@@ -1438,27 +1438,28 @@
             filter: blur(0);
         }
         /* ===== SUBSCRIPTIONS CSS ===== */
-        .sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .sub-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-        .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .sub-profile-group { margin-bottom: 16px; }
-        .sub-profile-title { font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; display: inline-block; padding: 2px 8px; border-radius: 4px; }
-        .sub-profile-title.rouge { background: #fee2e2; color: #ef4444; }
-        .sub-profile-title.violet { background: #f3e8ff; color: #a855f7; }
-        .sub-profile-title.jaune { background: #fef9c3; color: #eab308; }
-        .sub-profile-title.vert { background: #dcfce7; color: #22c55e; }
-        .sub-profile-title.blanc { background: #f1f5f9; color: #64748b; }
+        .sub-grid { display: flex; flex-direction: column; gap: 24px; }
+        .sub-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .sub-card-header { padding: 12px 16px; background: var(--bg-darkest); font-weight: 700; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         
-        .sub-client { display: flex; flex-direction: column; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--bg-darkest); cursor: pointer; transition: border-color 0.2s; }
-        .sub-client:hover { border-color: var(--accent-teal); }
-        .sub-client-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .sub-client-name { font-weight: 600; font-size: 13px; }
-        .sub-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .sub-table-wrapper { overflow-x: auto; }
+        .sub-table { width: 100%; border-collapse: collapse; min-width: 600px; text-align: left; }
+        .sub-table th, .sub-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .sub-table th { background: var(--bg-card); font-weight: 700; color: var(--text-secondary); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .sub-table tr { transition: background 0.2s; }
+        .sub-table tr:hover td { background: var(--bg-card-hover); cursor: pointer; }
+        
+        .sub-table td.profil-cell { font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
+        .sub-table td.profil-rouge { color: #ef4444; border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
+        .sub-table td.profil-violet { color: #a855f7; border-left: 4px solid #a855f7; background: rgba(168, 85, 247, 0.05); }
+        .sub-table td.profil-jaune { color: #eab308; border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.05); }
+        .sub-table td.profil-vert { color: #22c55e; border-left: 4px solid #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .sub-table td.profil-blanc { color: #94a3b8; border-left: 4px solid #94a3b8; background: rgba(148, 163, 184, 0.05); }
+
+        .sub-badge { font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; }
         .sub-badge.active { background: rgba(52, 211, 153, 0.2); color: #34d399; }
         .sub-badge.warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
         .sub-badge.expired { background: rgba(248, 113, 113, 0.2); color: #f87171; }
-        
-        .sub-client-details { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); }
         
         .sub-tab-btn { background: transparent; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 16px; margin: 0; color: var(--text-secondary); font-weight: 600; transition: all 0.2s; }
         .sub-tab-btn:hover { background: var(--bg-card); color: var(--text-primary); }
@@ -3058,31 +3059,63 @@
         let html = '<div class="sub-grid">';
 
         for (const acc of conf.accounts) {
-            html += `<div class="sub-card"><div class="sub-card-header"><span>Compte ${acc}</span></div>`;
+            html += `<div class="sub-card">
+                <div class="sub-card-header">
+                    <span>${subFilter.toUpperCase()} - Compte ${acc}</span>
+                </div>
+                <div class="sub-table-wrapper">
+                    <table class="sub-table">
+                        <thead>
+                            <tr>
+                                ${conf.hasProfiles ? '<th>Profil</th>' : ''}
+                                <th>Noms</th>
+                                <th>Statut</th>
+                                <th>Durée</th>
+                                <th>Début</th>
+                                <th>Fin</th>
+                                <th>Facturation</th>
+                                <th>État</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
             
             if (conf.hasProfiles) {
                 const profiles = ['Rouge', 'Violet', 'Jaune', 'Vert', 'Blanc'];
+                let hasData = false;
                 for (const p of profiles) {
-                    html += `<div class="sub-profile-group"><div class="sub-profile-title ${p.toLowerCase()}">${p}</div>`;
-                    html += getSubClientsHtml(subFilter, acc, p);
-                    html += `</div>`;
+                    const rows = getSubClientsRowsHtml(subFilter, acc, p);
+                    if (rows) { html += rows; hasData = true; }
                 }
+                if (!hasData) html += `<tr><td colspan="8" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
             } else {
-                html += getSubClientsHtml(subFilter, acc, null);
+                const rows = getSubClientsRowsHtml(subFilter, acc, null);
+                if (rows) html += rows;
+                else html += `<tr><td colspan="7" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
             }
-            html += `</div>`;
+
+            html += `       </tbody>
+                    </table>
+                </div>
+            </div>`;
         }
         html += '</div>';
         c.innerHTML = html;
     }
 
-    function getSubClientsHtml(service, acc, profile) {
+    function getSubClientsRowsHtml(service, acc, profile) {
         let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile ? s.profile === profile : true));
-        if (!clients.length) return `<div style="font-size:11px; color:#6b7280; font-style:italic; padding-left:4px;">Vide</div>`;
+        if (!clients.length) return '';
         
         let html = '';
         const today = new Date();
         today.setHours(0,0,0,0);
+
+        // Sort by End Date (soonest expiring first)
+        clients.sort((a,b) => {
+            if (!a.end) return 1;
+            if (!b.end) return -1;
+            return new Date(a.end) - new Date(b.end);
+        });
 
         for (const c of clients) {
             let badgeClass = 'active';
@@ -3099,17 +3132,21 @@
             }
             if (c.duration && c.duration.toLowerCase().includes('life')) { badgeClass = 'active'; badgeText = 'A Vie'; }
 
-            html += `<div class="sub-client" onclick="openSubModal('${c.id}')">
-                <div class="sub-client-header">
-                    <span class="sub-client-name">${escHtml(c.name)}</span>
-                    <span class="sub-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                <div class="sub-client-details">
-                    <span>${escHtml(c.status)} • ${escHtml(c.duration)}</span>
-                    <span>${c.end ? c.end : '-'}</span>
-                </div>
-                ${c.code ? `<div style="font-size:10px; color:#9ca3af; margin-top:4px;">Code/Fact: ${escHtml(c.code)}</div>` : ''}
-            </div>`;
+            let profCell = '';
+            if (profile) {
+                profCell = `<td class="profil-cell profil-${profile.toLowerCase()}">${profile}</td>`;
+            }
+
+            html += `<tr onclick="openSubModal('${c.id}')">
+                ${profCell}
+                <td style="font-weight:600;">${escHtml(c.name)}</td>
+                <td>${escHtml(c.status)}</td>
+                <td>${escHtml(c.duration)}</td>
+                <td>${c.start || '-'}</td>
+                <td>${c.end || '-'}</td>
+                <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span></td>
+                <td><span class="sub-badge ${badgeClass}">${badgeText}</span></td>
+            </tr>`;
         }
         return html;
     }
