@@ -1,0 +1,20 @@
+    <!-- ===== SUBSCRIPTIONS VIEW ===== -->
+    <div id="subscriptionsView" class="view">
+        <div class="section-header">
+            <h2 class="section-title"><span class="material-icons-outlined">subscriptions</span> Mes Abonnements</h2>
+            <div class="section-actions">
+                <button class="btn primary" onclick="openSubModal()"><span class="material-icons-outlined">add</span> Ajouter Client</button>
+            </div>
+        </div>
+
+        <div class="period-selector" style="justify-content:center; margin-bottom: 24px;">
+            <div class="nav-tabs" style="display:flex; width:auto; padding:0; border:none; box-shadow:none; position:relative; top:0; left:0; flex-direction:row;">
+                <button class="nav-tab sub-tab-btn active" onclick="setSubFilter('netflix')">Netflix</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('spotify')">Spotify</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('prime')">Prime Video</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('proton')">ProtonVPN</button>
+            </div>
+        </div>
+
+        <div id="subContent"></div>
+    </div>

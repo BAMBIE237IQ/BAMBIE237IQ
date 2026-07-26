@@ -35,11 +35,82 @@ export default async function handler(req, res) {
     const lowerText = text.toLowerCase();
     
     if (lowerText === '/start') {
-      await sendMessage("👋 *Bienvenue sur Handy Finance Bot !*\n\nPour ajouter une transaction sans ouvrir l'application, envoyez un message sous ce format :\n👉 `Depense 5000 Repas`\n👉 `Entree 15000 Remboursement`\n👉 `Banque 50000 Salaire`\n👉 `Mobile 10000 Transfert`");
+      await sendMessage("👋 *Bienvenue sur Handy Finance Bot !*\n\nPour une transaction, envoyez :\n👉 `Depense 5000 Repas`\n👉 `Entree 15000 Cadeau`\n\nPour un abonnement, envoyez :\n👉 `Abo Netflix 1 Rouge Jean`\n👉 `Abo Spotify 2 Paul`");
       return res.status(200).send('OK');
     }
 
-    // Déterminer le type
+    // -- GESTION DES ABONNEMENTS --
+    if (lowerText.startsWith('abo ') || lowerText.startsWith('abonnement ')) {
+       const parts = text.split(' ').filter(p => p.trim() !== '');
+       // Format attendu : Abo [Service] [Compte] [Profil(si Netflix)] [Nom...]
+       // Ex: Abo Netflix 1 Rouge Jean Dupont
+       // Ex: Abo Spotify 2 Paul
+       if (parts.length < 4) {
+           await sendMessage("❌ *Erreur de format d'abonnement.*\nExemple : `Abo Netflix 1 Rouge Jean`\nExemple : `Abo Spotify 2 Paul`");
+           return res.status(200).send('OK');
+       }
+       
+       const serviceRaw = parts[1].toLowerCase();
+       let service = '';
+       if (serviceRaw.includes('netflix')) service = 'netflix';
+       else if (serviceRaw.includes('spotify')) service = 'spotify';
+       else if (serviceRaw.includes('prime')) service = 'prime';
+       else if (serviceRaw.includes('proton')) service = 'proton';
+       else {
+           await sendMessage("❌ *Service inconnu.* Utilisez Netflix, Spotify, Prime, ou Proton.");
+           return res.status(200).send('OK');
+       }
+       
+       const account = parseInt(parts[2], 10) || 1;
+       let profile = null;
+       let nameIndex = 3;
+       
+       if (service === 'netflix') {
+           profile = parts[3];
+           nameIndex = 4;
+       }
+       
+       const name = parts.slice(nameIndex).join(' ');
+       if (!name) {
+           await sendMessage("❌ *Nom manquant.* Veuillez préciser le nom du client.");
+           return res.status(200).send('OK');
+       }
+
+       const date = new Date();
+       const cameroonTime = new Date(date.getTime() + (60 * 60 * 1000));
+       const dateStr = cameroonTime.toISOString().split('T')[0];
+
+       const subClient = {
+           id: Date.now().toString(),
+           service: service,
+           account: account,
+           profile: profile,
+           name: name,
+           status: "Okay",
+           start: dateStr,
+           end: "",
+           duration: "01Mois",
+           code: "Via Telegram"
+       };
+
+       const subUrl = `${FIREBASE_DB_URL}subscriptions.json`;
+       const fetchRes = await fetch(subUrl);
+       let subs = await fetchRes.json() || [];
+       if (!Array.isArray(subs)) subs = Object.values(subs);
+       
+       subs.push(subClient);
+       
+       const putRes = await fetch(subUrl, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(subs) });
+       
+       if (putRes.ok) {
+           await sendMessage(`✅ *Abonnement enregistré !*\n\n📺 Service : ${service.toUpperCase()} (Compte ${account})\n👤 Client : ${name}\n\nOuvrez l'application pour modifier les dates ou la facturation.`);
+       } else {
+           await sendMessage("⚠️ *Erreur serveur* : Impossible d'enregistrer l'abonnement.");
+       }
+       return res.status(200).send('OK');
+    }
+
+    // -- GESTION DES FINANCES (Le code existant) --
     let type = '';
     if (lowerText.includes('depense') || lowerText.includes('dépense') || lowerText.includes('sortie') || lowerText.includes('retrait')) {
       type = 'expense';
