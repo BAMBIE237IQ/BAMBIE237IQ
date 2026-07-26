@@ -1464,6 +1464,9 @@
             <button class="nav-btn" title="Masquer/Afficher les montants" onclick="toggleBlur()">
                 <span class="material-icons-outlined" id="blurIcon">visibility_off</span>
             </button>
+            <button class="nav-btn" title="Sauvegarde Complète (JSON)" onclick="exportJSON()">
+                <span class="material-icons-outlined">save_alt</span>
+            </button>
             <button class="nav-btn" title="Exporter CSV" onclick="exportCSV()">
                 <span class="material-icons-outlined">download</span>
             </button>
@@ -1679,7 +1682,7 @@
                         <label class="fin-label">Date</label>
                         <input type="date" class="fin-input" id="finDate">
                     </div>
-                    <button class="fin-submit" onclick="addTransaction()">
+                    <button class="fin-submit" id="finSubmitBtn" onclick="addTransaction()">
                         <span class="material-icons-outlined">add_circle</span>
                         Ajouter la transaction
                     </button>
@@ -2379,6 +2382,16 @@
         toast('CSV exporté ✓');
     }
 
+    function exportJSON() {
+        const dataStr = JSON.stringify({habits:S.habits, data:S.data, moods:S.moods, transactions:S.transactions, finAccounts:S.finAccounts}, null, 2);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `sauvegarde_handy_tracker_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        toast('Sauvegarde JSON générée ✓');
+    }
+
     // ==================== TOAST ====================
     function toast(msg) {
         const c=document.getElementById('toastContainer');
@@ -2437,6 +2450,8 @@
         document.getElementById('finTypeExpense').className = 'fin-type-btn' + (type==='expense'?' active-expense':'');
     }
 
+    let editingTxInfo = null;
+
     function addTransaction() {
         const amount = parseFloat(document.getElementById('finAmount').value);
         const label = document.getElementById('finLabel').value.trim();
@@ -2447,24 +2462,57 @@
         if (!dateStr) { toast('⚠ Sélectionnez une date'); return; }
         pushUndo();
         const d = new Date(dateStr);
-        const mk = monthKey(d.getFullYear(), d.getMonth());
-        if (!S.transactions[mk]) S.transactions[mk] = [];
-        S.transactions[mk].push({
-            id: 't'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,4),
-            type: S.finType,
-            amount,
-            label,
-            justification: justif,
-            day: d.getDate(),
-            date: dateStr
-        });
+        const newMk = monthKey(d.getFullYear(), d.getMonth());
+
+        if (editingTxInfo) {
+            const oldMk = editingTxInfo.mk;
+            const oldId = editingTxInfo.txId;
+            if (S.transactions[oldMk]) {
+                S.transactions[oldMk] = S.transactions[oldMk].filter(t => t.id !== oldId);
+                if (!S.transactions[oldMk].length) delete S.transactions[oldMk];
+            }
+            if (!S.transactions[newMk]) S.transactions[newMk] = [];
+            S.transactions[newMk].push({
+                id: oldId, type: S.finType, amount, label, justification: justif, day: d.getDate(), date: dateStr
+            });
+            editingTxInfo = null;
+            document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">add_circle</span> Ajouter la transaction';
+            toast('Transaction mise à jour ✓');
+        } else {
+            if (!S.transactions[newMk]) S.transactions[newMk] = [];
+            S.transactions[newMk].push({
+                id: 't'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,4),
+                type: S.finType,
+                amount,
+                label,
+                justification: justif,
+                day: d.getDate(),
+                date: dateStr
+            });
+            toast(S.finType==='income' ? '💰 Entrée ajoutée ✓' : '💸 Sortie ajoutée ✓');
+        }
+        
         save();
         // Reset form
         document.getElementById('finAmount').value = '';
         document.getElementById('finLabel').value = '';
         document.getElementById('finJustif').value = '';
         renderAll();
-        toast(S.finType==='income' ? '💰 Entrée ajoutée ✓' : '💸 Sortie ajoutée ✓');
+    }
+
+    function editTransaction(mk, txId) {
+        if (!S.transactions[mk]) return;
+        const tx = S.transactions[mk].find(t => t.id === txId);
+        if (!tx) return;
+        editingTxInfo = { mk, txId };
+        setFinType(tx.type);
+        document.getElementById('finAmount').value = tx.amount;
+        document.getElementById('finLabel').value = tx.label;
+        document.getElementById('finJustif').value = tx.justification || '';
+        document.getElementById('finDate').value = tx.date;
+        
+        document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">save</span> Mettre à jour la transaction';
+        document.querySelector('.fin-form-card').scrollIntoView({behavior:'smooth'});
     }
 
     function deleteTransaction(mk, txId) {
@@ -2472,6 +2520,10 @@
         if (S.transactions[mk]) {
             S.transactions[mk] = S.transactions[mk].filter(t => t.id !== txId);
             if (!S.transactions[mk].length) delete S.transactions[mk];
+        }
+        if (editingTxInfo && editingTxInfo.txId === txId) {
+            editingTxInfo = null;
+            document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">add_circle</span> Ajouter la transaction';
         }
         save(); renderAll();
         toast('Transaction supprimée — Ctrl+Z pour annuler');
@@ -2758,7 +2810,10 @@
                             ${tx.justification ? `<div class="fin-tx-desc">📝 ${escHtml(tx.justification)}</div>` : ''}
                         </div>
                         <span class="fin-tx-amount ${tx.type}">${isIncome?'+':'-'}${formatMoney(tx.amount)}</span>
-                        <span class="material-icons-outlined fin-tx-delete" onclick="deleteTransaction('${mk}','${tx.id}')">close</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span class="material-icons-outlined fin-tx-delete" title="Modifier" onclick="editTransaction('${mk}','${tx.id}')">edit</span>
+                            <span class="material-icons-outlined fin-tx-delete" title="Supprimer" onclick="deleteTransaction('${mk}','${tx.id}')">close</span>
+                        </div>
                     </div>`;
                 }
                 listHTML += '</div></div>';
