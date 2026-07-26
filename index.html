@@ -1437,6 +1437,28 @@
         body.blur-amounts .compare-diff strong:hover {
             filter: blur(0);
         }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .top-nav { flex-direction: column; height: auto; padding: 16px; gap: 16px; align-items: stretch; }
+            .logo { justify-content: center; margin-bottom: 8px; }
+            .nav-tabs { overflow-x: auto; padding-bottom: 4px; justify-content: flex-start; }
+            .nav-tabs::-webkit-scrollbar { display: none; }
+            .nav-actions { justify-content: center; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .fin-layout { grid-template-columns: 1fr; }
+            .period-selector { flex-direction: column; align-items: stretch; gap: 12px; }
+            .main-content { padding: 16px 12px; }
+            .habit-table-wrapper, .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { min-width: 700px; }
+            .fin-summary-row { flex-direction: column; gap: 8px; }
+            .compare-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .period-selector .nav-tabs { width: 100%; overflow-x: auto; justify-content: flex-start; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -1461,7 +1483,7 @@
             </button>
         </div>
         <div class="nav-actions">
-            <button class="nav-btn" title="Masquer/Afficher les montants" onclick="toggleBlur()">
+            <button class="nav-btn" title="Masquer/Afficher les montants" id="blurBtnContainer" onclick="toggleBlur()" style="display:none;">
                 <span class="material-icons-outlined" id="blurIcon">visibility_off</span>
             </button>
             <button class="nav-btn" title="Sauvegarde Complète (JSON)" onclick="exportJSON()">
@@ -2357,6 +2379,7 @@
         document.getElementById(v+'View').classList.add('active');
         document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
         document.querySelector(`.nav-tab[onclick*="${v}"]`).classList.add('active');
+        document.getElementById('blurBtnContainer').style.display = (v === 'finance') ? 'flex' : 'none';
         renderAll();
     }
 
