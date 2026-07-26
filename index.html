@@ -1437,8 +1437,34 @@
         body.blur-amounts .compare-diff strong:hover {
             filter: blur(0);
         }
+        /* ===== SUBSCRIPTIONS CSS ===== */
+        .sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .sub-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+        .sub-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .sub-profile-group { margin-bottom: 16px; }
+        .sub-profile-title { font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; display: inline-block; padding: 2px 8px; border-radius: 4px; }
+        .sub-profile-title.rouge { background: #fee2e2; color: #ef4444; }
+        .sub-profile-title.violet { background: #f3e8ff; color: #a855f7; }
+        .sub-profile-title.jaune { background: #fef9c3; color: #eab308; }
+        .sub-profile-title.vert { background: #dcfce7; color: #22c55e; }
+        .sub-profile-title.blanc { background: #f1f5f9; color: #64748b; }
+        
+        .sub-client { display: flex; flex-direction: column; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--bg-darkest); cursor: pointer; transition: border-color 0.2s; }
+        .sub-client:hover { border-color: var(--accent-teal); }
+        .sub-client-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .sub-client-name { font-weight: 600; font-size: 13px; }
+        .sub-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .sub-badge.active { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+        .sub-badge.warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .sub-badge.expired { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+        
+        .sub-client-details { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); }
+        
+        .sub-tab-btn { background: transparent; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 16px; margin: 0; color: var(--text-secondary); font-weight: 600; transition: all 0.2s; }
+        .sub-tab-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+        .sub-tab-btn.active { background: transparent; color: var(--accent-teal); border-bottom-color: var(--accent-teal); }
 
-        /* ===== MOBILE RESPONSIVE ===== */
+        /* ===== NAV DROPDOWN (Global) ===== */
         .mobile-dropdown-icon { display: none; margin-left: 4px; color: var(--text-secondary); transition: transform 0.2s; }
         .logo.menu-open .mobile-dropdown-icon { transform: rotate(180deg); }
 
@@ -1502,6 +1528,10 @@
             <button class="nav-tab" onclick="switchView('finance')">
                 <span class="material-icons-outlined">account_balance_wallet</span>
                 Finance
+            </button>
+            <button class="nav-tab" onclick="switchView('subscriptions')">
+                <span class="material-icons-outlined">subscriptions</span>
+                Abonnements
             </button>
         </div>
         <div class="nav-actions">
@@ -1738,6 +1768,27 @@
         </div>
     </div>
 
+    <!-- ===== SUBSCRIPTIONS VIEW ===== -->
+    <div id="subscriptionsView" class="view">
+        <div class="section-header">
+            <h2 class="section-title"><span class="material-icons-outlined">subscriptions</span> Mes Abonnements</h2>
+            <div class="section-actions">
+                <button class="btn primary" onclick="openSubModal()"><span class="material-icons-outlined">add</span> Ajouter Client</button>
+            </div>
+        </div>
+
+        <div class="period-selector" style="justify-content:center; margin-bottom: 24px;">
+            <div class="nav-tabs" style="display:flex; width:auto; padding:0; border:none; box-shadow:none; position:relative; top:0; left:0; flex-direction:row;">
+                <button class="nav-tab sub-tab-btn active" onclick="setSubFilter('netflix')">Netflix</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('spotify')">Spotify</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('prime')">Prime Video</button>
+                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('proton')">ProtonVPN</button>
+            </div>
+        </div>
+
+        <div id="subContent"></div>
+    </div>
+
     <!-- ===== MODAL ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
@@ -1747,6 +1798,30 @@
             <div class="modal-actions">
                 <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
                 <button class="modal-btn confirm" id="modalConfirm" onclick="confirmModal()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SUB MODAL ===== -->
+    <div class="modal-overlay" id="subModalOverlay">
+        <div class="modal" style="width:350px;">
+            <h3 id="subModalTitle">Nouveau Client</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+                <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="prime">Prime Video</option><option value="proton">ProtonVPN</option></select></div>
+                <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
+                <div id="subProfileDiv"><label class="fin-label">Profil</label><select id="subProfile" class="fin-input"><option value="Rouge">Rouge</option><option value="Violet">Violet</option><option value="Jaune">Jaune</option><option value="Vert">Vert</option><option value="Blanc">Blanc</option></select></div>
+                <div><label class="fin-label">Nom du client</label><input type="text" id="subName" class="fin-input" placeholder="Ex: Jean Dupont"></div>
+                <div><label class="fin-label">Statut</label><input type="text" id="subStatus" class="fin-input" placeholder="Ex: Okay, Sell..."></div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;"><label class="fin-label">Début</label><input type="date" id="subStart" class="fin-input"></div>
+                    <div style="flex:1;"><label class="fin-label">Fin</label><input type="date" id="subEnd" class="fin-input"></div>
+                </div>
+                <div><label class="fin-label">Durée</label><input type="text" id="subDuration" class="fin-input" placeholder="Ex: 1Mois, For Life"></div>
+                <div><label class="fin-label">Facturation / Code</label><input type="text" id="subCode" class="fin-input" placeholder="Ex: 0001, 1500 FCFA"></div>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="modal-btn cancel" onclick="closeSubModal()">Annuler</button>
+                <button class="modal-btn confirm" onclick="saveSub()">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -1776,7 +1851,9 @@
     const MOOD_EMOJIS = ['😢','😟','😐','🙂','😊','😄','🤩'];
     const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, blurAmounts:false };
+    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, blurAmounts:false, subscriptions:[] };
+    let subFilter = 'netflix';
+    let editingSubId = null;
     let charts = {};
     let undoStack = [], redoStack = [];
     let dbRef;
@@ -1807,6 +1884,7 @@
                 S.transactions = data.transactions || {};
                 S.finAccounts = data.finAccounts || {cash:0, bank:0, mobile:0};
                 S.blurAmounts = data.blurAmounts || false;
+                S.subscriptions = data.subscriptions || [];
             } else {
                 if (!S.habits.length) {
                     addHabit('🏃 Exercice physique','teal');
@@ -1846,7 +1924,8 @@
                 moods: S.moods,
                 transactions: S.transactions,
                 finAccounts: S.finAccounts,
-                blurAmounts: S.blurAmounts
+                blurAmounts: S.blurAmounts,
+                subscriptions: S.subscriptions
             }).catch(e => console.error("Firebase save error", e));
         }
     }
@@ -2018,6 +2097,7 @@
         if (S.currentView==='weekly') renderWeekly();
         else if (S.currentView==='monthly') renderMonthly();
         else if (S.currentView==='finance') renderFinance();
+        else if (S.currentView==='subscriptions') renderSubscriptions();
     }
 
     // ==================== WEEKLY VIEW ====================
@@ -2955,6 +3035,160 @@
                 plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true, pointStyle: 'circle', padding: 10 } } }
             }
         });
+    }
+
+    // ==================== SUBSCRIPTIONS ====================
+    const SUB_CONFIG = {
+        netflix: { accounts: [1,2,3,4], hasProfiles: true },
+        spotify: { accounts: [1,2], hasProfiles: false },
+        prime: { accounts: [1], hasProfiles: false },
+        proton: { accounts: [1], hasProfiles: false }
+    };
+
+    function setSubFilter(f) {
+        subFilter = f;
+        document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.sub-tab-btn[onclick*="${f}"]`).classList.add('active');
+        renderSubscriptions();
+    }
+
+    function renderSubscriptions() {
+        const c = document.getElementById('subContent');
+        const conf = SUB_CONFIG[subFilter];
+        let html = '<div class="sub-grid">';
+
+        for (const acc of conf.accounts) {
+            html += `<div class="sub-card"><div class="sub-card-header"><span>Compte ${acc}</span></div>`;
+            
+            if (conf.hasProfiles) {
+                const profiles = ['Rouge', 'Violet', 'Jaune', 'Vert', 'Blanc'];
+                for (const p of profiles) {
+                    html += `<div class="sub-profile-group"><div class="sub-profile-title ${p.toLowerCase()}">${p}</div>`;
+                    html += getSubClientsHtml(subFilter, acc, p);
+                    html += `</div>`;
+                }
+            } else {
+                html += getSubClientsHtml(subFilter, acc, null);
+            }
+            html += `</div>`;
+        }
+        html += '</div>';
+        c.innerHTML = html;
+    }
+
+    function getSubClientsHtml(service, acc, profile) {
+        let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile ? s.profile === profile : true));
+        if (!clients.length) return `<div style="font-size:11px; color:#6b7280; font-style:italic; padding-left:4px;">Vide</div>`;
+        
+        let html = '';
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        for (const c of clients) {
+            let badgeClass = 'active';
+            let badgeText = 'Actif';
+            let diffDays = 999;
+            
+            if (c.end) {
+                const endD = new Date(c.end);
+                endD.setHours(0,0,0,0);
+                diffDays = Math.ceil((endD - today) / (1000 * 60 * 60 * 24));
+                if (diffDays < 0) { badgeClass = 'expired'; badgeText = 'Expiré'; }
+                else if (diffDays <= 3) { badgeClass = 'warning'; badgeText = \`J-\${diffDays}\`; }
+                if (diffDays === 0) { badgeClass = 'warning'; badgeText = "Aujourd'hui"; }
+            }
+            if (c.duration && c.duration.toLowerCase().includes('life')) { badgeClass = 'active'; badgeText = 'A Vie'; }
+
+            html += `<div class="sub-client" onclick="openSubModal('${c.id}')">
+                <div class="sub-client-header">
+                    <span class="sub-client-name">${escHtml(c.name)}</span>
+                    <span class="sub-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="sub-client-details">
+                    <span>${escHtml(c.status)} • ${escHtml(c.duration)}</span>
+                    <span>${c.end ? c.end : '-'}</span>
+                </div>
+                ${c.code ? `<div style="font-size:10px; color:#9ca3af; margin-top:4px;">Code/Fact: ${escHtml(c.code)}</div>` : ''}
+            </div>`;
+        }
+        return html;
+    }
+
+    function updateSubModalFields() {
+        const s = document.getElementById('subService').value;
+        const c = SUB_CONFIG[s];
+        
+        const accSel = document.getElementById('subAccount');
+        accSel.innerHTML = '';
+        for (const a of c.accounts) accSel.innerHTML += `<option value="${a}">Compte ${a}</option>`;
+        
+        document.getElementById('subProfileDiv').style.display = c.hasProfiles ? 'block' : 'none';
+    }
+
+    function openSubModal(id = null) {
+        editingSubId = id;
+        document.getElementById('subModalTitle').textContent = id ? 'Modifier Client' : 'Nouveau Client';
+        const m = document.getElementById('subModalOverlay');
+        
+        if (id) {
+            const c = S.subscriptions.find(x => x.id === id);
+            if (c) {
+                document.getElementById('subService').value = c.service;
+                updateSubModalFields();
+                document.getElementById('subAccount').value = c.account;
+                if (SUB_CONFIG[c.service].hasProfiles) document.getElementById('subProfile').value = c.profile;
+                document.getElementById('subName').value = c.name;
+                document.getElementById('subStatus').value = c.status;
+                document.getElementById('subStart').value = c.start;
+                document.getElementById('subEnd').value = c.end;
+                document.getElementById('subDuration').value = c.duration;
+                document.getElementById('subCode').value = c.code;
+            }
+        } else {
+            document.getElementById('subService').value = subFilter;
+            updateSubModalFields();
+            document.getElementById('subName').value = '';
+            document.getElementById('subStatus').value = 'Sell';
+            document.getElementById('subStart').value = new Date().toISOString().split('T')[0];
+            document.getElementById('subEnd').value = '';
+            document.getElementById('subDuration').value = '01Mois';
+            document.getElementById('subCode').value = '';
+        }
+        
+        m.classList.add('active');
+        document.getElementById('subName').focus();
+    }
+
+    function closeSubModal() { document.getElementById('subModalOverlay').classList.remove('active'); }
+
+    function saveSub() {
+        const s = document.getElementById('subService').value;
+        const obj = {
+            id: editingSubId || Date.now().toString(),
+            service: s,
+            account: parseInt(document.getElementById('subAccount').value),
+            profile: SUB_CONFIG[s].hasProfiles ? document.getElementById('subProfile').value : null,
+            name: document.getElementById('subName').value.trim(),
+            status: document.getElementById('subStatus').value.trim(),
+            start: document.getElementById('subStart').value,
+            end: document.getElementById('subEnd').value,
+            duration: document.getElementById('subDuration').value.trim(),
+            code: document.getElementById('subCode').value.trim()
+        };
+
+        if (!obj.name) return toast("Erreur : Nom requis");
+
+        if (editingSubId) {
+            const idx = S.subscriptions.findIndex(x => x.id === editingSubId);
+            if (idx > -1) S.subscriptions[idx] = obj;
+        } else {
+            S.subscriptions.push(obj);
+        }
+        
+        save();
+        closeSubModal();
+        renderSubscriptions();
+        toast("Client sauvegardé ✓");
     }
 
     // ===== START =====
