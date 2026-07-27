@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     const lowerText = text.toLowerCase();
     
     if (lowerText === '/start') {
-      await sendMessage("👋 *Bienvenue sur Handy Finance Bot !*\n\nPour une transaction, envoyez :\n👉 `Depense 5000 Repas`\n👉 `Entree 15000 Cadeau`\n\nPour un abonnement, envoyez :\n👉 `Abo Netflix 1 Rouge Jean`\n👉 `Abo Spotify 2 Paul`");
+      await sendMessage("👋 *Bienvenue sur Handy Finance Bot !*\n\nPour une transaction, envoyez UNE SEULE LIGNE, par exemple :\n👉 `Depense 5000 Repas`\n👉 `Entree 15000 Cadeau`\n\nPour un abonnement, envoyez :\n👉 `Abo Netflix 1 Rouge Jean`");
       return res.status(200).send('OK');
     }
 
@@ -114,11 +114,11 @@ export default async function handler(req, res) {
     let type = '';
     if (lowerText.includes('depense') || lowerText.includes('dépense') || lowerText.includes('sortie') || lowerText.includes('retrait')) {
       type = 'expense';
-    } else if (lowerText.includes('entree') || lowerText.includes('entrée') || lowerText.includes('ajout') || lowerText.includes('revenu')) {
+    } else if (lowerText.includes('entree') || lowerText.includes('entrée') || lowerText.includes('entré') || lowerText.includes('entre') || lowerText.includes('ajout') || lowerText.includes('revenu')) {
       type = 'income';
     } else if (lowerText.includes('banque')) {
       type = 'bank';
-    } else if (lowerText.includes('mobile')) {
+    } else if (lowerText.includes('mobile') || lowerText.includes('momo') || lowerText.includes('om')) {
       type = 'mobile';
     } else {
       await sendMessage("❌ *Erreur* : Je n'ai pas compris le type d'opération.\n\nCommencez votre message par `Dépense`, `Entrée`, `Banque` ou `Mobile`.");
@@ -138,8 +138,8 @@ export default async function handler(req, res) {
     const labelWords = words.filter(w => {
       const lw = w.toLowerCase();
       return lw !== 'dépense' && lw !== 'depense' && lw !== 'sortie' && lw !== 'retrait' &&
-             lw !== 'entrée' && lw !== 'entree' && lw !== 'ajout' && lw !== 'revenu' &&
-             lw !== 'banque' && lw !== 'mobile' &&
+             lw !== 'entrée' && lw !== 'entree' && lw !== 'entré' && lw !== 'entre' && lw !== 'ajout' && lw !== 'revenu' &&
+             lw !== 'banque' && lw !== 'mobile' && lw !== 'momo' && lw !== 'om' &&
              w !== amountMatch[0];
     });
     
@@ -191,11 +191,12 @@ export default async function handler(req, res) {
     });
 
     if (putRes.ok) {
-       const icon = type === 'expense' ? '🔴' : '🟢';
-       const typeStr = type === 'expense' ? 'Dépense' : (type === 'income' ? 'Entrée' : (type === 'bank' ? 'Banque' : 'Mobile'));
-       await sendMessage(`✅ *${typeStr} enregistrée !*\n\n${icon} Montant : ${amount} FCFA\n📝 Libellé : ${label}`);
+      const typeStr = type === 'expense' ? '🔴 Dépense' : (type === 'income' ? '🟢 Entrée' : (type === 'bank' ? '🏦 Banque' : '📱 Mobile'));
+      await sendMessage(`✅ *Opération enregistrée !*\n\nType: ${typeStr}\nMontant: ${amount} F\nLibellé: ${label}`);
     } else {
-       await sendMessage("⚠️ *Erreur serveur* : Impossible d'enregistrer dans Firebase.");
+      const errorText = await putRes.text();
+      console.error("Firebase PUT error:", putRes.status, errorText);
+      await sendMessage("⚠️ *Erreur serveur* : Impossible d'enregistrer dans Firebase. Avez-vous bien créé la base de données Firebase et configuré les règles d'accès ? (Code: " + putRes.status + ")");
     }
 
     return res.status(200).send('OK');
