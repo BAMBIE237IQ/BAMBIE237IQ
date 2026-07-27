@@ -1852,7 +1852,7 @@
     const MOOD_EMOJIS = ['😢','😟','😐','🙂','😊','😄','🤩'];
     const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, blurAmounts:false, subscriptions:[] };
+    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, blurAmounts:false, subscriptions:[], subAccountNames:{} };
     let subFilter = 'netflix';
     let editingSubId = null;
     let charts = {};
@@ -1886,6 +1886,7 @@
                 S.finAccounts = data.finAccounts || {cash:0, bank:0, mobile:0};
                 S.blurAmounts = data.blurAmounts || false;
                 S.subscriptions = data.subscriptions || [];
+                S.subAccountNames = data.subAccountNames || {};
             } else {
                 if (!S.habits.length) {
                     addHabit('🏃 Exercice physique','teal');
@@ -1926,7 +1927,8 @@
                 transactions: S.transactions,
                 finAccounts: S.finAccounts,
                 blurAmounts: S.blurAmounts,
-                subscriptions: S.subscriptions
+                subscriptions: S.subscriptions,
+                subAccountNames: S.subAccountNames
             }).catch(e => console.error("Firebase save error", e));
         }
     }
@@ -3059,9 +3061,16 @@
         let html = '<div class="sub-grid">';
 
         for (const acc of conf.accounts) {
+            const accKey = `${subFilter}_${acc}`;
+            const defaultName = `${subFilter.toUpperCase()} - Compte ${acc}`;
+            const accName = (S.subAccountNames && S.subAccountNames[accKey]) ? S.subAccountNames[accKey] : defaultName;
+            
             html += `<div class="sub-card">
                 <div class="sub-card-header">
-                    <span>${subFilter.toUpperCase()} - Compte ${acc}</span>
+                    <span>${escHtml(accName)}</span>
+                    <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc}, '${escHtml(accName)}')">
+                        <span class="material-icons-outlined" style="font-size:14px;">edit</span>
+                    </button>
                 </div>
                 <div class="sub-table-wrapper">
                     <table class="sub-table">
@@ -3226,6 +3235,17 @@
         closeSubModal();
         renderSubscriptions();
         toast("Client sauvegardé ✓");
+    }
+
+    function renameSubAccount(service, acc, currentName) {
+        const newName = prompt("Nouveau nom pour ce compte :", currentName);
+        if (newName !== null && newName.trim() !== "") {
+            if (!S.subAccountNames) S.subAccountNames = {};
+            S.subAccountNames[`${service}_${acc}`] = newName.trim();
+            save();
+            renderSubscriptions();
+            toast("Compte renommé");
+        }
     }
 
     // ===== START =====
