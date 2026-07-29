@@ -1871,45 +1871,49 @@
       measurementId: "G-RQGHZ9RQLR"
     };
 
-    // ==================== INIT ====================
     function init() {
-        firebase.initializeApp(firebaseConfig);
-        dbRef = firebase.database().ref('userData');
-
-        dbRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                S.habits = data.habits || [];
-                S.data = data.data || {};
-                S.moods = data.moods || {};
-                S.transactions = data.transactions || {};
-                S.finAccounts = data.finAccounts || {cash:0, bank:0, mobile:0};
-                S.blurAmounts = data.blurAmounts || false;
-                S.subscriptions = data.subscriptions || [];
-                S.subAccountNames = data.subAccountNames || {};
-            } else {
-                if (!S.habits.length) {
-                    addHabit('🏃 Exercice physique','teal');
-                    addHabit('📖 Lecture 30 min','blue');
-                    addHabit('🧘 Méditation','purple');
-                    addHabit('💧 Boire 2L d\'eau','green');
-                    addHabit('😴 Dormir avant 23h','pink');
-                    addHabit('🥗 Manger sainement','yellow');
-                    addHabit('📝 Journal intime','orange');
-                    save();
-                }
+        // 1. Charger depuis le stockage local (Sauvetage des données existantes)
+        const localData = localStorage.getItem(STORAGE_KEY);
+        if (localData) {
+            try {
+                const parsed = JSON.parse(localData);
+                S.habits = parsed.habits || [];
+                S.data = parsed.data || {};
+                S.moods = parsed.moods || {};
+                S.transactions = parsed.transactions || {};
+                S.finAccounts = parsed.finAccounts || {cash:0, bank:0, mobile:0};
+                S.blurAmounts = parsed.blurAmounts || false;
+                S.subscriptions = parsed.subscriptions || [];
+                S.subAccountNames = parsed.subAccountNames || {};
+            } catch(e) {}
+        } else {
+            // Uniquement si c'est la toute première fois de leur vie sur l'app
+            if (!S.habits.length) {
+                addHabit('🏃 Exercice physique','teal');
+                addHabit('📚 Lecture 30 min','blue');
+                addHabit('🧘 Méditation','purple');
+                addHabit('💧 Boire 2L d\'eau','green');
             }
+        }
 
-            if (isInitialLoad) {
-                const today = new Date();
-                S.monthYear = today.getFullYear();
-                S.monthIdx = today.getMonth();
-                S.finYear = today.getFullYear();
-                S.finMonth = today.getMonth();
-                document.getElementById('finDate').value = today.toISOString().split('T')[0];
-                setWeekStartFromDate(today);
-                setupListeners();
-                isInitialLoad = false;
+        // 2. Initialiser Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            dbRef = firebase.database().ref('userData');
+
+            dbRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    S.habits = data.habits || [];
+                    S.data = data.data || {};
+                    S.moods = data.moods || {};
+                    S.transactions = data.transactions || {};
+                    S.finAccounts = data.finAccounts || {cash:0, bank:0, mobile:0};
+                    S.blurAmounts = data.blurAmounts || false;
+                    S.subscriptions = data.subscriptions || [];
+                    S.subAccountNames = data.subAccountNames || {};
+                    renderAll();
+                }
             }
 
             updateBlurState();
@@ -1919,6 +1923,19 @@
 
     // ==================== PERSISTENCE ====================
     function save() {
+        // Sauvegarde locale (Garantie de ne rien perdre)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            habits: S.habits,
+            data: S.data,
+            moods: S.moods,
+            transactions: S.transactions,
+            finAccounts: S.finAccounts,
+            blurAmounts: S.blurAmounts,
+            subscriptions: S.subscriptions,
+            subAccountNames: S.subAccountNames
+        }));
+
+        // Tentative de sauvegarde dans le Cloud Firebase
         if (dbRef) {
             dbRef.set({
                 habits: S.habits,
