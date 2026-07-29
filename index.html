@@ -1912,13 +1912,17 @@
                     S.blurAmounts = data.blurAmounts || false;
                     S.subscriptions = data.subscriptions || [];
                     S.subAccountNames = data.subAccountNames || {};
+                    
+                    updateBlurState();
                     renderAll();
                 }
-            }
+            });
+        } catch (e) {
+            console.error("Firebase init error", e);
+        }
 
-            updateBlurState();
-            renderAll();
-        });
+        updateBlurState();
+        renderAll();
     }
 
     // ==================== PERSISTENCE ====================
