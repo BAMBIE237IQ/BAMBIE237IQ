@@ -1527,13 +1527,17 @@
                 Habit Tracker
             </button>
             <button class="nav-tab" onclick="switchView('finance')">
-                <span class="material-icons-outlined">account_balance_wallet</span>
-                Dashboard
-            </button>
-            <button class="nav-tab" onclick="switchView('subscriptions')">
-                <span class="material-icons-outlined">subscriptions</span>
-                Abonnements
-            </button>
+                  <span class="material-icons-outlined">account_balance_wallet</span>
+                  Dashboard
+              </button>
+              <button class="nav-tab" onclick="switchView('subscriptions')">
+                  <span class="material-icons-outlined">subscriptions</span>
+                  Abonnements
+              </button>
+              <button class="nav-tab" onclick="switchView('finance2')">
+                  <span class="material-icons-outlined">account_balance_wallet</span>
+                  Finance
+              </button>
         </div>
         <div class="nav-actions">
             <button class="nav-btn" title="Masquer/Afficher les montants" id="blurBtnContainer" onclick="toggleBlur()" style="display:none;">
@@ -1852,9 +1856,34 @@
     const MOOD_EMOJIS = ['😢','😟','😐','🙂','😊','😄','🤩'];
     const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, blurAmounts:false, subscriptions:[], subAccountNames:{} };
+    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{} };
     let subFilter = 'netflix';
     let editingSubId = null;
+
+    const activeS = new Proxy(S, {
+        get: function(target, prop) {
+            if (target.activeLedger === 'finance2') {
+                if (prop === 'transactions') return target.finance2Transactions;
+                if (prop === 'finAccounts') return target.fin2Accounts;
+                if (prop === 'finYear') return target.fin2Year;
+                if (prop === 'finMonth') return target.fin2Month;
+                if (prop === 'finType') return target.fin2Type;
+            }
+            return target[prop];
+        },
+        set: function(target, prop, value) {
+            if (target.activeLedger === 'finance2') {
+                if (prop === 'transactions') { target.finance2Transactions = value; return true; }
+                if (prop === 'finAccounts') { target.fin2Accounts = value; return true; }
+                if (prop === 'finYear') { target.fin2Year = value; return true; }
+                if (prop === 'finMonth') { target.fin2Month = value; return true; }
+                if (prop === 'finType') { target.fin2Type = value; return true; }
+            }
+            target[prop] = value;
+            return true;
+        }
+    });
+
     let charts = {};
     let undoStack = [], redoStack = [];
     let dbRef;
@@ -1882,6 +1911,11 @@
                 S.moods = parsed.moods || {};
                 S.transactions = parsed.transactions || {};
                 S.finAccounts = parsed.finAccounts || {cash:0, bank:0, mobile:0};
+                S.fin2Accounts = parsed.fin2Accounts || {cash:0, bank:0, mobile:0};
+                S.finance2Transactions = parsed.finance2Transactions || {};
+                S.fin2Year = parsed.fin2Year || S.finYear;
+                S.fin2Month = parsed.fin2Month || S.finMonth;
+                S.fin2Type = parsed.fin2Type || 'income';
                 S.blurAmounts = parsed.blurAmounts || false;
                 S.subscriptions = parsed.subscriptions || [];
                 S.subAccountNames = parsed.subAccountNames || {};
@@ -1909,6 +1943,11 @@
                     S.moods = data.moods || {};
                     S.transactions = data.transactions || {};
                     S.finAccounts = data.finAccounts || {cash:0, bank:0, mobile:0};
+                    S.fin2Accounts = data.fin2Accounts || {cash:0, bank:0, mobile:0};
+                    S.finance2Transactions = data.finance2Transactions || {};
+                    S.fin2Year = data.fin2Year || S.finYear;
+                    S.fin2Month = data.fin2Month || S.finMonth;
+                    S.fin2Type = data.fin2Type || 'income';
                     S.blurAmounts = data.blurAmounts || false;
                     S.subscriptions = data.subscriptions || [];
                     S.subAccountNames = data.subAccountNames || {};
@@ -1933,7 +1972,7 @@
             data: S.data,
             moods: S.moods,
             transactions: S.transactions,
-            finAccounts: S.finAccounts,
+            finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
             blurAmounts: S.blurAmounts,
             subscriptions: S.subscriptions,
             subAccountNames: S.subAccountNames
@@ -1946,7 +1985,7 @@
                 data: S.data,
                 moods: S.moods,
                 transactions: S.transactions,
-                finAccounts: S.finAccounts,
+                finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
                 blurAmounts: S.blurAmounts,
                 subscriptions: S.subscriptions,
                 subAccountNames: S.subAccountNames
@@ -2120,7 +2159,7 @@
     function renderAll() {
         if (S.currentView==='weekly') renderWeekly();
         else if (S.currentView==='monthly') renderMonthly();
-        else if (S.currentView==='finance') renderFinance();
+        else if (S.currentView==='finance' || S.currentView==='finance2') renderFinance();
         else if (S.currentView==='subscriptions') renderSubscriptions();
     }
 
