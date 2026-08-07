@@ -2620,14 +2620,14 @@
 
     // ==================== FINANCE ====================
     function toggleBlur() {
-        S.blurAmounts = !S.blurAmounts;
+        activeS.blurAmounts = !activeS.blurAmounts;
         save();
         updateBlurState();
     }
 
     function updateBlurState() {
         const icon = document.getElementById('blurIcon');
-        if (S.blurAmounts) {
+        if (activeS.blurAmounts) {
             document.body.classList.add('blur-amounts');
             if (icon) icon.textContent = 'visibility';
         } else {
@@ -2637,9 +2637,9 @@
     }
 
     function updateInitBals() {
-        S.finAccounts.cash = parseFloat(document.getElementById('finInitCash').value) || 0;
-        S.finAccounts.bank = parseFloat(document.getElementById('finInitBank').value) || 0;
-        S.finAccounts.mobile = parseFloat(document.getElementById('finInitMobile').value) || 0;
+        activeS.finAccounts.cash = parseFloat(document.getElementById('finInitCash').value) || 0;
+        activeS.finAccounts.bank = parseFloat(document.getElementById('finInitBank').value) || 0;
+        activeS.finAccounts.mobile = parseFloat(document.getElementById('finInitMobile').value) || 0;
         save();
         renderAll();
         toast('Fonds initiaux mis à jour ✓');
@@ -2647,12 +2647,12 @@
 
     function getAllTimeTransactions() {
         let all = [];
-        for (const k in S.transactions) all = all.concat(S.transactions[k]);
+        for (const k in activeS.transactions) all = all.concat(activeS.transactions[k]);
         return all;
     }
 
     function setFinType(type) {
-        S.finType = type;
+        activeS.finType = type;
         document.getElementById('finTypeIncome').className = 'fin-type-btn' + (type==='income'?' active-income':'');
         document.getElementById('finTypeExpense').className = 'fin-type-btn' + (type==='expense'?' active-expense':'');
     }
@@ -2674,29 +2674,29 @@
         if (editingTxInfo) {
             const oldMk = editingTxInfo.mk;
             const oldId = editingTxInfo.txId;
-            if (S.transactions[oldMk]) {
-                S.transactions[oldMk] = S.transactions[oldMk].filter(t => t.id !== oldId);
-                if (!S.transactions[oldMk].length) delete S.transactions[oldMk];
+            if (activeS.transactions[oldMk]) {
+                activeS.transactions[oldMk] = activeS.transactions[oldMk].filter(t => t.id !== oldId);
+                if (!activeS.transactions[oldMk].length) delete activeS.transactions[oldMk];
             }
-            if (!S.transactions[newMk]) S.transactions[newMk] = [];
-            S.transactions[newMk].push({
-                id: oldId, type: S.finType, amount, label, justification: justif, day: d.getDate(), date: dateStr
+            if (!activeS.transactions[newMk]) activeS.transactions[newMk] = [];
+            activeS.transactions[newMk].push({
+                id: oldId, type: activeS.finType, amount, label, justification: justif, day: d.getDate(), date: dateStr
             });
             editingTxInfo = null;
             document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">add_circle</span> Ajouter la transaction';
             toast('Transaction mise à jour ✓');
         } else {
-            if (!S.transactions[newMk]) S.transactions[newMk] = [];
-            S.transactions[newMk].push({
+            if (!activeS.transactions[newMk]) activeS.transactions[newMk] = [];
+            activeS.transactions[newMk].push({
                 id: 't'+Date.now().toString(36)+'_'+Math.random().toString(36).substr(2,4),
-                type: S.finType,
+                type: activeS.finType,
                 amount,
                 label,
                 justification: justif,
                 day: d.getDate(),
                 date: dateStr
             });
-            toast(S.finType==='income' ? '💰 Entrée ajoutée ✓' : '💸 Sortie ajoutée ✓');
+            toast(activeS.finType==='income' ? '💰 Entrée ajoutée ✓' : '💸 Sortie ajoutée ✓');
         }
         
         save();
@@ -2708,8 +2708,8 @@
     }
 
     function editTransaction(mk, txId) {
-        if (!S.transactions[mk]) return;
-        const tx = S.transactions[mk].find(t => t.id === txId);
+        if (!activeS.transactions[mk]) return;
+        const tx = activeS.transactions[mk].find(t => t.id === txId);
         if (!tx) return;
         editingTxInfo = { mk, txId };
         setFinType(tx.type);
@@ -2724,9 +2724,9 @@
 
     function deleteTransaction(mk, txId) {
         pushUndo();
-        if (S.transactions[mk]) {
-            S.transactions[mk] = S.transactions[mk].filter(t => t.id !== txId);
-            if (!S.transactions[mk].length) delete S.transactions[mk];
+        if (activeS.transactions[mk]) {
+            activeS.transactions[mk] = activeS.transactions[mk].filter(t => t.id !== txId);
+            if (!activeS.transactions[mk].length) delete activeS.transactions[mk];
         }
         if (editingTxInfo && editingTxInfo.txId === txId) {
             editingTxInfo = null;
@@ -2737,22 +2737,22 @@
     }
 
     function changeFinMonth(dir) {
-        S.finMonth += dir;
-        if (S.finMonth > 11) { S.finMonth = 0; S.finYear++; }
-        if (S.finMonth < 0) { S.finMonth = 11; S.finYear--; }
+        activeS.finMonth += dir;
+        if (activeS.finMonth > 11) { activeS.finMonth = 0; activeS.finYear++; }
+        if (activeS.finMonth < 0) { activeS.finMonth = 11; activeS.finYear--; }
         renderAll();
     }
 
     function goToCurrentFinMonth() {
         const t = new Date();
-        S.finYear = t.getFullYear();
-        S.finMonth = t.getMonth();
+        activeS.finYear = t.getFullYear();
+        activeS.finMonth = t.getMonth();
         renderAll();
     }
 
     function getMonthTransactions(y, m) {
         const mk = monthKey(y, m);
-        return S.transactions[mk] || [];
+        return activeS.transactions[mk] || [];
     }
 
     function getWeekTransactions(y, m, weekNum) {
@@ -2770,7 +2770,7 @@
         let all = [];
         for (let m = 0; m < 12; m++) {
             const mk = monthKey(y, m);
-            if (S.transactions[mk]) all = all.concat(S.transactions[mk]);
+            if (activeS.transactions[mk]) all = all.concat(activeS.transactions[mk]);
         }
         return all;
     }
@@ -2906,16 +2906,16 @@
     }
 
     function renderFinance() {
-        const y = S.finYear, m = S.finMonth;
+        const y = activeS.finYear, m = activeS.finMonth;
         const mk = monthKey(y, m);
         const txs = getMonthTransactions(y, m);
         const yearTxs = getYearTransactions(y);
 
         // Label
         document.getElementById('finMonthLabel').innerHTML = `${MONTHS[m]}<br><span class="period-sublabel">${y}</span>`;
-        document.getElementById('finInitCash').value = S.finAccounts.cash || '';
-        document.getElementById('finInitBank').value = S.finAccounts.bank || '';
-        document.getElementById('finInitMobile').value = S.finAccounts.mobile || '';
+        document.getElementById('finInitCash').value = activeS.finAccounts.cash || '';
+        document.getElementById('finInitBank').value = activeS.finAccounts.bank || '';
+        document.getElementById('finInitMobile').value = activeS.finAccounts.mobile || '';
 
         // Totals
         const mIncome = sumTx(txs, 'income');
@@ -2924,7 +2924,7 @@
         const allTxs = getAllTimeTransactions();
         const globalIncome = sumTx(allTxs, 'income');
         const globalExpense = sumTx(allTxs, 'expense');
-        const initialTotal = (S.finAccounts.cash || 0) + (S.finAccounts.bank || 0) + (S.finAccounts.mobile || 0);
+        const initialTotal = (activeS.finAccounts.cash || 0) + (activeS.finAccounts.bank || 0) + (activeS.finAccounts.mobile || 0);
         const globalBalance = initialTotal + globalIncome - globalExpense;
 
         // Stats cards
