@@ -2619,6 +2619,46 @@
         toast('Sauvegarde JSON générée ✓');
     }
 
+    function importJSON(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (!parsed.habits && !parsed.transactions && !parsed.subscriptions) {
+                    toast("Fichier invalide !");
+                    return;
+                }
+                if (!confirm("Restaurer cette sauvegarde ? Vos donnees actuelles seront remplacees.")) return;
+                
+                S.habits = parsed.habits || [];
+                S.data = parsed.data || {};
+                S.moods = parsed.moods || {};
+                S.transactions = parsed.transactions || {};
+                S.finAccounts = parsed.finAccounts || {cash:0, bank:0, mobile:0};
+                S.fin2Accounts = parsed.fin2Accounts || {cash:0, bank:0, mobile:0};
+                S.finance2Transactions = parsed.finance2Transactions || {};
+                S.fin2Year = parsed.fin2Year || S.finYear;
+                S.fin2Month = parsed.fin2Month || S.finMonth;
+                S.fin2Type = parsed.fin2Type || 'income';
+                S.blurAmounts = parsed.blurAmounts || false;
+                S.subscriptions = parsed.subscriptions || [];
+                S.subAccountNames = parsed.subAccountNames || {};
+                
+                save();
+                updateBlurState();
+                renderAll();
+                toast("Sauvegarde restauree avec succes !");
+            } catch(err) {
+                toast("Erreur : fichier JSON invalide !");
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    }
+
     // ==================== TOAST ====================
     function toast(msg) {
         const c=document.getElementById('toastContainer');
