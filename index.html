@@ -1507,6 +1507,20 @@
             .period-selector .nav-tabs { width: 100%; overflow-x: auto; justify-content: flex-start; }
             .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
         }
+    
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
+        .cal-header { text-align: center; font-size: 12px; color: var(--text-secondary); font-weight: 500; padding-bottom: 5px; }
+        .cal-day { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 5px; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; transition: 0.2s; }
+        .cal-day:hover { border-color: var(--border-light); }
+        .cal-day.empty { background: transparent; border: none; cursor: default; }
+        .cal-day .cal-num { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .cal-day.checked { background: rgba(0, 200, 83, 0.1); border-color: var(--accent-green); color: var(--accent-green); }
+        .cal-day.checked .cal-num { color: var(--accent-green); }
+        .cal-day.today { border: 2px solid var(--accent-blue); }
+        .cal-event-text { font-size: 9px; line-height: 1.1; color: var(--text-secondary); text-align: center; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-top: auto; width: 100%; }
+        .cal-day.checked .cal-event-text { color: var(--accent-green); opacity: 0.8; }
+        .cal-event-badge { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background: var(--accent-blue); border-radius: 50%; }
+        .cal-day.checked .cal-event-badge { background: var(--accent-green); }
     </style>
 </head>
 <body>
@@ -1841,6 +1855,19 @@
         <div class="ctx-item danger" onclick="ctxDelete()"><span class="material-icons-outlined">delete</span> Supprimer</div>
     </div>
 
+    
+    <!-- ===== CALENDAR VIEW ===== -->
+    <div id="calendarView" class="view">
+        <div class="section-title"><span class="material-icons-outlined">event_available</span> Mon Parcours</div>
+        <div class="calendar-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);">
+            <button class="icon-btn" onclick="changeCalMonth(-1)"><span class="material-icons-outlined">chevron_left</span></button>
+            <h2 id="calMonthLabel" style="margin:0; font-size:16px;">Septembre 2026</h2>
+            <button class="icon-btn" onclick="changeCalMonth(1)"><span class="material-icons-outlined">chevron_right</span></button>
+        </div>
+        <div id="calStats" style="text-align:center; margin-bottom:15px; color:var(--text-secondary); font-size:14px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);"></div>
+        <div class="calendar-grid" id="calGrid"></div>
+    </div>
+
     <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -1856,7 +1883,7 @@
     const MOOD_EMOJIS = ['😢','😟','😐','🙂','😊','😄','🤩'];
     const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{} };
+    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, calendarChecked:{}, calendarEvents:{} };
     let subFilter = 'netflix';
     let editingSubId = null;
 
@@ -1919,6 +1946,8 @@
                 S.blurAmounts = parsed.blurAmounts || false;
                 S.subscriptions = parsed.subscriptions || [];
                 S.subAccountNames = parsed.subAccountNames || {};
+                S.calendarChecked = parsed.calendarChecked || {};
+                S.calendarEvents = parsed.calendarEvents || {};
             } catch(e) {}
         } else {
             // Uniquement si c'est la toute première fois de leur vie sur l'app
@@ -1961,6 +1990,8 @@
                     S.blurAmounts = data.blurAmounts || false;
                     S.subscriptions = data.subscriptions || [];
                     S.subAccountNames = data.subAccountNames || {};
+                S.calendarChecked = data.calendarChecked || {};
+                S.calendarEvents = data.calendarEvents || {};
                     
                     updateBlurState();
                     renderAll();
@@ -1985,7 +2016,7 @@
             finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
             blurAmounts: S.blurAmounts,
             subscriptions: S.subscriptions,
-            subAccountNames: S.subAccountNames
+            subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents
         }));
 
         // Tentative de sauvegarde dans le Cloud Firebase
@@ -1998,7 +2029,7 @@
                 finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
                 blurAmounts: S.blurAmounts,
                 subscriptions: S.subscriptions,
-                subAccountNames: S.subAccountNames
+                subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents
             }).catch(e => console.error("Firebase save error", e));
         }
     }
@@ -2592,6 +2623,112 @@
     function changeMonth(dir) { S.monthIdx+=dir; if(S.monthIdx>11){S.monthIdx=0;S.monthYear++;} if(S.monthIdx<0){S.monthIdx=11;S.monthYear--;} renderAll(); }
     function goToCurrentMonth() { const t=new Date(); S.monthYear=t.getFullYear(); S.monthIdx=t.getMonth(); renderAll(); }
 
+    
+    // ==================== CALENDAR VIEW ====================
+    let calDate = new Date();
+
+    function changeCalMonth(dir) {
+        calDate.setMonth(calDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function toggleCalCheck(dateStr) {
+        if (!S.calendarChecked) S.calendarChecked = {};
+        if (S.calendarChecked[dateStr]) {
+            delete S.calendarChecked[dateStr];
+        } else {
+            S.calendarChecked[dateStr] = true;
+        }
+        save();
+        renderCalendar();
+    }
+
+    function editCalEvent(dateStr, ev) {
+        if (ev) ev.stopPropagation();
+        if (!S.calendarEvents) S.calendarEvents = {};
+        let current = S.calendarEvents[dateStr] || '';
+        let newVal = prompt("�v�nement pour le " + dateStr + " :", current);
+        if (newVal !== null) {
+            if (newVal.trim() === '') {
+                delete S.calendarEvents[dateStr];
+            } else {
+                S.calendarEvents[dateStr] = newVal.trim();
+            }
+            save();
+            renderCalendar();
+        }
+    }
+
+    function renderCalendar() {
+        const y = calDate.getFullYear();
+        const m = calDate.getMonth();
+        document.getElementById('calMonthLabel').innerText = MONTHS[m] + ' ' + y;
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        
+        let startDow = firstDay - 1;
+        if (startDow === -1) startDow = 6;
+
+        const today = new Date();
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+
+        let html = '';
+        const dowNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        for (let d of dowNames) {
+            html += `<div class="cal-header">${d}</div>`;
+        }
+
+        for (let i = 0; i < startDow; i++) {
+            html += `<div class="cal-day empty"></div>`;
+        }
+
+        let streak = 0;
+        let checkedCount = 0;
+        let startDate = new Date(2026, 8, 1); // Sept 1st 2026
+        let currentDateForStreak = new Date(today);
+        currentDateForStreak.setHours(0,0,0,0);
+        
+        while (currentDateForStreak >= startDate) {
+            let sStr = currentDateForStreak.getFullYear() + '-' + String(currentDateForStreak.getMonth()+1).padStart(2,'0') + '-' + String(currentDateForStreak.getDate()).padStart(2,'0');
+            if (S.calendarChecked && S.calendarChecked[sStr]) {
+                streak++;
+            } else {
+                let tStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+                if (sStr !== tStr) break;
+            }
+            currentDateForStreak.setDate(currentDateForStreak.getDate() - 1);
+        }
+
+        if (S.calendarChecked) {
+            checkedCount = Object.keys(S.calendarChecked).length;
+        }
+
+        document.getElementById('calStats').innerHTML = `?? Cha�ne : <strong>${streak} jours</strong> &nbsp;|&nbsp; ? Total : <strong>${checkedCount} jours</strong>`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            let dStr = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+            let isChecked = S.calendarChecked && S.calendarChecked[dStr];
+            let hasEvent = S.calendarEvents && S.calendarEvents[dStr];
+            let isToday = (dStr === todayStr);
+
+            let classes = "cal-day";
+            if (isChecked) classes += " checked";
+            if (isToday) classes += " today";
+
+            html += `<div class="${classes}" onclick="toggleCalCheck('${dStr}')">
+                ${hasEvent ? `<div class="cal-event-badge"></div>` : ''}
+                <div class="cal-num">${d}</div>
+                ${hasEvent ? `<div class="cal-event-text">${escHtml(hasEvent)}</div>` : ''}
+                <button class="icon-btn" style="position:absolute; bottom:2px; right:2px; width:20px; height:20px; padding:0; background:transparent; border:none; color:var(--text-secondary); opacity:0.5; z-index:2;" onclick="editCalEvent('${dStr}', event)">
+                   <span class="material-icons-outlined" style="font-size:12px;">edit</span>
+                </button>
+            </div>`;
+        }
+
+        document.getElementById('calGrid').innerHTML = html;
+    }
+
     // ==================== EXPORT ====================
     function exportCSV() {
         const y=S.monthYear, m=S.monthIdx, days=daysIn(y,m);
@@ -2645,6 +2782,8 @@
                 S.blurAmounts = parsed.blurAmounts || false;
                 S.subscriptions = parsed.subscriptions || [];
                 S.subAccountNames = parsed.subAccountNames || {};
+                S.calendarChecked = parsed.calendarChecked || {};
+                S.calendarEvents = parsed.calendarEvents || {};
                 
                 save();
                 updateBlurState();
