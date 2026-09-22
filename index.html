@@ -1556,6 +1556,10 @@
                   <span class="material-icons-outlined">event_available</span>
                   Parcours
               </button>
+              <button class="nav-tab" onclick="switchView('fitness')">
+                  <span class="material-icons-outlined">fitness_center</span>
+                  Sant�
+              </button>
         </div>
         <div class="nav-actions">
             <button class="nav-btn" title="Masquer/Afficher les montants" id="blurBtnContainer" onclick="toggleBlur()" style="display:none;">
@@ -1872,6 +1876,64 @@
         <div class="calendar-grid" id="calGrid"></div>
     </div>
 
+    
+    <!-- ===== FITNESS VIEW ===== -->
+    <div id="fitnessView" class="view">
+        <div class="section-title"><span class="material-icons-outlined">fitness_center</span> Suivi Corporel</div>
+        <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <input type="date" id="fitnessDate" class="tx-input" onchange="renderFitness()" style="width:150px; background:var(--bg); border:1px solid var(--border-light); color:var(--text-primary); border-radius:8px; padding:5px;">
+                <div>
+                    <span id="fitnessBMI" style="font-size:14px; font-weight:bold; color:var(--accent-blue);">IMC: --</span>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                <!-- MATIN -->
+                <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border-light);">
+                    <div style="font-size:12px; font-weight:bold; color:var(--text-secondary); margin-bottom:10px; text-align:center;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#ffb74d;">wb_sunny</span> MATIN</div>
+                    <div class="input-group" style="margin-bottom:8px;">
+                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Poids (kg)</label>
+                        <input type="number" id="fitWeightAM" class="tx-input" step="0.1" onchange="saveFitnessData()" placeholder="ex: 82.0">
+                    </div>
+                    <div class="input-group">
+                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Cuisses (cm)</label>
+                        <input type="number" id="fitThighAM" class="tx-input" step="0.5" onchange="saveFitnessData()" placeholder="ex: 60">
+                    </div>
+                </div>
+                <!-- SOIR -->
+                <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border-light);">
+                    <div style="font-size:12px; font-weight:bold; color:var(--text-secondary); margin-bottom:10px; text-align:center;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#90caf9;">nights_stay</span> SOIR</div>
+                    <div class="input-group" style="margin-bottom:8px;">
+                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Poids (kg)</label>
+                        <input type="number" id="fitWeightPM" class="tx-input" step="0.1" onchange="saveFitnessData()" placeholder="ex: 81.5">
+                    </div>
+                    <div class="input-group">
+                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Cuisses (cm)</label>
+                        <input type="number" id="fitThighPM" class="tx-input" step="0.5" onchange="saveFitnessData()" placeholder="ex: 61">
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:var(--text-secondary); display:block; margin-bottom:5px;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">restaurant</span> Journal Alimentaire</label>
+                <textarea id="fitFoodLog" class="tx-input" style="width:100%; height:60px; resize:none;" onchange="saveFitnessData()" placeholder="Qu'avez-vous mang� aujourd'hui ?"></textarea>
+            </div>
+            
+            <div>
+                <label style="font-size:12px; font-weight:bold; color:var(--text-secondary); display:block; margin-bottom:5px;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">menu_book</span> Journal Quotidien</label>
+                <textarea id="fitDailyLog" class="tx-input" style="width:100%; height:60px; resize:none;" onchange="saveFitnessData()" placeholder="Notes, humeur, �nergie..."></textarea>
+            </div>
+        </div>
+        
+        <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border);">
+            <div style="font-size:14px; font-weight:bold; margin-bottom:10px;"><span class="material-icons-outlined" style="font-size:16px; vertical-align:middle;">trending_down</span> �volution (30 derniers jours)</div>
+            <div style="position: relative; height:200px; width:100%;">
+                <canvas id="fitnessChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -1887,7 +1949,7 @@
     const MOOD_EMOJIS = ['😢','😟','😐','🙂','😊','😄','🤩'];
     const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, calendarChecked:{}, calendarEvents:{} };
+    let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, calendarChecked:{}, calendarEvents:{}, fitness:{ targetWeight:75, height:1.81, records:{} } };
     let subFilter = 'netflix';
     let editingSubId = null;
 
@@ -1952,6 +2014,7 @@
                 S.subAccountNames = parsed.subAccountNames || {};
                 S.calendarChecked = parsed.calendarChecked || {};
                 S.calendarEvents = parsed.calendarEvents || {};
+                S.fitness = parsed.fitness || { targetWeight:75, height:1.81, records:{} };
             } catch(e) {}
         } else {
             // Uniquement si c'est la toute première fois de leur vie sur l'app
@@ -1996,6 +2059,7 @@
                     S.subAccountNames = data.subAccountNames || {};
                 S.calendarChecked = data.calendarChecked || {};
                 S.calendarEvents = data.calendarEvents || {};
+                S.fitness = data.fitness || { targetWeight:75, height:1.81, records:{} };
                     
                     updateBlurState();
                     renderAll();
@@ -2020,7 +2084,7 @@
             finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
             blurAmounts: S.blurAmounts,
             subscriptions: S.subscriptions,
-            subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents
+            subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness
         }));
 
         // Tentative de sauvegarde dans le Cloud Firebase
@@ -2033,7 +2097,7 @@
                 finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
                 blurAmounts: S.blurAmounts,
                 subscriptions: S.subscriptions,
-                subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents
+                subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness
             }).catch(e => console.error("Firebase save error", e));
         }
     }
@@ -2733,6 +2797,146 @@
         document.getElementById('calGrid').innerHTML = html;
     }
 
+    
+    // ==================== FITNESS VIEW ====================
+    let fitnessChartInst = null;
+
+    function renderFitness() {
+        let dateInput = document.getElementById('fitnessDate');
+        if (!dateInput.value) {
+            let today = new Date();
+            dateInput.value = today.toISOString().split('T')[0];
+        }
+        const dStr = dateInput.value;
+        
+        if (!S.fitness) S.fitness = { targetWeight: 75, height: 1.81, records: {} };
+        if (!S.fitness.records) S.fitness.records = {};
+        
+        const rec = S.fitness.records[dStr] || { weightAM: '', weightPM: '', thighAM: '', thighPM: '', foodLog: '', dailyLog: '' };
+        
+        document.getElementById('fitWeightAM').value = rec.weightAM || '';
+        document.getElementById('fitWeightPM').value = rec.weightPM || '';
+        document.getElementById('fitThighAM').value = rec.thighAM || '';
+        document.getElementById('fitThighPM').value = rec.thighPM || '';
+        document.getElementById('fitFoodLog').value = rec.foodLog || '';
+        document.getElementById('fitDailyLog').value = rec.dailyLog || '';
+        
+        let w = parseFloat(rec.weightAM) || parseFloat(rec.weightPM) || 0;
+        let h = S.fitness.height || 1.81;
+        let bmiEl = document.getElementById('fitnessBMI');
+        if (w > 0 && h > 0) {
+            let bmi = w / (h * h);
+            bmiEl.innerText = 'IMC: ' + bmi.toFixed(1);
+            if (bmi < 18.5) bmiEl.style.color = 'var(--accent-blue)';
+            else if (bmi < 25) bmiEl.style.color = 'var(--accent-green)';
+            else if (bmi < 30) bmiEl.style.color = 'var(--accent-orange)';
+            else bmiEl.style.color = 'var(--accent-red)';
+        } else {
+            bmiEl.innerText = 'IMC: --';
+            bmiEl.style.color = 'var(--text-secondary)';
+        }
+        
+        drawFitnessChart();
+    }
+
+    function saveFitnessData() {
+        const dStr = document.getElementById('fitnessDate').value;
+        if (!dStr) return;
+        
+        if (!S.fitness) S.fitness = { targetWeight: 75, height: 1.81, records: {} };
+        if (!S.fitness.records) S.fitness.records = {};
+        
+        S.fitness.records[dStr] = {
+            weightAM: document.getElementById('fitWeightAM').value,
+            weightPM: document.getElementById('fitWeightPM').value,
+            thighAM: document.getElementById('fitThighAM').value,
+            thighPM: document.getElementById('fitThighPM').value,
+            foodLog: document.getElementById('fitFoodLog').value,
+            dailyLog: document.getElementById('fitDailyLog').value,
+        };
+        
+        save();
+        drawFitnessChart();
+    }
+
+    function drawFitnessChart() {
+        const ctx = document.getElementById('fitnessChart');
+        if (!ctx) return;
+        
+        if (!S.fitness || !S.fitness.records) return;
+        
+        let labels = [];
+        let weightData = [];
+        let thighData = [];
+        
+        let endD = new Date();
+        let startD = new Date();
+        startD.setDate(endD.getDate() - 30);
+        
+        let curr = new Date(startD);
+        while (curr <= endD) {
+            let dStr = curr.toISOString().split('T')[0];
+            labels.push(curr.getDate() + '/' + (curr.getMonth()+1));
+            
+            let r = S.fitness.records[dStr];
+            if (r) {
+                let w = parseFloat(r.weightAM) || parseFloat(r.weightPM) || null;
+                weightData.push(w);
+                let t = parseFloat(r.thighAM) || parseFloat(r.thighPM) || null;
+                thighData.push(t);
+            } else {
+                weightData.push(null);
+                thighData.push(null);
+            }
+            
+            curr.setDate(curr.getDate() + 1);
+        }
+        
+        if (fitnessChartInst) {
+            fitnessChartInst.destroy();
+        }
+        
+        fitnessChartInst = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Poids (kg)',
+                        data: weightData,
+                        borderColor: '#f48fb1',
+                        backgroundColor: '#f48fb1',
+                        yAxisID: 'y',
+                        spanGaps: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Cuisses (cm)',
+                        data: thighData,
+                        borderColor: '#81c784',
+                        backgroundColor: '#81c784',
+                        yAxisID: 'y1',
+                        spanGaps: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#a0a0a0', font: { size: 10 } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#a0a0a0', maxTicksLimit: 7 }, grid: { color: '#2a2a2a' } },
+                    y: { type: 'linear', display: true, position: 'left', ticks: { color: '#f48fb1' }, grid: { color: '#2a2a2a' } },
+                    y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#81c784' }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+
     // ==================== EXPORT ====================
     function exportCSV() {
         const y=S.monthYear, m=S.monthIdx, days=daysIn(y,m);
@@ -2751,7 +2955,7 @@
     }
 
     function exportJSON() {
-        const dataStr = JSON.stringify({habits:S.habits, data:S.data, moods:S.moods, transactions:S.transactions, finAccounts:S.finAccounts}, null, 2);
+        const dataStr = JSON.stringify(S, null, 2);
         const blob = new Blob([dataStr], {type: "application/json"});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -2788,6 +2992,7 @@
                 S.subAccountNames = parsed.subAccountNames || {};
                 S.calendarChecked = parsed.calendarChecked || {};
                 S.calendarEvents = parsed.calendarEvents || {};
+                S.fitness = parsed.fitness || { targetWeight:75, height:1.81, records:{} };
                 
                 save();
                 updateBlurState();
