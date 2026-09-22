@@ -1921,6 +1921,7 @@
     
     <!-- ===== FITNESS VIEW ===== -->
     <div id="fitnessView" class="view">
+        <div class="section-title" style="margin-bottom: 20px;"><span class="material-icons-outlined">fitness_center</span> Suivi Corporel</div>
         <div class="fitness-header">
             <div class="fitness-date-container">
                 <span class="material-icons-outlined" style="color:var(--text-secondary);">calendar_today</span>
@@ -1928,8 +1929,8 @@
             </div>
             
             <div style="display:flex; gap:15px;">
-                <div class="progress-badge">
-                    <div class="bmi-label">Objectif</div>
+                <div class="progress-badge" style="width:auto; padding:0 15px;">
+                    <div class="bmi-label" style="margin-bottom: 2px;">Objectif 75kg</div>
                     <div id="fitProgressText" class="bmi-value" style="color:var(--accent-green);">--%</div>
                 </div>
                 <div class="bmi-badge" id="fitnessBMIBadge">
@@ -2011,19 +2012,26 @@
 
             <!-- RIGHT PANEL (Bonhomme) -->
             <div class="fit-right-panel">
-                <svg id="bonhommeSvg" viewBox="0 0 100 200" style="width:100%; height:100%; max-height:400px; fill:var(--accent-green); transition: 0.5s;">
-                    <!-- Head -->
-                    <circle cx="50" cy="20" r="15" />
-                    <!-- Body Group to scale -->
-                    <g id="bonhommeBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out;">
-                        <!-- Arms -->
-                        <rect x="5" y="40" width="90" height="20" rx="10" />
-                        <!-- Torso -->
-                        <rect x="30" y="40" width="40" height="70" />
-                        <!-- Left Leg -->
-                        <rect x="30" y="100" width="15" height="70" rx="5" />
-                        <!-- Right Leg -->
-                        <rect x="55" y="100" width="15" height="70" rx="5" />
+                <svg id="bonhommeSvg" viewBox="0 0 100 200" style="width:100%; height:100%; max-height:400px;">
+                    <!-- BACKGROUND RED PANTIN (Reference 82kg) -->
+                    <g style="fill: rgba(255, 82, 82, 0.3);">
+                        <circle cx="50" cy="20" r="15" />
+                        <g style="transform-origin: 50% 50%;">
+                            <rect x="5" y="40" width="90" height="20" rx="10" />
+                            <rect x="30" y="40" width="40" height="70" />
+                            <rect x="30" y="100" width="15" height="70" rx="5" />
+                            <rect x="55" y="100" width="15" height="70" rx="5" />
+                        </g>
+                    </g>
+                    <!-- FOREGROUND GREEN PANTIN (Dynamic) -->
+                    <g style="fill: var(--accent-green);">
+                        <circle cx="50" cy="20" r="15" />
+                        <g id="bonhommeBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out;">
+                            <rect x="5" y="40" width="90" height="20" rx="10" />
+                            <rect x="30" y="40" width="40" height="70" />
+                            <rect x="30" y="100" width="15" height="70" rx="5" />
+                            <rect x="55" y="100" width="15" height="70" rx="5" />
+                        </g>
                     </g>
                 </svg>
             </div>
@@ -2951,9 +2959,15 @@
             document.getElementById('fitProgressText').innerText = Math.round(progress) + '%';
             
             // Bonhomme scale (maigrir)
-            // Progress 0% -> scaleX = 1.1 (plus gros)
-            // Progress 100% -> scaleX = 0.7 (plus fin)
-            let scaleX = 1.1 - (progress / 100) * 0.4;
+            // R�f�rence � 82kg (scale = 1)
+            // Si on perd du poids, on s'affine. Si on en prend, on grossit.
+            let refWeight = 82;
+            let weightDiff = w - refWeight;
+            // Par exemple, chaque kilo en moins affine de 4%. Chaque kilo en plus grossit de 4%.
+            let scaleX = 1 + (weightDiff * 0.04);
+            if (scaleX < 0.4) scaleX = 0.4; // Limite pour ne pas dispara�tre
+            if (scaleX > 2.0) scaleX = 2.0; // Limite max
+            
             document.getElementById('bonhommeBody').style.transform = `scaleX(${scaleX})`;
             
         } else {
