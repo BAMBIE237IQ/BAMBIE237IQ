@@ -1521,6 +1521,37 @@
         .cal-day.checked .cal-event-text { color: var(--accent-green); opacity: 0.8; }
         .cal-event-badge { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background: var(--accent-blue); border-radius: 50%; }
         .cal-day.checked .cal-event-badge { background: var(--accent-green); }
+    
+        /* Fitness Redesign */
+        .fitness-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .fitness-date-container { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .fitness-date-container input { background: transparent; border: none; color: var(--text-primary); font-size: 16px; font-weight: bold; outline: none; font-family: inherit; }
+        
+        .bmi-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 75px; height: 75px; border-radius: 50%; background: var(--bg-card); border: 3px solid var(--border); transition: 0.3s; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+        .bmi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -2px; }
+        .bmi-value { font-size: 18px; font-weight: bold; color: var(--text-primary); }
+        
+        .fitness-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        
+        .fitness-card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .fitness-card:hover { border-color: var(--border-light); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        
+        .fc-header { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        
+        .fc-body { display: flex; gap: 15px; }
+        .fc-half { flex: 1; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 12px; border: 1px solid transparent; transition: border-color 0.2s; }
+        .fc-half:focus-within { border-color: var(--accent-blue); }
+        .fc-subtitle { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-subtitle .material-icons-outlined { font-size: 14px; }
+        
+        .fc-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--border); color: var(--text-primary); font-size: 24px; font-weight: bold; padding: 5px 0; outline: none; transition: 0.2s; text-align: center; font-family: inherit; }
+        .fc-input:focus { border-bottom-color: var(--accent-blue); }
+        .fc-input::placeholder { color: var(--text-muted); font-size: 16px; font-weight: normal; }
+        
+        .fc-textarea { width: 100%; height: 90px; background: rgba(0,0,0,0.15); border: 1px solid var(--border); color: var(--text-primary); font-size: 14px; padding: 15px; border-radius: 12px; outline: none; resize: none; transition: 0.2s; font-family: inherit; }
+        .fc-textarea:focus { border-color: var(--accent-blue); background: rgba(0,0,0,0.25); }
+        
+        .chart-card { grid-column: 1 / -1; }
     </style>
 </head>
 <body>
@@ -1879,56 +1910,79 @@
     
     <!-- ===== FITNESS VIEW ===== -->
     <div id="fitnessView" class="view">
-        <div class="section-title"><span class="material-icons-outlined">fitness_center</span> Suivi Corporel</div>
-        <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <input type="date" id="fitnessDate" class="tx-input" onchange="renderFitness()" style="width:150px; background:var(--bg); border:1px solid var(--border-light); color:var(--text-primary); border-radius:8px; padding:5px;">
-                <div>
-                    <span id="fitnessBMI" style="font-size:14px; font-weight:bold; color:var(--accent-blue);">IMC: --</span>
-                </div>
+        <div class="fitness-header">
+            <div class="fitness-date-container">
+                <span class="material-icons-outlined" style="color:var(--text-secondary);">calendar_today</span>
+                <input type="date" id="fitnessDate" onchange="renderFitness()">
             </div>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
-                <!-- MATIN -->
-                <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border-light);">
-                    <div style="font-size:12px; font-weight:bold; color:var(--text-secondary); margin-bottom:10px; text-align:center;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#ffb74d;">wb_sunny</span> MATIN</div>
-                    <div class="input-group" style="margin-bottom:8px;">
-                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Poids (kg)</label>
-                        <input type="number" id="fitWeightAM" class="tx-input" step="0.1" onchange="saveFitnessData()" placeholder="ex: 82.0">
-                    </div>
-                    <div class="input-group">
-                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Cuisses (cm)</label>
-                        <input type="number" id="fitThighAM" class="tx-input" step="0.5" onchange="saveFitnessData()" placeholder="ex: 60">
-                    </div>
-                </div>
-                <!-- SOIR -->
-                <div style="background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border-light);">
-                    <div style="font-size:12px; font-weight:bold; color:var(--text-secondary); margin-bottom:10px; text-align:center;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle; color:#90caf9;">nights_stay</span> SOIR</div>
-                    <div class="input-group" style="margin-bottom:8px;">
-                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Poids (kg)</label>
-                        <input type="number" id="fitWeightPM" class="tx-input" step="0.1" onchange="saveFitnessData()" placeholder="ex: 81.5">
-                    </div>
-                    <div class="input-group">
-                        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">Cuisses (cm)</label>
-                        <input type="number" id="fitThighPM" class="tx-input" step="0.5" onchange="saveFitnessData()" placeholder="ex: 61">
-                    </div>
-                </div>
-            </div>
-            
-            <div style="margin-bottom:15px;">
-                <label style="font-size:12px; font-weight:bold; color:var(--text-secondary); display:block; margin-bottom:5px;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">restaurant</span> Journal Alimentaire</label>
-                <textarea id="fitFoodLog" class="tx-input" style="width:100%; height:60px; resize:none;" onchange="saveFitnessData()" placeholder="Qu'avez-vous mang� aujourd'hui ?"></textarea>
-            </div>
-            
-            <div>
-                <label style="font-size:12px; font-weight:bold; color:var(--text-secondary); display:block; margin-bottom:5px;"><span class="material-icons-outlined" style="font-size:14px; vertical-align:middle;">menu_book</span> Journal Quotidien</label>
-                <textarea id="fitDailyLog" class="tx-input" style="width:100%; height:60px; resize:none;" onchange="saveFitnessData()" placeholder="Notes, humeur, �nergie..."></textarea>
+            <div class="bmi-badge" id="fitnessBMIBadge">
+                <div class="bmi-label">IMC</div>
+                <div class="bmi-value" id="fitnessBMIValue">--</div>
             </div>
         </div>
-        
-        <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border);">
-            <div style="font-size:14px; font-weight:bold; margin-bottom:10px;"><span class="material-icons-outlined" style="font-size:16px; vertical-align:middle;">trending_down</span> �volution (30 derniers jours)</div>
-            <div style="position: relative; height:200px; width:100%;">
+
+        <div class="fitness-grid">
+            <!-- Poids Card -->
+            <div class="fitness-card">
+                <div class="fc-header">
+                    <span class="material-icons-outlined" style="color:var(--accent-pink);">monitor_weight</span>
+                    <span>Poids (Objectif: 75kg)</span>
+                </div>
+                <div class="fc-body">
+                    <div class="fc-half">
+                        <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
+                        <input type="number" id="fitWeightAM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="kg">
+                    </div>
+                    <div class="fc-half">
+                        <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
+                        <input type="number" id="fitWeightPM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="kg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cuisses Card -->
+            <div class="fitness-card">
+                <div class="fc-header">
+                    <span class="material-icons-outlined" style="color:var(--accent-green);">accessibility_new</span>
+                    <span>Cuisses</span>
+                </div>
+                <div class="fc-body">
+                    <div class="fc-half">
+                        <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
+                        <input type="number" id="fitThighAM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="cm">
+                    </div>
+                    <div class="fc-half">
+                        <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
+                        <input type="number" id="fitThighPM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="cm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Food Journal -->
+            <div class="fitness-card">
+                <div class="fc-header">
+                    <span class="material-icons-outlined" style="color:var(--accent-teal);">restaurant</span>
+                    <span>Journal Alimentaire</span>
+                </div>
+                <textarea id="fitFoodLog" class="fc-textarea" onchange="saveFitnessData()" placeholder="Notes sur vos repas d'aujourd'hui..."></textarea>
+            </div>
+
+            <!-- Daily Journal -->
+            <div class="fitness-card">
+                <div class="fc-header">
+                    <span class="material-icons-outlined" style="color:var(--accent-blue);">edit_note</span>
+                    <span>Journal Quotidien</span>
+                </div>
+                <textarea id="fitDailyLog" class="fc-textarea" onchange="saveFitnessData()" placeholder="Pens�es, exercices, bien-�tre..."></textarea>
+            </div>
+        </div>
+
+        <div class="fitness-card chart-card">
+            <div class="fc-header">
+                <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
+                <span>�volution des 30 derniers jours</span>
+            </div>
+            <div style="position:relative; height:250px; width:100%;">
                 <canvas id="fitnessChart"></canvas>
             </div>
         </div>
@@ -2823,17 +2877,26 @@
         
         let w = parseFloat(rec.weightAM) || parseFloat(rec.weightPM) || 0;
         let h = S.fitness.height || 1.81;
-        let bmiEl = document.getElementById('fitnessBMI');
+        
+        let bmiBadge = document.getElementById('fitnessBMIBadge');
+        let bmiVal = document.getElementById('fitnessBMIValue');
+        
         if (w > 0 && h > 0) {
             let bmi = w / (h * h);
-            bmiEl.innerText = 'IMC: ' + bmi.toFixed(1);
-            if (bmi < 18.5) bmiEl.style.color = 'var(--accent-blue)';
-            else if (bmi < 25) bmiEl.style.color = 'var(--accent-green)';
-            else if (bmi < 30) bmiEl.style.color = 'var(--accent-orange)';
-            else bmiEl.style.color = 'var(--accent-red)';
+            bmiVal.innerText = bmi.toFixed(1);
+            let color = '';
+            if (bmi < 18.5) color = 'var(--accent-blue)';
+            else if (bmi < 25) color = 'var(--accent-green)';
+            else if (bmi < 30) color = 'var(--accent-orange)';
+            else color = 'var(--accent-red)';
+            
+            bmiBadge.style.borderColor = color;
+            bmiBadge.style.boxShadow = '0 0 15px ' + color.replace(')', ', 0.3)').replace('var(', '').replace(')', ''); // simple hack for glow if css vars are hex. Since they are hex, we can just use the var directly.
+            bmiBadge.style.boxShadow = `0 0 15px ${color}`; // Actually just use the color for shadow.
         } else {
-            bmiEl.innerText = 'IMC: --';
-            bmiEl.style.color = 'var(--text-secondary)';
+            bmiVal.innerText = '--';
+            bmiBadge.style.borderColor = 'var(--border)';
+            bmiBadge.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
         }
         
         drawFitnessChart();
