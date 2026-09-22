@@ -1537,6 +1537,11 @@
         .fit-col-right { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px; }
         
         .progress-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 75px; height: 75px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .fit-layout { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        .fit-left-panel { flex: 3; min-width: 320px; display: flex; flex-direction: column; gap: 20px; }
+        .fit-2x2-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .fit-right-panel { flex: 1; min-width: 200px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; padding: 20px; }
+
 
         
         .fitness-card { background: var(--bg-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -1935,79 +1940,92 @@
         </div>
 
         <!-- MAIN GRID -->
-        <div class="fit-main-grid">
-            <!-- LEFT COLUMN (Metrics) -->
-            <div class="fit-col-left">
-                <div class="fitness-card">
+        <div class="fit-layout">
+            <!-- LEFT PANEL (Cards + Chart) -->
+            <div class="fit-left-panel">
+                <div class="fit-2x2-grid">
+                    <!-- Poids Card -->
+                    <div class="fitness-card">
+                        <div class="fc-header">
+                            <span class="material-icons-outlined" style="color:var(--accent-pink);">monitor_weight</span>
+                            <span>Poids (Objectif: 75kg)</span>
+                        </div>
+                        <div class="fc-body">
+                            <div class="fc-half">
+                                <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
+                                <input type="number" id="fitWeightAM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="--">
+                            </div>
+                            <div class="fc-half">
+                                <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
+                                <input type="number" id="fitWeightPM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="--">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cuisses Card -->
+                    <div class="fitness-card">
+                        <div class="fc-header">
+                            <span class="material-icons-outlined" style="color:var(--accent-green);">accessibility_new</span>
+                            <span>Cuisses (Objectif: 58cm)</span>
+                        </div>
+                        <div class="fc-body">
+                            <div class="fc-half">
+                                <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
+                                <input type="number" id="fitThighAM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="--">
+                            </div>
+                            <div class="fc-half">
+                                <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
+                                <input type="number" id="fitThighPM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="--">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Journal -->
+                    <div class="fitness-card">
+                        <div class="fc-header" style="font-size:14px;">
+                            <span class="material-icons-outlined" style="color:var(--accent-blue);">edit_note</span> Journal Quotidien
+                        </div>
+                        <textarea id="fitDailyLog" class="fc-textarea" style="height:80px;" onchange="saveFitnessData()" placeholder="word"></textarea>
+                    </div>
+
+                    <!-- Food Journal -->
+                    <div class="fitness-card">
+                        <div class="fc-header" style="font-size:14px;">
+                            <span class="material-icons-outlined" style="color:var(--accent-teal);">restaurant</span> Journal Alimentaire
+                        </div>
+                        <textarea id="fitFoodLog" class="fc-textarea" style="height:80px;" onchange="saveFitnessData()" placeholder="Notes sur vos repas d'aujourd'hui..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Chart Card (Bottom of Left Panel) -->
+                <div class="fitness-card chart-card">
                     <div class="fc-header">
-                        <span class="material-icons-outlined" style="color:var(--accent-pink);">monitor_weight</span>
-                        <span>Poids (Objectif: 75kg)</span>
+                        <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
+                        <span>�volution des 30 derniers jours</span>
                     </div>
-                    <div class="fc-body">
-                        <div class="fc-half">
-                            <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
-                            <input type="number" id="fitWeightAM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="--">
-                        </div>
-                        <div class="fc-half">
-                            <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
-                            <input type="number" id="fitWeightPM" class="fc-input" step="0.1" onchange="saveFitnessData()" placeholder="--">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="fitness-card">
-                    <div class="fc-header">
-                        <span class="material-icons-outlined" style="color:var(--accent-green);">accessibility_new</span>
-                        <span>Cuisses (Objectif: 58cm)</span>
-                    </div>
-                    <div class="fc-body">
-                        <div class="fc-half">
-                            <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#ffb74d;">wb_sunny</span> Matin</div>
-                            <input type="number" id="fitThighAM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="--">
-                        </div>
-                        <div class="fc-half">
-                            <div class="fc-subtitle"><span class="material-icons-outlined" style="color:#90caf9;">nights_stay</span> Soir</div>
-                            <input type="number" id="fitThighPM" class="fc-input" step="0.5" onchange="saveFitnessData()" placeholder="--">
-                        </div>
+                    <div style="position:relative; height:200px; width:100%;">
+                        <canvas id="fitnessChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN (Avatar & Journals) -->
-            <div class="fit-col-right">
-                <!-- Avatar Card -->
-                <div class="fitness-card" style="align-items:center; justify-content:center; padding:10px;">
-                    <svg id="bonhommeSvg" viewBox="0 0 100 200" style="width:100px; height:130px; fill:var(--accent-green); transition: 0.5s;">
-                        <circle cx="50" cy="30" r="16" />
-                        <g id="bonhommeBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out;">
-                            <path d="M 25 55 C 25 45, 75 45, 75 55 L 75 110 L 90 110 C 95 110, 95 125, 90 125 L 65 125 L 65 185 C 65 195, 55 195, 55 185 L 55 130 L 45 130 L 45 185 C 45 195, 35 195, 35 185 L 35 125 L 10 125 C 5 125, 5 110, 10 110 L 25 110 Z" />
-                        </g>
-                    </svg>
-                </div>
-                
-                <div class="fitness-card">
-                    <div class="fc-header" style="font-size:14px;">
-                        <span class="material-icons-outlined" style="color:var(--accent-blue);">edit_note</span> Journal Quotidien
-                    </div>
-                    <textarea id="fitDailyLog" class="fc-textarea" style="height:55px;" onchange="saveFitnessData()" placeholder="word"></textarea>
-                </div>
-
-                <div class="fitness-card">
-                    <div class="fc-header" style="font-size:14px;">
-                        <span class="material-icons-outlined" style="color:var(--accent-teal);">restaurant</span> Journal Alimentaire
-                    </div>
-                    <textarea id="fitFoodLog" class="fc-textarea" style="height:55px;" onchange="saveFitnessData()" placeholder="Notes sur vos repas d'aujourd'hui..."></textarea>
-                </div>
-            </div>
-        </div>
-
-        <div class="fitness-card chart-card">
-            <div class="fc-header">
-                <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
-                <span>�volution des 30 derniers jours</span>
-            </div>
-            <div style="position:relative; height:200px; width:100%;">
-                <canvas id="fitnessChart"></canvas>
+            <!-- RIGHT PANEL (Bonhomme) -->
+            <div class="fit-right-panel">
+                <svg id="bonhommeSvg" viewBox="0 0 100 200" style="width:100%; height:100%; max-height:400px; fill:var(--accent-green); transition: 0.5s;">
+                    <!-- Head -->
+                    <circle cx="50" cy="20" r="15" />
+                    <!-- Body Group to scale -->
+                    <g id="bonhommeBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out;">
+                        <!-- Arms -->
+                        <rect x="5" y="40" width="90" height="20" rx="10" />
+                        <!-- Torso -->
+                        <rect x="30" y="40" width="40" height="70" />
+                        <!-- Left Leg -->
+                        <rect x="30" y="100" width="15" height="70" rx="5" />
+                        <!-- Right Leg -->
+                        <rect x="55" y="100" width="15" height="70" rx="5" />
+                    </g>
+                </svg>
             </div>
         </div>
     </div>
