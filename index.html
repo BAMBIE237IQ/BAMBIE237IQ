@@ -1544,6 +1544,7 @@
             .fit-2x2-grid { grid-template-columns: 1fr; }
             .fit-layout { flex-direction: column; }
         }
+        .resizable-panel { resize: both; overflow: auto; min-width: 150px; min-height: 100px; }
         .fit-right-panel { flex: 1; min-width: 200px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; padding: 20px; }
 
 
@@ -1947,10 +1948,10 @@
         <!-- MAIN GRID -->
         <div class="fit-layout">
             <!-- LEFT PANEL (Cards + Chart) -->
-            <div class="fit-left-panel">
+            <div class="fit-left-panel resizable-panel">
                 <div class="fit-2x2-grid">
                     <!-- Poids Card -->
-                    <div class="fitness-card">
+                    <div class="fitness-card resizable-panel">
                         <div class="fc-header">
                             <span class="material-icons-outlined" style="color:var(--accent-pink);">monitor_weight</span>
                             <span>Poids (Objectif: 75kg)</span>
@@ -1968,7 +1969,7 @@
                     </div>
 
                     <!-- Cuisses Card -->
-                    <div class="fitness-card">
+                    <div class="fitness-card resizable-panel">
                         <div class="fc-header">
                             <span class="material-icons-outlined" style="color:var(--accent-green);">accessibility_new</span>
                             <span>Cuisses (Objectif: 58cm)</span>
@@ -1986,7 +1987,7 @@
                     </div>
 
                     <!-- Daily Journal -->
-                    <div class="fitness-card">
+                    <div class="fitness-card resizable-panel">
                         <div class="fc-header" style="font-size:14px;">
                             <span class="material-icons-outlined" style="color:var(--accent-blue);">edit_note</span> Journal Quotidien
                         </div>
@@ -1994,7 +1995,7 @@
                     </div>
 
                     <!-- Food Journal -->
-                    <div class="fitness-card">
+                    <div class="fitness-card resizable-panel">
                         <div class="fc-header" style="font-size:14px;">
                             <span class="material-icons-outlined" style="color:var(--accent-teal);">restaurant</span> Journal Alimentaire
                         </div>
@@ -2004,32 +2005,30 @@
 
                 <!-- Chart Card (Bottom of Left Panel) -->
                 <!-- RIGHT PANEL (Bonhomme) -->
-            <div class="fit-right-panel">
-                <svg id="bonhommeSvg" viewBox="0 0 100 200" style="width:100%; height:100%; max-height:400px;">
-                    <!-- BACKGROUND RED PANTIN (Reference 82kg) -->
-                    <g style="fill: rgba(255, 82, 82, 0.3);">
-                        <circle cx="50" cy="20" r="15" />
-                        <g style="transform-origin: 50% 50%;">
-                            <rect x="5" y="40" width="90" height="20" rx="10" />
-                            <rect x="30" y="40" width="40" height="70" />
-                            <rect x="30" y="100" width="15" height="70" rx="5" />
-                            <rect x="55" y="100" width="15" height="70" rx="5" />
+            <div class="fit-right-panel resizable-panel">
+                <svg id="bonhommeSvg" viewBox="0 0 100 150" style="width:100%; height:100%; min-height: 250px;">
+                    <defs>
+                        <!-- Stickman path based on user's new pictogram -->
+                        <g id="stickmanShape">
+                            <circle cx="50" cy="15" r="12" />
+                            <path d="M 38 32 L 15 54 L 22 61 L 38 46 L 38 135 L 47 135 L 47 85 L 53 85 L 53 135 L 62 135 L 62 46 L 78 61 L 85 54 L 62 32 Z" stroke-linejoin="round" stroke-linecap="round" />
                         </g>
+                    </defs>
+                    
+                    <!-- RED PANTIN (ARRIERE PLAN - DYNAMIQUE) -->
+                    <g id="bonhommeRedBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out; fill: var(--accent-red);">
+                        <use href="#stickmanShape" />
                     </g>
-                    <!-- FOREGROUND GREEN PANTIN (Dynamic) -->
-                    <g style="fill: var(--accent-green);">
-                        <circle cx="50" cy="20" r="15" />
-                        <g id="bonhommeBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out;">
-                            <rect x="5" y="40" width="90" height="20" rx="10" />
-                            <rect x="30" y="40" width="40" height="70" />
-                            <rect x="30" y="100" width="15" height="70" rx="5" />
-                            <rect x="55" y="100" width="15" height="70" rx="5" />
-                        </g>
+                    
+                    <!-- GREEN PANTIN (PREMIER PLAN - REFERENCE 82kg) -->
+                    <!-- Semi-transparent fill with solid border so we can see the red one shrinking behind it -->
+                    <g id="bonhommeGreenBody" style="transform-origin: 50% 50%; fill: rgba(0, 200, 83, 0.25); stroke: var(--accent-green); stroke-width: 2;">
+                        <use href="#stickmanShape" />
                     </g>
                 </svg>
             </div>
         </div>
-<div class="fitness-card chart-card">
+<div class="fitness-card chart-card resizable-panel">
                     <div class="fc-header">
                         <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
                         <span>�volution des 30 derniers jours</span>
@@ -2963,7 +2962,7 @@
             }
             document.getElementById('fitProgressText').innerText = Math.round(progress) + '%';
             
-            // Bonhomme scale (maigrir)
+            // Bonhomme scale (Red is dynamic, Green is static 82kg)
             let scaleX = 1.0;
             if (w > 0) {
                 let refWeight = 82;
@@ -2972,14 +2971,15 @@
                 if (scaleX < 0.4) scaleX = 0.4;
                 if (scaleX > 2.0) scaleX = 2.0;
             }
-            document.getElementById('bonhommeBody').style.transform = `scaleX(${scaleX})`;
+            // Scale ONLY the Red pantin (Background/Dynamic)
+            document.getElementById('bonhommeRedBody').style.transform = `scaleX(${scaleX})`;
             
         } else {
             bmiVal.innerText = '--';
             bmiBadge.style.borderColor = 'var(--border)';
             bmiBadge.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
             document.getElementById('fitProgressText').innerText = '--%';
-            document.getElementById('bonhommeBody').style.transform = 'scaleX(1)';
+            document.getElementById('bonhommeRedBody').style.transform = 'scaleX(1)';
         }
         
         drawFitnessChart();
