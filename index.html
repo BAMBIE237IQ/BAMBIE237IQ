@@ -1945,9 +1945,43 @@
             </div>
         </div>
 
+        <!-- Chart Card (Moved to the TOP of the layout) -->
+        <div class="fitness-card chart-card resizable-panel" style="margin-bottom: 20px;">
+            <div class="fc-header">
+                <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
+                <span>�volution des 30 derniers jours</span>
+            </div>
+            <div style="position:relative; height:200px; width:100%;">
+                <canvas id="fitnessChart"></canvas>
+            </div>
+        </div>
+
         <!-- MAIN GRID -->
         <div class="fit-layout">
-            <!-- LEFT PANEL (Cards + Chart) -->
+            <!-- RIGHT PANEL (Bonhomme) -->
+            <div class="fit-right-panel resizable-panel">
+                <svg id="bonhommeSvg" viewBox="0 0 100 150" style="width:100%; height:100%; min-height: 250px;">
+                    <defs>
+                        <!-- Stickman path based on user's new pictogram -->
+                        <g id="stickmanShape">
+                            <circle cx="50" cy="15" r="12" />
+                            <path d="M 38 32 L 15 54 L 22 61 L 38 46 L 38 135 L 47 135 L 47 85 L 53 85 L 53 135 L 62 135 L 62 46 L 78 61 L 85 54 L 62 32 Z" stroke-linejoin="round" stroke-linecap="round" />
+                        </g>
+                    </defs>
+                    
+                    <!-- RED PANTIN (ARRIERE PLAN - DYNAMIQUE) -->
+                    <g id="bonhommeRedBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out; fill: var(--accent-red);">
+                        <use href="#stickmanShape" />
+                    </g>
+                    
+                    <!-- GREEN PANTIN (PREMIER PLAN - REFERENCE 82kg) -->
+                    <!-- Semi-transparent fill with solid border so we can see the red one shrinking behind it -->
+                    <g id="bonhommeGreenBody" style="transform-origin: 50% 50%; fill: rgba(0, 200, 83, 0.25); stroke: var(--accent-green); stroke-width: 2;">
+                        <use href="#stickmanShape" />
+                    </g>
+                </svg>
+            </div>
+            <!-- LEFT PANEL (Cards) -->
             <div class="fit-left-panel resizable-panel">
                 <div class="fit-2x2-grid">
                     <!-- Poids Card -->
@@ -2002,46 +2036,12 @@
                         <textarea id="fitFoodLog" class="fc-textarea" style="height:80px;" onchange="saveFitnessData()" placeholder="Notes sur vos repas d'aujourd'hui..."></textarea>
                     </div>
                 </div>
-
-                <!-- Chart Card (Bottom of Left Panel) -->
-                <!-- RIGHT PANEL (Bonhomme) -->
-            <div class="fit-right-panel resizable-panel">
-                <svg id="bonhommeSvg" viewBox="0 0 100 150" style="width:100%; height:100%; min-height: 250px;">
-                    <defs>
-                        <!-- Stickman path based on user's new pictogram -->
-                        <g id="stickmanShape">
-                            <circle cx="50" cy="15" r="12" />
-                            <path d="M 38 32 L 15 54 L 22 61 L 38 46 L 38 135 L 47 135 L 47 85 L 53 85 L 53 135 L 62 135 L 62 46 L 78 61 L 85 54 L 62 32 Z" stroke-linejoin="round" stroke-linecap="round" />
-                        </g>
-                    </defs>
-                    
-                    <!-- RED PANTIN (ARRIERE PLAN - DYNAMIQUE) -->
-                    <g id="bonhommeRedBody" style="transform-origin: 50% 50%; transition: transform 0.5s ease-out; fill: var(--accent-red);">
-                        <use href="#stickmanShape" />
-                    </g>
-                    
-                    <!-- GREEN PANTIN (PREMIER PLAN - REFERENCE 82kg) -->
-                    <!-- Semi-transparent fill with solid border so we can see the red one shrinking behind it -->
-                    <g id="bonhommeGreenBody" style="transform-origin: 50% 50%; fill: rgba(0, 200, 83, 0.25); stroke: var(--accent-green); stroke-width: 2;">
-                        <use href="#stickmanShape" />
-                    </g>
-                </svg>
-            </div>
-        </div>
-<div class="fitness-card chart-card resizable-panel">
-                    <div class="fc-header">
-                        <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
-                        <span>�volution des 30 derniers jours</span>
-                    </div>
-                    <div style="position:relative; height:200px; width:100%;">
-                        <canvas id="fitnessChart"></canvas>
-                    </div>
-                </div>
             </div>
 
             
+        </div>
     </div>
-
+    
     <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
