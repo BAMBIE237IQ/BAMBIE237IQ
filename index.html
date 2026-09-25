@@ -64,9 +64,20 @@
         }
 
         /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        
+        /* Thickened scrollbar for better visibility */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 5px; }
+        
+
+        #fitnessView.active {
+            display: flex !important;
+            flex-direction: column;
+            height: 100%;
+        }
+
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+        
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
         /* ===== TOP NAV ===== */
@@ -1945,7 +1956,8 @@
             </div>
         </div>
 
-        <!-- Chart Card (Moved to the TOP of the layout) -->
+        <div class="fitness-scroll-area" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 15px; margin-top: 15px;">
+          <!-- Chart Card (Moved to the TOP of the layout) -->
         <div class="fitness-card chart-card resizable-panel" style="margin-bottom: 20px; display: flex; flex-direction: column;">
             <div class="fc-header">
                 <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
@@ -2040,7 +2052,9 @@
 
             
         </div>
-    </div>
+    
+          </div>
+      </div>
     
     
     <!-- ===== MOOD MODAL ===== -->
