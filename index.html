@@ -1789,8 +1789,17 @@
                     <div class="chart-container"><canvas id="finDailyChart"></canvas></div>
                 </div>
                 <div class="chart-card">
-                    <div class="card-title"><span class="material-icons-outlined">pie_chart</span> Répartition</div>
-                    <div class="chart-container"><canvas id="finPieChart"></canvas></div>
+                    <div class="card-title"><span class="material-icons-outlined">pie_chart</span> R�partition</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; width:100%; height:100%; align-items:center; justify-content:center;">
+                        <div style="flex:1; min-width:140px; display:flex; flex-direction:column; align-items:center;">
+                            <div style="text-align:center; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Sorties</div>
+                            <div class="chart-container" style="position:relative; width:100%; height:180px;"><canvas id="finPieExpense"></canvas></div>
+                        </div>
+                        <div style="flex:1; min-width:140px; display:flex; flex-direction:column; align-items:center;">
+                            <div style="text-align:center; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Entr�es</div>
+                            <div class="chart-container" style="position:relative; width:100%; height:180px;"><canvas id="finPieIncome"></canvas></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3599,7 +3608,7 @@
 
         // Daily chart
         renderFinDailyChart(y, m, days, txs);
-        renderFinPieChart(txs);
+        renderFinPieCharts(txs);
 
         // Transaction list grouped by day (most recent first)
         const groupedByDay = {};
@@ -3688,44 +3697,55 @@
         });
     }
 
-    function renderFinPieChart(txs) {
-        if (charts.finPie) charts.finPie.destroy();
-        // Group expenses by label
-        const expensesByLabel = {};
+    function renderFinPieCharts(txs) {
+        if (charts.finPieExp) charts.finPieExp.destroy();
+        if (charts.finPieInc) charts.finPieInc.destroy();
+        
+        const expByLabel = {};
+        const incByLabel = {};
+        
         for (const tx of txs) {
             if (tx.type === 'expense') {
-                expensesByLabel[tx.label] = (expensesByLabel[tx.label] || 0) + tx.amount;
+                expByLabel[tx.label] = (expByLabel[tx.label] || 0) + tx.amount;
+            } else if (tx.type === 'income') {
+                incByLabel[tx.label] = (incByLabel[tx.label] || 0) + tx.amount;
             }
         }
-        const labels = Object.keys(expensesByLabel);
-        const data = Object.values(expensesByLabel);
+        
         const pieColors = ['#f472b6','#a78bfa','#60a5fa','#2dd4bf','#fbbf24','#fb923c','#f87171','#34d399'];
-
-        if (!labels.length) {
-            // Show empty chart
-            const ctx = document.getElementById('finPieChart').getContext('2d');
-            charts.finPie = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Aucune sortie'], datasets: [{ data: [1], backgroundColor: ['#1e2538'], borderWidth: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { labels: { color: '#484f58', font: { size: 10 } } } } }
-            });
-            return;
-        }
-
-        const ctx = document.getElementById('finPieChart').getContext('2d');
-        charts.finPie = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels,
-                datasets: [{ data, backgroundColor: pieColors.slice(0, labels.length), borderWidth: 0, borderRadius: 4 }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '65%',
-                plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true, pointStyle: 'circle', padding: 10 } } }
+        
+        function drawPie(canvasId, chartKey, dataObj, emptyText) {
+            const labels = Object.keys(dataObj);
+            const data = Object.values(dataObj);
+            const ctx = document.getElementById(canvasId);
+            if(!ctx) return;
+            
+            if (!labels.length) {
+                charts[chartKey] = new Chart(ctx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: [emptyText], datasets: [{ data: [1], backgroundColor: ['#1e2538'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+                });
+                return;
             }
-        });
+            
+            charts[chartKey] = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{ data, backgroundColor: pieColors.slice(0, labels.length), borderWidth: 0, borderRadius: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true, pointStyle: 'circle', padding: 8 } } }
+                }
+            });
+        }
+        
+        drawPie('finPieExpense', 'finPieExp', expByLabel, 'Aucune sortie');
+        drawPie('finPieIncome', 'finPieInc', incByLabel, 'Aucune entr�e');
     }
-
+    
     // ==================== SUBSCRIPTIONS ====================
     const SUB_CONFIG = {
         netflix: { accounts: [1,2,3,4], hasProfiles: true },
