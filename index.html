@@ -1020,6 +1020,63 @@
             .period-label { font-size: 16px; min-width: 140px; }
         }
 
+        
+        /* ===== MOBILE BOTTOM NAV ===== */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+        }
+        
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 10px;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .mobile-nav-item.active {
+            color: var(--accent-blue);
+        }
+        
+        .mobile-nav-item .material-icons-outlined {
+            font-size: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav { display: flex; }
+            .top-nav .nav-tabs { display: none !important; } /* Hide old dropdown */
+            .top-nav .mobile-dropdown-icon { display: none !important; }
+            .top-nav .logo { margin: 0 auto; } /* Center logo */
+            .main-content { padding-bottom: 90px !important; } /* Space for bottom nav */
+            
+            /* Order fitness items */
+            .fit-layout { display: flex; flex-direction: column; }
+            .fit-left-panel { order: 1; } /* Cards first */
+            .fit-right-panel { order: 2; min-height: 200px; padding: 10px; } /* Bonhomme second */
+        }
+        
+        @media (max-width: 480px) {
+            .fc-body { flex-direction: column; gap: 10px; }
+            .fitness-header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .fitness-header > div { justify-content: space-between; }
+        }
+
         /* ===== PRINT ===== */
         @media print {
             .top-nav, .toast-container { display: none !important; }
@@ -2837,6 +2894,12 @@
     }
 
     function switchView(v) {
+        // Mobile nav update
+        document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+        let targetNav = v === 'finance2' ? 'finance' : v;
+        const activeMobNav = document.getElementById('mobNav-' + targetNav);
+        if (activeMobNav) activeMobNav.classList.add('active');
+
         S.currentView = v;
         if (v === 'finance') S.activeLedger = 'dashboard';
         else if (v === 'finance2') S.activeLedger = 'finance2';
@@ -3957,5 +4020,30 @@
     // ===== START =====
     init();
     </script>
+
+    <!-- ===== MOBILE BOTTOM NAV ===== -->
+    <div class="mobile-bottom-nav">
+        <div class="mobile-nav-item active" onclick="switchView('weekly')" id="mobNav-weekly">
+            <span class="material-icons-outlined">home</span>
+            <span>Habitudes</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('fitness')" id="mobNav-fitness">
+            <span class="material-icons-outlined">fitness_center</span>
+            <span>Sant�</span>
+        </div>
+        <!-- Center Floating Action Button (Optional, but let's keep it simple as a tab) -->
+        <div class="mobile-nav-item" onclick="switchView('calendar')" id="mobNav-calendar" style="background: var(--accent-blue); color: #fff; border-radius: 50%; padding: 10px; transform: translateY(-10px); box-shadow: 0 4px 10px rgba(96,165,250,0.5);">
+            <span class="material-icons-outlined">calendar_month</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('finance')" id="mobNav-finance">
+            <span class="material-icons-outlined">account_balance_wallet</span>
+            <span>Finances</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('subscriptions')" id="mobNav-subscriptions">
+            <span class="material-icons-outlined">subscriptions</span>
+            <span>Abos</span>
+        </div>
+    </div>
+
 </body>
 </html>
