@@ -1673,7 +1673,7 @@
               </button>
               <button class="nav-tab" onclick="switchView('fitness')">
                   <span class="material-icons-outlined">fitness_center</span>
-                  Sant�
+                  Sant��
               </button>
         </div>
         <div class="nav-actions">
@@ -1846,14 +1846,14 @@
                     <div class="chart-container"><canvas id="finDailyChart"></canvas></div>
                 </div>
                 <div class="chart-card">
-                    <div class="card-title"><span class="material-icons-outlined">pie_chart</span> R�partition</div>
+                    <div class="card-title"><span class="material-icons-outlined">pie_chart</span> R&eacute;partition</div>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; width:100%; height:100%; align-items:center; justify-content:center;">
                         <div style="flex:1; min-width:140px; display:flex; flex-direction:column; align-items:center;">
                             <div style="text-align:center; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Sorties</div>
                             <div class="chart-container" style="position:relative; width:100%; height:180px;"><canvas id="finPieExpense"></canvas></div>
                         </div>
                         <div style="flex:1; min-width:140px; display:flex; flex-direction:column; align-items:center;">
-                            <div style="text-align:center; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Entr�es</div>
+                            <div style="text-align:center; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">Entr&eacute;es</div>
                             <div class="chart-container" style="position:relative; width:100%; height:180px;"><canvas id="finPieIncome"></canvas></div>
                         </div>
                     </div>
@@ -1896,7 +1896,7 @@
                         <input type="number" class="fin-input" id="finAmount" placeholder="Ex: 25000" min="0" step="100">
                     </div>
                     <div class="fin-field">
-                        <label class="fin-label">Libellé</label>
+                        <label class="fin-label">Libell&eacute;é</label>
                         <input type="text" class="fin-input" id="finLabel" placeholder="Ex: Salaire, Loyer, Courses...">
                     </div>
                     <div class="fin-field">
@@ -2027,7 +2027,7 @@
         <div class="fitness-card chart-card resizable-panel" style="margin-bottom: 20px; display: flex; flex-direction: column;">
             <div class="fc-header">
                 <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
-                <span>�volution des 30 derniers jours</span>
+                <span>�&Eacute;�volution des 30 derniers jours</span>
             </div>
             <div style="position:relative; flex:1; width:100%; min-height:200px;">
                 <canvas id="fitnessChart"></canvas>
@@ -3362,8 +3362,8 @@
         const label = document.getElementById('finLabel').value.trim();
         const justif = document.getElementById('finJustif').value.trim();
         const dateStr = document.getElementById('finDate').value;
-        if (!amount || amount <= 0) { toast('⚠ Entrez un montant valide'); return; }
-        if (!label) { toast('⚠ Entrez un libellé'); return; }
+        if (!amount || amount <= 0) { toast('⚠ Entr&eacute;ez un montant valide'); return; }
+        if (!label) { toast('⚠ Entr&eacute;ez un libellé'); return; }
         if (!dateStr) { toast('⚠ Sélectionnez une date'); return; }
         pushUndo();
         const d = new Date(dateStr);
@@ -3800,7 +3800,23 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '65%',
-                    plugins: { legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true, pointStyle: 'circle', padding: 8 } } }
+                    plugins: { 
+                    legend: { position: 'bottom', labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true, pointStyle: 'circle', padding: 8 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ' : ';
+                                }
+                                let val = context.raw || 0;
+                                let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                let percentage = total > 0 ? ((val / total) * 100).toFixed(1) + '%' : '0%';
+                                return label + val + ' (' + percentage + ')';
+                            }
+                        }
+                    }
+                }
                 }
             });
         }
@@ -4029,7 +4045,7 @@
         </div>
         <div class="mobile-nav-item" onclick="switchView('fitness')" id="mobNav-fitness">
             <span class="material-icons-outlined">fitness_center</span>
-            <span>Sant�</span>
+            <span>Sant��</span>
         </div>
         <!-- Center Floating Action Button (Optional, but let's keep it simple as a tab) -->
         <div class="mobile-nav-item" onclick="switchView('calendar')" id="mobNav-calendar" style="background: var(--accent-blue); color: #fff; border-radius: 50%; padding: 10px; transform: translateY(-10px); box-shadow: 0 4px 10px rgba(96,165,250,0.5);">
