@@ -2027,7 +2027,7 @@
         <div class="fitness-card chart-card resizable-panel" style="margin-bottom: 20px; display: flex; flex-direction: column;">
             <div class="fc-header">
                 <span class="material-icons-outlined" style="color:#f48fb1;">trending_up</span>
-                <span>�volution des 30 derniers jours</span>
+                <span>Évolution des 30 derniers jours</span>
             </div>
             <div style="position:relative; flex:1; width:100%; min-height:200px;">
                 <canvas id="fitnessChart"></canvas>
@@ -3066,7 +3066,12 @@
         document.getElementById('fitFoodLog').value = rec.foodLog || '';
         document.getElementById('fitDailyLog').value = rec.dailyLog || '';
         
-        let w = parseFloat(rec.weightAM) || parseFloat(rec.weightPM) || 0;
+        let wAM = parseFloat(rec.weightAM) || 0;
+        let wPM = parseFloat(rec.weightPM) || 0;
+        let w = 0;
+        if (wAM > 0 && wPM > 0) w = (wAM + wPM) / 2;
+        else if (wAM > 0) w = wAM;
+        else if (wPM > 0) w = wPM;
         let h = S.fitness.height || 1.81;
         
         let bmiBadge = document.getElementById('fitnessBMIBadge');
@@ -3163,9 +3168,19 @@
             
             let r = S.fitness.records[dStr];
             if (r) {
-                let w = parseFloat(r.weightAM) || parseFloat(r.weightPM) || null;
+                let wA = parseFloat(r.weightAM) || 0;
+                  let wP = parseFloat(r.weightPM) || 0;
+                  let w = null;
+                  if (wA > 0 && wP > 0) w = (wA + wP) / 2;
+                  else if (wA > 0) w = wA;
+                  else if (wP > 0) w = wP;
                 weightData.push(w);
-                let t = parseFloat(r.thighAM) || parseFloat(r.thighPM) || null;
+                let tA = parseFloat(r.thighAM) || 0;
+                  let tP = parseFloat(r.thighPM) || 0;
+                  let t = null;
+                  if (tA > 0 && tP > 0) t = (tA + tP) / 2;
+                  else if (tA > 0) t = tA;
+                  else if (tP > 0) t = tP;
                 thighData.push(t);
             } else {
                 weightData.push(null);
