@@ -3591,14 +3591,14 @@
         const yesterdayTxs = getDayTransactions(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
         const todayBal = sumTx(todayTxs, 'income') - sumTx(todayTxs, 'expense');
         const yesterdayBal = sumTx(yesterdayTxs, 'income') - sumTx(yesterdayTxs, 'expense');
-        html += buildCompareCard('Jour', 'Hier', "Aujourd'hui", todayBal, yesterdayBal);
+        html += buildCompareCard('Jour', "Aujourd'hui", 'Hier', todayBal, yesterdayBal);
 
         // 2. THIS WEEK vs LAST WEEK
         const curWeekTxs = getCurrentWeekTransactions(y, m);
         const prevWeekTxs = getPrevWeekTransactions(y, m);
         const curWeekBal = sumTx(curWeekTxs, 'income') - sumTx(curWeekTxs, 'expense');
         const prevWeekBal = sumTx(prevWeekTxs, 'income') - sumTx(prevWeekTxs, 'expense');
-        html += buildCompareCard('Semaine', 'Sem. passée', 'Sem. actuelle', curWeekBal, prevWeekBal);
+        html += buildCompareCard('Semaine', 'Sem. actuelle', 'Sem. passée', curWeekBal, prevWeekBal);
 
         // 3. THIS MONTH vs LAST MONTH
         const prevM = m === 0 ? 11 : m - 1;
@@ -3606,14 +3606,14 @@
         const prevMonthTxs = getMonthTransactions(prevY, prevM);
         const curMonthBal = sumTx(txs, 'income') - sumTx(txs, 'expense');
         const prevMonthBal = sumTx(prevMonthTxs, 'income') - sumTx(prevMonthTxs, 'expense');
-        html += buildCompareCard('Mois', MONTHS[prevM].substring(0,3), MONTHS[m].substring(0,3), curMonthBal, prevMonthBal);
+        html += buildCompareCard('Mois', MONTHS[m].substring(0,3), MONTHS[prevM].substring(0,3), curMonthBal, prevMonthBal);
 
         // 4. THIS YEAR vs LAST YEAR
         const yearTxs = getYearTransactions(y);
         const prevYearTxs = getYearTransactions(y - 1);
         const curYearBal = sumTx(yearTxs, 'income') - sumTx(yearTxs, 'expense');
         const prevYearBal = sumTx(prevYearTxs, 'income') - sumTx(prevYearTxs, 'expense');
-        html += buildCompareCard('Année', String(y - 1), String(y), curYearBal, prevYearBal);
+        html += buildCompareCard('Année', String(y), String(y - 1), curYearBal, prevYearBal);
 
         document.getElementById('finCompare').innerHTML = html;
     }
