@@ -3046,6 +3046,28 @@
     // ==================== FITNESS VIEW ====================
     let fitnessChartInst = null;
 
+    
+    function changeFitnessDate(days) {
+        let dateInput = document.getElementById('fitnessDate');
+        if (!dateInput.value) {
+            setFitnessDateToday();
+            return;
+        }
+        let d = new Date(dateInput.value);
+        d.setUTCDate(d.getUTCDate() + days);
+        dateInput.value = d.toISOString().split('T')[0];
+        renderFitness();
+    }
+    
+    function setFitnessDateToday() {
+        let dateInput = document.getElementById('fitnessDate');
+        let today = new Date();
+        const offset = today.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
+        dateInput.value = localISOTime;
+        renderFitness();
+    }
+
     function renderFitness() {
         let dateInput = document.getElementById('fitnessDate');
         if (!dateInput.value) {
