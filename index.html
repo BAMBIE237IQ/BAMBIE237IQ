@@ -2269,6 +2269,8 @@
                     
                     updateBlurState();
                     renderAll();
+                } else if (S.habits.length > 0 || Object.keys(S.data).length > 0) {
+                    save();
                 }
             });
         } catch (e) {
