@@ -1829,7 +1829,15 @@
             <div class="stats-row" id="finStats"></div>
 
             <!-- Comparisons -->
-            <div class="fin-compare-section">
+            
+                <!-- GORGEOUS CURVED LINE CHART -->
+                <div class="card chart-card" style="margin-bottom: 25px;">
+                    <div class="section-title"><span class="material-icons-outlined" style="color:var(--accent-teal)">timeline</span> Évolution des 30 derniers jours</div>
+                    <div class="chart-wrapper" style="height: 250px; position: relative;">
+                        <canvas id="financeCurveChart"></canvas>
+                    </div>
+                </div>
+                <div class="fin-compare-section">
                 <div class="section-header">
                     <div class="section-title"><span class="material-icons-outlined" style="font-size:18px;color:var(--accent-purple)">compare_arrows</span> Comparaisons</div>
                 </div>
@@ -3640,6 +3648,102 @@
         html += buildCompareCard('Année', String(y), String(y - 1), curYearBal, prevYearBal);
 
         document.getElementById('finCompare').innerHTML = html;
+        drawFinanceCurveChart();
+    }
+
+    function drawFinanceCurveChart() {
+        const ctx = document.getElementById('financeCurveChart');
+        if (!ctx) return;
+        
+        // Destroy old if exists
+        if (window.financeCurveChartInst) {
+            window.financeCurveChartInst.destroy();
+        }
+
+        // Get last 30 days data
+        const labels = [];
+        const incomes = [];
+        const expenses = [];
+        
+        const today = new Date();
+        for (let i = 29; i >= 0; i--) {
+            let d = new Date(today);
+            d.setDate(d.getDate() - i);
+            let y = d.getFullYear();
+            let m = d.getMonth();
+            let dt = d.getDate();
+            labels.push(dt + '/' + (m+1));
+            
+            let txs = getDayTransactions(y, m, dt);
+            incomes.push(sumTx(txs, 'income'));
+            expenses.push(sumTx(txs, 'expense'));
+        }
+
+        window.financeCurveChartInst = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Entrées',
+                        data: incomes,
+                        borderColor: '#2dd4bf', // Teal
+                        backgroundColor: (context) => {
+                            const chartCtx = context.chart.ctx;
+                            const gradient = chartCtx.createLinearGradient(0, 0, 0, 250);
+                            gradient.addColorStop(0, 'rgba(45, 212, 191, 0.4)');
+                            gradient.addColorStop(1, 'rgba(45, 212, 191, 0.0)');
+                            return gradient;
+                        },
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#2dd4bf',
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                    },
+                    {
+                        label: 'Dépenses',
+                        data: expenses,
+                        borderColor: '#f472b6', // Pink
+                        backgroundColor: (context) => {
+                            const chartCtx = context.chart.ctx;
+                            const gradient = chartCtx.createLinearGradient(0, 0, 0, 250);
+                            gradient.addColorStop(0, 'rgba(244, 114, 182, 0.4)');
+                            gradient.addColorStop(1, 'rgba(244, 114, 182, 0.0)');
+                            return gradient;
+                        },
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#f472b6',
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(24,24,27,0.9)',
+                        titleColor: '#8b949e',
+                        bodyColor: '#e6edf3',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e', maxTicksLimit: 10 } },
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e', callback: v => formatMoneyShort(v) } }
+                }
+            }
+        });
     }
 
     function renderFinance() {
