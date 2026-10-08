@@ -2898,7 +2898,7 @@
     function switchView(v) {
         // Mobile nav update
         document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
-        let targetNav = v === 'finance2' ? 'finance' : v;
+        let targetNav = v;
         const activeMobNav = document.getElementById('mobNav-' + targetNav);
         if (activeMobNav) activeMobNav.classList.add('active');
 
@@ -4086,19 +4086,22 @@
             <span class="material-icons-outlined">fitness_center</span>
             <span>Santé</span>
         </div>
-        <!-- Center Floating Action Button (Optional, but let's keep it simple as a tab) -->
-        <div class="mobile-nav-item" onclick="switchView('calendar')" id="mobNav-calendar" style="background: var(--accent-blue); color: #fff; border-radius: 50%; padding: 10px; transform: translateY(-10px); box-shadow: 0 4px 10px rgba(96,165,250,0.5);">
-            <span class="material-icons-outlined">calendar_month</span>
-        </div>
         <div class="mobile-nav-item" onclick="switchView('finance')" id="mobNav-finance">
-            <span class="material-icons-outlined">account_balance_wallet</span>
-            <span>Finances</span>
+            <span class="material-icons-outlined">receipt_long</span>
+            <span>Journal Fin.</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('finance2')" id="mobNav-finance2">
+            <span class="material-icons-outlined">query_stats</span>
+            <span>Dashboard Fin.</span>
+        </div>
+        <div class="mobile-nav-item" onclick="switchView('calendar')" id="mobNav-calendar">
+            <span class="material-icons-outlined">calendar_month</span>
+            <span>Parcours</span>
         </div>
         <div class="mobile-nav-item" onclick="switchView('subscriptions')" id="mobNav-subscriptions">
             <span class="material-icons-outlined">subscriptions</span>
             <span>Abos</span>
         </div>
     </div>
-
 </body>
 </html>
