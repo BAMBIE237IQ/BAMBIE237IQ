@@ -1668,9 +1668,9 @@
                   Finance
               </button>
               <button class="nav-tab" onclick="switchView('calendar')">
-                  <span class="material-icons-outlined">event_available</span>
-                  Parcours
-              </button>
+                    <span class="material-icons-outlined">format_list_bulleted</span>
+                    Journal de bord
+                </button>
               <button class="nav-tab" onclick="switchView('fitness')">
                   <span class="material-icons-outlined">fitness_center</span>
                   Santé
@@ -1998,17 +1998,39 @@
     
     <!-- ===== CALENDAR VIEW ===== -->
     <div id="calendarView" class="view">
-        <div class="section-title"><span class="material-icons-outlined">event_available</span> Mon Parcours</div>
-        <div class="calendar-controls" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);">
-            <button class="icon-btn" onclick="changeCalMonth(-1)"><span class="material-icons-outlined">chevron_left</span></button>
-            <h2 id="calMonthLabel" style="margin:0; font-size:16px;">Septembre 2026</h2>
-            <button class="icon-btn" onclick="changeCalMonth(1)"><span class="material-icons-outlined">chevron_right</span></button>
+        <div class="section-title" style="margin-bottom: 20px;"><span class="material-icons-outlined">format_list_bulleted</span> Journal de bord</div>
+        
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="fitness-date-container" style="padding: 8px 15px; width: max-content; margin-bottom: 20px; display: flex; align-items: center; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border);">
+                <button onclick="changeJournalDate(-1)" style="background:transparent; border:none; color:var(--text-primary); cursor:pointer; display:flex; align-items:center;"><span class="material-icons-outlined">chevron_left</span></button>
+                <span class="material-icons-outlined" style="color:var(--text-secondary); margin: 0 5px;">calendar_today</span>
+                <input type="date" id="journalDate" onchange="renderJournal()" style="margin: 0 5px; width:120px; background:transparent; border:none; color:var(--text-primary); outline:none;">
+                <button onclick="changeJournalDate(1)" style="background:transparent; border:none; color:var(--text-primary); cursor:pointer; display:flex; align-items:center;"><span class="material-icons-outlined">chevron_right</span></button>
+                <button onclick="setJournalDateToday()" style="background:var(--accent-teal); color:#0a0e17; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; margin-left:10px;">Aujourd'hui</button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                <input type="text" id="journalNewTask" placeholder="Ajouter une tâche pour ce jour..." style="flex:1; padding: 12px 15px; border-radius:12px; background:var(--bg-input); border:1px solid var(--border); color:var(--text-primary); outline:none;" onkeypress="if(event.key==='Enter') addJournalTask()">
+                <button onclick="addJournalTask()" style="padding: 12px 20px; border-radius:12px; background:var(--accent-teal); color:#000; border:none; font-weight:bold; cursor:pointer;">Ajouter</button>
+            </div>
+
+            <div id="journalTaskList" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Tasks injected here -->
+            </div>
         </div>
-        <div id="calStats" style="text-align:center; margin-bottom:15px; color:var(--text-secondary); font-size:14px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);"></div>
-        <div class="calendar-grid" id="calGrid"></div>
+
+        <div class="section-title" style="margin-bottom: 20px;"><span class="material-icons-outlined">calendar_month</span> Historique des Habitudes</div>
+        <div class="card">
+            <div class="fc-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:12px; border:1px solid var(--border);">
+                <div class="fc-nav" onclick="changeCalMonth(-1)" style="cursor:pointer;"><span class="material-icons-outlined">chevron_left</span></div>
+                <div class="fc-month" id="calMonthLabel" style="font-weight:bold; font-size:16px;">...</div>
+                <div class="fc-nav" onclick="changeCalMonth(1)" style="cursor:pointer;"><span class="material-icons-outlined">chevron_right</span></div>
+            </div>
+            <div id="calStats" style="text-align:center; margin-bottom:15px; color:var(--text-secondary); font-size:14px;"></div>
+            <div id="calGrid" class="calendar-grid"></div>
+        </div>
     </div>
 
-    
     <!-- ===== FITNESS VIEW ===== -->
     <div id="fitnessView" class="view">
         <div class="section-title" style="margin-bottom: 20px;"><span class="material-icons-outlined">fitness_center</span> Suivi Corporel</div>
