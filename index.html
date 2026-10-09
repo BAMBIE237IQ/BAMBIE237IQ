@@ -60,7 +60,7 @@
             overflow: hidden;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* For Sidebar */
         }
 
         /* ===== SCROLLBAR ===== */
@@ -81,15 +81,24 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
         /* ===== TOP NAV ===== */
-        .top-nav {
-            display: flex;
-            align-items: center;
-            padding: 12px 24px;
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 240px;
+            height: 100vh;
             background: var(--bg-dark);
-            border-bottom: 1px solid var(--border);
-            gap: 16px;
-            min-height: 56px;
-            flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 30px;
         }
 
         .logo {
@@ -123,17 +132,21 @@
 
         .nav-tabs {
             display: flex;
-            gap: 4px;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 16px;
             flex: 1;
-            justify-content: center;
+            overflow-y: auto;
         }
+        .nav-tabs::-webkit-scrollbar { width: 6px; }
+        .nav-tabs::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
 
         .nav-tab {
-            padding: 8px 20px;
+            padding: 12px 16px;
             border: none;
             background: transparent;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             border-radius: var(--radius-sm);
@@ -141,7 +154,9 @@
             font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 12px;
+            width: 100%;
+            justify-content: flex-start;
         }
 
         .nav-tab:hover { background: var(--bg-card); color: var(--text-primary); }
@@ -178,12 +193,7 @@
         .nav-btn .material-icons-outlined { font-size: 18px; }
 
         /* ===== MAIN CONTENT ===== */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px 24px;
-        }
+        
 
         .view { display: none; }
         .view.active { display: block; }
@@ -1059,6 +1069,20 @@
         }
 
         @media (max-width: 768px) {
+            .sidebar { 
+                position: relative; 
+                width: 100%; 
+                height: auto; 
+                flex-direction: row; 
+                align-items: center; 
+                padding: 10px; 
+                border-right: none; 
+                border-bottom: 1px solid var(--border); 
+            }
+            .logo { padding: 5px; }
+            .nav-tabs { display: none; }
+            .nav-actions { display: none; }
+            .main-content { margin-left: 0; padding: 15px; padding-bottom: 90px !important; }
             .mobile-bottom-nav { display: flex; }
             .top-nav .nav-tabs { display: none !important; } /* Hide old dropdown */
             .top-nav .mobile-dropdown-icon { display: none !important; }
@@ -1830,13 +1854,6 @@
 
             <!-- Comparisons -->
             
-                <!-- GORGEOUS CURVED LINE CHART -->
-                <div class="card chart-card" style="margin-bottom: 25px;">
-                    <div class="section-title"><span class="material-icons-outlined" style="color:var(--accent-teal)">timeline</span> Évolution des 30 derniers jours</div>
-                    <div class="chart-wrapper" style="height: 250px; position: relative;">
-                        <canvas id="financeCurveChart"></canvas>
-                    </div>
-                </div>
                 <div class="fin-compare-section">
                 <div class="section-header">
                     <div class="section-title"><span class="material-icons-outlined" style="font-size:18px;color:var(--accent-purple)">compare_arrows</span> Comparaisons</div>
@@ -3765,7 +3782,7 @@ function renderAll() {
         html += buildCompareCard('Année', String(y), String(y - 1), curYearBal, prevYearBal);
 
         document.getElementById('finCompare').innerHTML = html;
-        drawFinanceCurveChart();
+        
     }
 
     function drawFinanceCurveChart() {
