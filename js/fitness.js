@@ -27,7 +27,7 @@ function renderFitness() {
     let dateInput = document.getElementById('fitnessDate');
     if (!dateInput.value) {
         let today = new Date();
-        dateInput.value = today.toISOString().split('T')[0];
+        dateInput.value = localDateStr(today);
     }
     const dStr = dateInput.value;
     
@@ -140,7 +140,7 @@ function drawFitnessChart() {
     
     let curr = new Date(startD);
     while (curr <= endD) {
-        let dStr = curr.toISOString().split('T')[0];
+        let dStr = localDateStr(curr);
         labels.push(curr.getDate() + '/' + (curr.getMonth()+1));
         
         let r = S.fitness.records[dStr];

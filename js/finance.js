@@ -600,5 +600,5 @@ function renderFinPieCharts(txs) {
     }
     
     drawPie('finPieExpense', 'finPieExp', expByLabel, 'Aucune sortie');
-    drawPie('finPieIncome', 'finPieInc', incByLabel, 'Aucune entr�e');
+    drawPie('finPieIncome', 'finPieInc', incByLabel, 'Aucune entrée');
 }

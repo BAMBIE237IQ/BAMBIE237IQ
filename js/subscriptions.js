@@ -153,7 +153,7 @@ function openSubModal(id = null) {
         updateSubModalFields();
         document.getElementById('subName').value = '';
         document.getElementById('subStatus').value = 'Sell';
-        document.getElementById('subStart').value = new Date().toISOString().split('T')[0];
+        document.getElementById('subStart').value = localDateStr();
         document.getElementById('subEnd').value = '';
         document.getElementById('subDuration').value = '01Mois';
         document.getElementById('subCode').value = '';

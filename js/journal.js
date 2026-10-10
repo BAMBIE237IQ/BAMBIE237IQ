@@ -91,6 +91,8 @@ function deleteJournalTask(dateStr, index) {
 function renderAll() {
 renderJournal();
     if (S.currentView==='weekly') renderWeekly();
+    else if (S.currentView==='calendar') renderCalendar();
+    else if (S.currentView==='fitness') renderFitness();
     else if (S.currentView==='monthly') renderMonthly();
     else if (S.currentView==='finance' || S.currentView==='finance2') renderFinance();
     else if (S.currentView==='subscriptions') renderSubscriptions();

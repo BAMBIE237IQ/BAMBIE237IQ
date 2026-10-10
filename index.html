@@ -18,7 +18,7 @@
 </head>
 <body>
     <!-- ===== TOP NAV ===== -->
-    <nav class="top-nav">
+    <nav class="top-nav sidebar">
         <div class="logo" id="mainLogo" onclick="toggleMobileMenu()">
             <div class="logo-icon">H</div>
             <span class="logo-text">Handy Stephane</span>
@@ -296,7 +296,6 @@
                 <div class="fin-main" id="finTransactions"></div>
             </div>
         </div>
-    </div>
 
     <!-- ===== SUBSCRIPTIONS VIEW ===== -->
     <div id="subscriptionsView" class="view">
@@ -317,53 +316,6 @@
         </div>
 
         <div id="subContent"></div>
-    </div>
-
-    <!-- ===== MODAL ===== -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <h3 id="modalTitle">Nouvelle habitude</h3>
-            <p class="modal-desc" id="modalDesc" style="display:none"></p>
-            <input type="text" id="modalInput" placeholder="Ex: 🧘 Méditation 10 min">
-            <div class="modal-actions">
-                <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
-                <button class="modal-btn confirm" id="modalConfirm" onclick="confirmModal()">Ajouter</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== SUB MODAL ===== -->
-    <div class="modal-overlay" id="subModalOverlay">
-        <div class="modal" style="width:350px;">
-            <h3 id="subModalTitle">Nouveau Client</h3>
-            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-                <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="prime">Prime Video</option><option value="proton">ProtonVPN</option></select></div>
-                <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
-                <div id="subProfileDiv"><label class="fin-label">Profil</label><select id="subProfile" class="fin-input"><option value="Rouge">Rouge</option><option value="Violet">Violet</option><option value="Jaune">Jaune</option><option value="Vert">Vert</option><option value="Blanc">Blanc</option></select></div>
-                <div><label class="fin-label">Nom du client</label><input type="text" id="subName" class="fin-input" placeholder="Ex: Jean Dupont"></div>
-                <div><label class="fin-label">Statut</label><input type="text" id="subStatus" class="fin-input" placeholder="Ex: Okay, Sell..."></div>
-                <div style="display:flex; gap:8px;">
-                    <div style="flex:1;"><label class="fin-label">Début</label><input type="date" id="subStart" class="fin-input"></div>
-                    <div style="flex:1;"><label class="fin-label">Fin</label><input type="date" id="subEnd" class="fin-input"></div>
-                </div>
-                <div><label class="fin-label">Durée</label><input type="text" id="subDuration" class="fin-input" placeholder="Ex: 1Mois, For Life"></div>
-                <div><label class="fin-label">Facturation / Code</label><input type="text" id="subCode" class="fin-input" placeholder="Ex: 0001, 1500 FCFA"></div>
-            </div>
-            <div class="modal-actions" style="margin-top:20px;">
-                <button class="modal-btn cancel" onclick="closeSubModal()">Annuler</button>
-                <button class="modal-btn confirm" onclick="saveSub()">Enregistrer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== CONTEXT MENU ===== -->
-    <div class="context-menu" id="contextMenu">
-        <div class="ctx-item" onclick="ctxRename()"><span class="material-icons-outlined">edit</span> Renommer</div>
-        <div class="ctx-sep"></div>
-        <div class="ctx-item" onclick="ctxMoveUp()"><span class="material-icons-outlined">arrow_upward</span> Vers le haut</div>
-        <div class="ctx-item" onclick="ctxMoveDown()"><span class="material-icons-outlined">arrow_downward</span> Vers le bas</div>
-        <div class="ctx-sep"></div>
-        <div class="ctx-item danger" onclick="ctxDelete()"><span class="material-icons-outlined">delete</span> Supprimer</div>
     </div>
 
     
@@ -522,6 +474,55 @@
     
           </div>
       </div>
+    </div>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">Nouvelle habitude</h3>
+            <p class="modal-desc" id="modalDesc" style="display:none"></p>
+            <input type="text" id="modalInput" placeholder="Ex: 🧘 Méditation 10 min">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeModal()">Annuler</button>
+                <button class="modal-btn confirm" id="modalConfirm" onclick="confirmModal()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SUB MODAL ===== -->
+    <div class="modal-overlay" id="subModalOverlay">
+        <div class="modal" style="width:350px;">
+            <h3 id="subModalTitle">Nouveau Client</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+                <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="prime">Prime Video</option><option value="proton">ProtonVPN</option></select></div>
+                <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
+                <div id="subProfileDiv"><label class="fin-label">Profil</label><select id="subProfile" class="fin-input"><option value="Rouge">Rouge</option><option value="Violet">Violet</option><option value="Jaune">Jaune</option><option value="Vert">Vert</option><option value="Blanc">Blanc</option></select></div>
+                <div><label class="fin-label">Nom du client</label><input type="text" id="subName" class="fin-input" placeholder="Ex: Jean Dupont"></div>
+                <div><label class="fin-label">Statut</label><input type="text" id="subStatus" class="fin-input" placeholder="Ex: Okay, Sell..."></div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;"><label class="fin-label">Début</label><input type="date" id="subStart" class="fin-input"></div>
+                    <div style="flex:1;"><label class="fin-label">Fin</label><input type="date" id="subEnd" class="fin-input"></div>
+                </div>
+                <div><label class="fin-label">Durée</label><input type="text" id="subDuration" class="fin-input" placeholder="Ex: 1Mois, For Life"></div>
+                <div><label class="fin-label">Facturation / Code</label><input type="text" id="subCode" class="fin-input" placeholder="Ex: 0001, 1500 FCFA"></div>
+            </div>
+            <div class="modal-actions" style="margin-top:20px;">
+                <button class="modal-btn cancel" onclick="closeSubModal()">Annuler</button>
+                <button class="modal-btn confirm" onclick="saveSub()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CONTEXT MENU ===== -->
+    <div class="context-menu" id="contextMenu">
+        <div class="ctx-item" onclick="ctxRename()"><span class="material-icons-outlined">edit</span> Renommer</div>
+        <div class="ctx-sep"></div>
+        <div class="ctx-item" onclick="ctxMoveUp()"><span class="material-icons-outlined">arrow_upward</span> Vers le haut</div>
+        <div class="ctx-item" onclick="ctxMoveDown()"><span class="material-icons-outlined">arrow_downward</span> Vers le bas</div>
+        <div class="ctx-sep"></div>
+        <div class="ctx-item danger" onclick="ctxDelete()"><span class="material-icons-outlined">delete</span> Supprimer</div>
+    </div>
+
     
     
     <!-- ===== MOOD MODAL ===== -->

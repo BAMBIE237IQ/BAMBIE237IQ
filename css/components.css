@@ -204,7 +204,9 @@
 }
 
 @media (max-width: 768px) {
-    .sidebar { 
+    body { flex-direction: column; } /* Sidebar becomes a top bar */
+    .sidebar {
+        flex-shrink: 0;
         position: relative; 
         width: 100%; 
         height: auto; 

@@ -20,7 +20,7 @@ function exportJSON() {
     const blob = new Blob([dataStr], {type: "application/json"});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `sauvegarde_handy_tracker_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `sauvegarde_handy_tracker_${localDateStr()}.json`;
     a.click();
     toast('Sauvegarde JSON générée ✓');
 }

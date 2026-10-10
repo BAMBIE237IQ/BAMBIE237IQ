@@ -93,7 +93,7 @@ function init() {
     if (S.fin2Year == null) { S.fin2Year = today.getFullYear(); S.fin2Month = today.getMonth(); }
     if (!S.weekStart) setWeekStartFromDate(today);
     let fd = document.getElementById('finDate');
-    if (fd && !fd.value) fd.value = today.toISOString().split('T')[0];
+    if (fd && !fd.value) fd.value = localDateStr(today);
     
     // 2. Initialiser Firebase
     try {
@@ -101,6 +101,7 @@ function init() {
         dbRef = firebase.database().ref('userData');
 
         dbRef.on('value', (snapshot) => {
+            isInitialLoad = false;
             const data = snapshot.val();
             if (data) {
                 S.habits = data.habits || [];
@@ -121,6 +122,7 @@ function init() {
             S.fitness = data.fitness || { targetWeight: 82, height:1.81, records:{} };
                 S.journal = data.journal || {};
                 
+                saveLocal();
                 updateBlurState();
                 renderAll();
             } else if (S.habits.length > 0 || Object.keys(S.data).length > 0) {
@@ -136,9 +138,8 @@ function init() {
 }
 
 // ==================== PERSISTENCE ====================
-function save() {
-    // Sauvegarde locale (Garantie de ne rien perdre)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+function getPersistedState() {
+    return {
         habits: S.habits,
         data: S.data,
         moods: S.moods,
@@ -147,20 +148,21 @@ function save() {
         blurAmounts: S.blurAmounts,
         subscriptions: S.subscriptions,
         subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
-    }));
+    };
+}
 
-    // Tentative de sauvegarde dans le Cloud Firebase
-    if (dbRef) {
-        dbRef.set({
-            habits: S.habits,
-            data: S.data,
-            moods: S.moods,
-            transactions: S.transactions,
-            finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
-            blurAmounts: S.blurAmounts,
-            subscriptions: S.subscriptions,
-            subAccountNames: S.subAccountNames, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
-        }).catch(e => console.error("Firebase save error", e));
+function saveLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
+}
+
+function save() {
+    // Sauvegarde locale (Garantie de ne rien perdre)
+    saveLocal();
+
+    // Sauvegarde Cloud : seulement après avoir reçu les données Firebase,
+    // sinon un clic pendant le chargement écraserait le cloud avec un état vide/par défaut.
+    if (dbRef && !isInitialLoad) {
+        dbRef.set(getPersistedState()).catch(e => console.error("Firebase save error", e));
     }
 }
 

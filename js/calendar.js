@@ -21,7 +21,7 @@ function editCalEvent(dateStr, ev) {
     if (ev) ev.stopPropagation();
     if (!S.calendarEvents) S.calendarEvents = {};
     let current = S.calendarEvents[dateStr] || '';
-    let newVal = prompt("�v�nement pour le " + dateStr + " :", current);
+    let newVal = prompt("Événement pour le " + dateStr + " :", current);
     if (newVal !== null) {
         if (newVal.trim() === '') {
             delete S.calendarEvents[dateStr];
@@ -78,7 +78,7 @@ function renderCalendar() {
         checkedCount = Object.keys(S.calendarChecked).length;
     }
 
-    document.getElementById('calStats').innerHTML = `?? Cha�ne : <strong>${streak} jours</strong> &nbsp;|&nbsp; ? Total : <strong>${checkedCount} jours</strong>`;
+    document.getElementById('calStats').innerHTML = `🔥 Chaîne : <strong>${streak} jours</strong> &nbsp;|&nbsp; ✅ Total : <strong>${checkedCount} jours</strong>`;
 
     for (let d = 1; d <= daysInMonth; d++) {
         let dStr = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
