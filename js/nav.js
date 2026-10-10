@@ -9,9 +9,11 @@ function toggleMobileMenu() {
 function switchView(v) {
     // Mobile nav update
     document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
-    let targetNav = (v === 'finance2') ? 'finance' : v; // un seul onglet Finance
-    const activeMobNav = document.getElementById('mobNav-' + targetNav);
+    let targetNav = v;
+    // Onglets absents de la barre du bas -> le bouton "Plus" s'allume
+    const activeMobNav = document.getElementById('mobNav-' + targetNav) || document.getElementById('mobNav-more');
     if (activeMobNav) activeMobNav.classList.add('active');
+    document.querySelectorAll('.more-list button').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
     S.currentView = v;
     if (v === 'finance') S.activeLedger = 'dashboard';
@@ -26,7 +28,6 @@ function switchView(v) {
     let activeTab = document.querySelector(`.nav-tab[onclick*="'${targetNav}'"]`);
     if (activeTab) activeTab.classList.add('active');
     
-    ['finance', 'finance2'].forEach(l => { const b = document.getElementById('ledgerBtn-' + l); if (b) { b.classList.toggle('active', v === l); b.setAttribute('aria-selected', v === l); } });
     window.scrollTo(0, 0);
     const mc = document.querySelector('.main-content'); if (mc) mc.scrollTop = 0;
 
@@ -41,7 +42,7 @@ function switchView(v) {
     if (v === 'finance' || v === 'finance2') {
         const titleEl = document.querySelector('#financeView .section-title');
         if (titleEl) {
-            titleEl.innerHTML = v === 'finance' ? '<span class="material-icons-outlined">account_balance_wallet</span> Journal financier' : '<span class="material-icons-outlined">query_stats</span> Dashboard global';
+            titleEl.innerHTML = v === 'finance' ? '<span class="material-icons-outlined">account_balance_wallet</span> Dashboard Financier' : '<span class="material-icons-outlined">query_stats</span> Finance Pro';
         }
     }
     

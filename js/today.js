@@ -66,27 +66,11 @@ function renderToday() {
     document.getElementById('todayDateLabel').textContent = `${DAYS_FULL[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
     document.getElementById('todayHabitsTitle').textContent = isTodaySel ? 'Habitudes du jour' : `Habitudes du ${d.getDate()}/${d.getMonth() + 1}`;
 
-    // --- KPIs (PC) ---
-    const mk = monthKey(now.getFullYear(), now.getMonth());
-    const txs = S.transactions[mk] || [];
-    const inc = sumTx(txs, 'income'), exp = sumTx(txs, 'expense'), bal = inc - exp;
+    // --- Résumé de tous les onglets (PC + mobile) ---
+    const best = getBestStreakAll();
     const wt = getLatestWeight(d);
     const h = (S.fitness && S.fitness.height) || 1.81, target = (S.fitness && S.fitness.targetWeight) || 82;
-    const bmi = wt ? (wt.value / (h * h)).toFixed(1).replace('.', ',') : '—';
-    const best = getBestStreakAll();
-    document.getElementById('todayKpis').innerHTML = `
-        <div class="kpi"><span class="kpi-label">Habitudes du jour</span>
-            <div class="kpi-value">${done.length}<small>/ ${habits.length}</small></div>
-            <div class="kpi-bar"><div style="width:${pct}%"></div></div></div>
-        <div class="kpi"><span class="kpi-label">Meilleure série</span>
-            <div class="kpi-value">${best}<small>jour${best > 1 ? 's' : ''}</small></div>
-            <span class="kpi-sub">Toutes habitudes confondues</span></div>
-        <div class="kpi blurable"><span class="kpi-label">Solde de ${MONTHS[now.getMonth()].toLowerCase()}</span>
-            <div class="kpi-value ${bal < 0 ? 'neg' : 'pos'}">${bal < 0 ? '−' : '+'}${formatFCFA(Math.abs(bal))}<small>FCFA</small></div>
-            <span class="kpi-sub">Entrées ${formatFCFA(inc)} · Sorties ${formatFCFA(exp)}</span></div>
-        <div class="kpi"><span class="kpi-label">Dernier poids</span>
-            <div class="kpi-value">${wt ? String(wt.value).replace('.', ',') : '—'}<small>kg</small></div>
-            <span class="kpi-sub">Objectif ${target} kg · IMC ${bmi}</span></div>`;
+    document.getElementById('todaySummary').innerHTML = buildTodaySummary(d, now, done.length, habits.length, best, wt, h, target);
 
     // --- Ring (mobile) ---
     const C = 2 * Math.PI * 34, left = habits.length - done.length;
@@ -159,8 +143,73 @@ function renderToday() {
         ${sparklineSVG(series, 30, 'var(--accent-pink)')}
         <div class="t-weight-foot"><span>${wt ? `${String(wt.value).replace('.', ',')} kg` : 'Aucun relevé'}</span>
         <span>${toGo !== null ? `${toGo.toFixed(1).replace('.', ',')} kg avant ${target} kg` : ''}</span></div>
-        <button class="btn t-weight-btn" onclick="switchView('fitness')">Saisir mon poids</button>`;
+        <div class="t-weight-actions"><button class="btn t-weight-btn" onclick="switchView('fitness')">Saisir mon poids</button><button class="btn t-weight-btn" onclick="editWeightTarget()">Objectif : ${String(target).replace('.', ',')} kg</button></div>`;
 }
+
+function sumCard(view, icon, color, title, value, sub, extra) {
+    return `<button class="sum-card${extra || ''}" onclick="switchView('${view}')">
+        <span class="sum-head"><span class="material-icons-outlined" style="color:${color}">${icon}</span>${title}</span>
+        <span class="sum-value">${value}</span>
+        <span class="sum-sub">${sub}</span>
+    </button>`;
+}
+
+function money(n) { return `<span class="${n < 0 ? 'neg' : 'pos'}">${n < 0 ? '−' : '+'}${formatFCFA(Math.abs(n))}</span><small>FCFA</small>`; }
+
+function buildTodaySummary(d, now, doneN, totalN, best, wt, h, target) {
+    // Task Tracker : semaine en cours (dimanche -> aujourd'hui)
+    const ws = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    let wDone = 0, wCells = 0;
+    for (let x = new Date(ws); x <= now; x.setDate(x.getDate() + 1)) for (const hb of S.habits) { wCells++; if (isHabitDone(hb.id, x)) wDone++; }
+    const weekPct = wCells ? Math.round(wDone / wCells * 100) : 0;
+
+    // Habit Tracker : moyenne du mois + meilleure habitude
+    const y = now.getFullYear(), m = now.getMonth();
+    const pcts = S.habits.map(hb => ({ name: hb.name, p: getHabitPct(hb.id, y, m) }));
+    const monthPct = pcts.length ? Math.round(pcts.reduce((s, x) => s + x.p, 0) / pcts.length) : 0;
+    const top = pcts.slice().sort((a, b) => b.p - a.p)[0];
+
+    // Dashboard (journal financier) et Finance (dashboard global) : solde du mois
+    const mk = monthKey(y, m);
+    const t1 = S.transactions[mk] || [], t2 = (S.finance2Transactions || {})[mk] || [];
+    const inc1 = sumTx(t1, 'income'), exp1 = sumTx(t1, 'expense');
+    const inc2 = sumTx(t2, 'income'), exp2 = sumTx(t2, 'expense');
+
+    // Abonnements : actifs / expirent sous 3 jours / expirés
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let active = 0, soon = 0, expired = 0;
+    for (const c of S.subscriptions || []) {
+        const life = c.duration && String(c.duration).toLowerCase().includes('life');
+        if (!c.end || life) { active++; continue; }
+        const [ey, em, ed] = c.end.split('-').map(Number);
+        const diff = Math.round((new Date(ey, em - 1, ed) - today0) / 86400000);
+        if (diff < 0) expired++; else { active++; if (diff <= 3) soon++; }
+    }
+
+    // Journal de bord : jour sélectionné + tâches non terminées des 7 derniers jours
+    const j = S.journal || {};
+    const dayTasks = j[localDateStr(d)] || [];
+    let openWeek = 0;
+    for (let i = 0; i < 7; i++) { const x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i); openWeek += (j[localDateStr(x)] || []).filter(t => !t.done).length; }
+
+    // Santé
+    const bmi = wt ? (wt.value / (h * h)).toFixed(1).replace('.', ',') : '—';
+    const toGo = wt ? wt.value - target : null;
+    const fmtKg = n => String(Math.round(n * 10) / 10).replace('.', ',');
+
+    return [
+        sumCard('weekly', 'view_week', 'var(--accent-teal)', 'Task Tracker', `${doneN}<small>/ ${totalN} aujourd’hui</small>`, `Semaine : ${weekPct} % · série ${best} j`),
+        sumCard('monthly', 'calendar_month', 'var(--accent-purple)', 'Habit Tracker', `${monthPct}<small>% ce mois</small>`, top ? `Top : ${escHtml(top.name)} (${top.p} %)` : 'Aucune habitude'),
+        sumCard('finance', 'account_balance_wallet', 'var(--accent-blue)', 'Dashboard', money(inc1 - exp1), `Entrées ${formatFCFA(inc1)} · Sorties ${formatFCFA(exp1)}`, ' blurable'),
+        sumCard('subscriptions', 'subscriptions', 'var(--accent-pink)', 'Abonnements', `${active}<small>clients actifs</small>`, soon || expired ? `<span class="${soon ? 'warn' : ''}">${soon} expire${soon > 1 ? 'nt' : ''} sous 3 j</span> · ${expired} expiré${expired > 1 ? 's' : ''}` : 'Rien à renouveler'),
+        sumCard('finance2', 'query_stats', 'var(--accent-yellow)', 'Finance', money(inc2 - exp2), `Entrées ${formatFCFA(inc2)} · Sorties ${formatFCFA(exp2)}`, ' blurable'),
+        sumCard('calendar', 'format_list_bulleted', 'var(--accent-green)', 'Journal de bord', `${dayTasks.filter(t => t.done).length}<small>/ ${dayTasks.length} tâches</small>`, openWeek ? `${openWeek} non terminée${openWeek > 1 ? 's' : ''} sur 7 jours` : 'Tout est à jour'),
+        sumCard('fitness', 'fitness_center', 'var(--accent-red)', 'Santé', wt ? `${fmtKg(wt.value)}<small>kg</small>` : '—', wt ? `Objectif ${fmtKg(target)} kg · ${toGo > 0 ? 'encore ' + fmtKg(toGo) + ' kg' : 'atteint'} · IMC ${bmi}` : `Objectif ${fmtKg(target)} kg`)
+    ].join('');
+}
+
+function openMoreMenu() { document.getElementById('moreOverlay').classList.add('active'); }
+function closeMoreMenu() { document.getElementById('moreOverlay').classList.remove('active'); }
 
 function addTodayTask(e) {
     e.preventDefault();

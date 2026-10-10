@@ -222,3 +222,67 @@ body.blur-amounts .kpi.blurable .kpi-value, body.blur-amounts .kpi.blurable .kpi
     .period-selector .period-label { flex: 1; text-align: center; }
     .period-selector > .btn { flex-basis: 100%; justify-content: center; margin-left: 0 !important; }
 }
+
+/* ===== ACCUEIL : RÉSUMÉ DE TOUS LES ONGLETS ===== */
+.today-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.sum-card {
+    padding: 16px 18px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-primary); font: inherit; text-align: left; cursor: pointer;
+    display: flex; flex-direction: column; gap: 8px; min-width: 0; transition: border-color var(--transition), background var(--transition);
+}
+.sum-card:hover { border-color: var(--border-light); background: var(--bg-card-hover); }
+.sum-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.sum-head .material-icons-outlined { font-size: 18px; }
+.sum-value { font-size: 24px; font-weight: 800; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sum-value small { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.sum-value .neg { color: var(--accent-red); }
+.sum-value .pos { color: var(--accent-teal); }
+.sum-sub { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
+.sum-sub .warn { color: var(--accent-red); font-weight: 700; }
+body.blur-amounts .sum-card.blurable .sum-value, body.blur-amounts .sum-card.blurable .sum-sub { filter: blur(6px); }
+.t-weight-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ===== MENU "PLUS" (mobile) ===== */
+.more-list { display: flex; flex-direction: column; gap: 6px; }
+.more-list button {
+    min-height: 52px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-card);
+    color: var(--text-primary); font: inherit; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 14px; cursor: pointer; text-align: left;
+}
+.more-list button .material-icons-outlined { color: var(--text-secondary); font-size: 22px; }
+.more-list button.active { border-color: var(--accent-teal); color: var(--accent-teal); background: var(--accent-teal-bg); }
+.more-list button.active .material-icons-outlined { color: var(--accent-teal); }
+
+/* ===== HISTORIQUE DES TO-DO LISTS ===== */
+.jh-filters { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.jh-filters button { height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.jh-filters button.active { background: var(--accent-teal-bg); border-color: var(--accent-teal); color: var(--accent-teal); }
+#journalHistory { display: flex; flex-direction: column; gap: 12px; }
+.jh-day { padding: 14px 16px; border-radius: 14px; background: var(--bg-input); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.jh-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0; border: none; background: none; color: var(--text-primary); font: inherit; cursor: pointer; text-align: left; }
+.jh-head:hover .jh-date { color: var(--accent-teal); }
+.jh-date { font-size: 14px; font-weight: 700; }
+.jh-count { font-size: 13px; font-weight: 700; color: var(--text-secondary); padding: 2px 10px; border-radius: 10px; background: var(--bg-card); }
+.jh-count.all { color: var(--accent-teal); background: var(--accent-teal-bg); }
+.jh-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-bottom: 4px; }
+.jh-bar div { height: 100%; background: var(--accent-teal); }
+.jh-task { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.jh-task button { width: 36px; height: 36px; flex-shrink: 0; border: none; background: none; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.jh-task.done button { color: var(--accent-teal); }
+.jh-task.done span:last-child { text-decoration: line-through; color: var(--text-secondary); }
+.jh-empty { padding: 16px 0; text-align: center; color: var(--text-secondary); font-size: 14px; }
+.jh-more { align-self: center; height: 40px; padding: 0 18px; font-size: 13px; }
+
+/* Objectif de poids cliquable */
+.target-btn { font: inherit; color: inherit; cursor: pointer; border: 1px solid var(--border); }
+.target-btn:hover { border-color: var(--accent-teal); }
+
+@media (max-width: 768px) {
+    .today-head { order: 0; }
+    .today-ring { order: 1; }
+    .today-strip { order: 2; }
+    .today-grid { order: 3; }
+    .today-summary { order: 4; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .sum-card { padding: 14px; }
+    .sum-value { font-size: 20px; }
+    .sum-sub { font-size: 12px; }
+}

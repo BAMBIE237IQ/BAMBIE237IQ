@@ -56,6 +56,8 @@ function renderFitness() {
     
     // Target & Progress math
     let targetW = S.fitness.targetWeight || 82;
+    const tl = document.getElementById('fitTargetLabel'); if (tl) tl.textContent = `Objectif ${String(targetW).replace('.', ',')} kg`;
+    const wt = document.getElementById('fitWeightCardTitle'); if (wt) wt.textContent = `Poids (Objectif : ${String(targetW).replace('.', ',')} kg)`;
     let startW = S.fitness.startWeight || 95; 
     
     if (w > 0 && h > 0) {
@@ -84,7 +86,7 @@ function renderFitness() {
         // Bonhomme scale (Red is dynamic, Green is static 82kg)
         let scaleX = 1.0;
         if (w > 0) {
-            let refWeight = 82;
+            let refWeight = targetW;
             let weightDiff = w - refWeight;
             scaleX = 1 + (weightDiff * 0.04);
             if (scaleX < 0.4) scaleX = 0.4;
@@ -102,6 +104,20 @@ function renderFitness() {
     }
     
     drawFitnessChart();
+}
+
+// Objectif de poids modifiable à la main (stocké dans S.fitness.targetWeight, synchronisé)
+function editWeightTarget() {
+    if (!S.fitness) S.fitness = { targetWeight: 82, height: 1.81, records: {} };
+    const cur = S.fitness.targetWeight || 82;
+    const v = prompt('Ton objectif de poids (kg) :', String(cur).replace('.', ','));
+    if (v === null) return;
+    const n = parseFloat(v.replace(',', '.'));
+    if (!(n >= 30 && n <= 300)) { toast('⚠ Entre un poids entre 30 et 300 kg'); return; }
+    S.fitness.targetWeight = Math.round(n * 10) / 10;
+    save();
+    renderAll();
+    toast(`Objectif réglé sur ${String(S.fitness.targetWeight).replace('.', ',')} kg ✓`);
 }
 
 function saveFitnessData() {

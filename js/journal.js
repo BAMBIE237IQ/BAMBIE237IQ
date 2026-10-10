@@ -67,14 +67,14 @@ function addJournalTask() {
     S.journal[dateStr].push({ text: text, done: false });
     input.value = '';
     save();
-    renderJournal();
+    renderAll();
 }
 
 function toggleJournalTask(dateStr, index) {
     if (!S.journal || !S.journal[dateStr]) return;
     S.journal[dateStr][index].done = !S.journal[dateStr][index].done;
     save();
-    renderJournal();
+    renderAll();
 }
 
 function deleteJournalTask(dateStr, index) {
@@ -82,8 +82,69 @@ function deleteJournalTask(dateStr, index) {
     if (confirm("Supprimer cette tâche ?")) {
         S.journal[dateStr].splice(index, 1);
         save();
-        renderJournal();
+        renderAll();
     }
+}
+
+// ==================== HISTORIQUE DES TO-DO LISTS ====================
+let journalHistoryFilter = 'all';
+let journalHistoryLimit = 14;
+
+function setJournalHistoryFilter(f) {
+    journalHistoryFilter = f;
+    journalHistoryLimit = 14;
+    document.querySelectorAll('.jh-filters button').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    renderJournalHistory();
+}
+
+function journalDayLabel(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d), t = new Date(), today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const diff = Math.round((date - today) / 86400000);
+    const base = `${DAYS_FULL[date.getDay()]} ${d} ${MONTHS[m - 1].toLowerCase()}${y !== t.getFullYear() ? ' ' + y : ''}`;
+    if (diff === 0) return 'Aujourd’hui · ' + base;
+    if (diff === -1) return 'Hier · ' + base;
+    if (diff === 1) return 'Demain · ' + base;
+    return base;
+}
+
+function openJournalDay(dateStr) {
+    document.getElementById('journalDate').value = dateStr;
+    renderJournal();
+    const mc = document.querySelector('.main-content'); if (mc) mc.scrollTop = 0;
+    window.scrollTo(0, 0);
+}
+
+function renderJournalHistory() {
+    const box = document.getElementById('journalHistory');
+    if (!box) return;
+    const j = S.journal || {};
+    let days = Object.keys(j).filter(k => Array.isArray(j[k]) && j[k].length).sort().reverse();
+    days = days.filter(k => {
+        const done = j[k].filter(t => t.done).length;
+        if (journalHistoryFilter === 'open') return done < j[k].length;
+        if (journalHistoryFilter === 'done') return done === j[k].length;
+        return true;
+    });
+    if (!days.length) {
+        box.innerHTML = '<div class="jh-empty">Aucune liste pour ce filtre.</div>';
+        return;
+    }
+    const shown = days.slice(0, journalHistoryLimit);
+    box.innerHTML = shown.map(k => {
+        const tasks = j[k], done = tasks.filter(t => t.done).length, pct = Math.round(done / tasks.length * 100);
+        return `<div class="jh-day">
+            <button class="jh-head" onclick="openJournalDay('${k}')" title="Ouvrir ce jour">
+                <span class="jh-date">${journalDayLabel(k)}</span>
+                <span class="jh-count${done === tasks.length ? ' all' : ''}">${done}/${tasks.length}</span>
+            </button>
+            <div class="jh-bar"><div style="width:${pct}%"></div></div>
+            ${tasks.map((t, i) => `<div class="jh-task${t.done ? ' done' : ''}">
+                <button onclick="toggleJournalTask('${k}', ${i})" aria-pressed="${!!t.done}" aria-label="Cocher : ${escAttr(t.text)}"><span class="material-icons-outlined">${t.done ? 'check_circle' : 'radio_button_unchecked'}</span></button>
+                <span>${escHtml(t.text)}</span>
+            </div>`).join('')}
+        </div>`;
+    }).join('') + (days.length > shown.length ? `<button class="btn jh-more" onclick="journalHistoryLimit += 14; renderJournalHistory()">Afficher plus (${days.length - shown.length} jours)</button>` : '');
 }
 
 // Hook into renderAll
@@ -92,7 +153,7 @@ function renderAll() {
 renderJournal();
     if (S.currentView==='today') renderToday();
     else if (S.currentView==='weekly') renderWeekly();
-    else if (S.currentView==='calendar') renderCalendar();
+    else if (S.currentView==='calendar') { renderCalendar(); renderJournalHistory(); }
     else if (S.currentView==='fitness') renderFitness();
     else if (S.currentView==='monthly') renderMonthly();
     else if (S.currentView==='finance' || S.currentView==='finance2') renderFinance();
