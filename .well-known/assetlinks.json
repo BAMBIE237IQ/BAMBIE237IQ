@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.bambie237iq.handytracker",
+        "sha256_cert_fingerprints": ["58:6E:06:23:8E:7B:85:C7:CD:4E:2C:4C:79:1A:8F:AE:A5:67:A9:B6:24:73:D9:8C:4E:E6:13:EE:2D:A6:4C:5F"]
+      }
+    }]
