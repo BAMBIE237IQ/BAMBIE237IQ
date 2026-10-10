@@ -1,6 +1,7 @@
 // ===== START =====
 init();
 initSyncIndicator();
+openViewFromHash();
 
 // PWA : installable sur l'écran d'accueil (https ou localhost uniquement)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

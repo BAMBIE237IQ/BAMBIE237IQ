@@ -149,3 +149,43 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
     .more-list button.active { border-color: var(--brand); color: #fff; background: var(--accent-teal-bg); }
     .more-list button.active .ph-duotone { color: var(--brand-bright); }
 }
+
+/* ===== NOTIFICATIONS ABONNEMENTS ===== */
+.notif-btn {
+    position: relative; flex-shrink: 0; width: 40px; height: 40px; border-radius: 999px;
+    border: 1px solid var(--border); background: #111; color: var(--text-secondary);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px;
+}
+.notif-btn:hover { color: #fff; border-color: var(--border-light); }
+.notif-btn.has-alerts { color: #fff; border-color: rgba(245, 181, 68, .6); }
+.notif-count {
+    position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+    border-radius: 9px; background: var(--brand); color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center;
+    box-shadow: 0 0 10px rgba(229, 28, 44, .6);
+}
+.notif-count[hidden] { display: none; }
+.notif-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+.notif-item {
+    display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border-radius: 16px;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font: inherit; text-align: left; cursor: pointer;
+}
+.notif-item:hover { border-color: var(--border-light); }
+.notif-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: #f5b544; }
+.notif-item.today .notif-dot, .notif-item.expired .notif-dot { background: var(--brand-bright); box-shadow: 0 0 8px rgba(255, 61, 74, .7); }
+.notif-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.notif-text strong { font-size: 15px; }
+.notif-text span { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-badge { flex-shrink: 0; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: #232327; color: #f5b544; }
+.notif-item.today .notif-badge { background: var(--brand-grad); color: #fff; }
+.notif-item.expired .notif-badge { color: var(--brand-bright); }
+.notif-empty { padding: 24px 8px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+.notif-perm { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #111; border: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); }
+.notif-perm .btn-primary { justify-content: center; }
+.notif-perm .btn-primary[hidden] { display: none; }
+.notif-foot { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
+/* Sur les écrans abonnements : J-5 → J-1 en ambre (et non plus seulement J-3) */
+.sub-badge.warning { background: rgba(245, 181, 68, .16); color: #f5b544; }
+
+@media (max-width: 768px) {
+    .sidebar .notif-btn { margin-left: auto; }
+}

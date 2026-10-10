@@ -18,7 +18,7 @@ const MI_TO_PH = {
     visibility: 'eye', visibility_off: 'eye-slash', save_alt: 'download-simple', save: 'floppy-disk',
     download: 'file-csv', refresh: 'arrow-clockwise', receipt_long: 'receipt', restaurant: 'fork-knife',
     psychology: 'brain', monitor_weight: 'scales', accessibility_new: 'person-simple', backspace: 'backspace',
-    account_balance: 'bank', money_off: 'money', favorite: 'heart'
+    account_balance: 'bank', money_off: 'money', favorite: 'heart', notifications: 'bell'
 };
 
 function convertIcon(el) {

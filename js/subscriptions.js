@@ -94,7 +94,7 @@ function getSubClientsRowsHtml(service, acc, profile) {
             endD.setHours(0,0,0,0);
             diffDays = Math.ceil((endD - today) / (1000 * 60 * 60 * 24));
             if (diffDays < 0) { badgeClass = 'expired'; badgeText = 'Expiré'; }
-            else if (diffDays <= 3) { badgeClass = 'warning'; badgeText = `J-${diffDays}`; }
+            else if (diffDays <= 5) { badgeClass = 'warning'; badgeText = `J-${diffDays}`; }
             if (diffDays === 0) { badgeClass = 'warning'; badgeText = "Aujourd'hui"; }
         }
         if (c.duration && c.duration.toLowerCase().includes('life')) { badgeClass = 'active'; badgeText = 'A Vie'; }

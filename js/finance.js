@@ -389,9 +389,10 @@ function renderFinance() {
 
     // Label
     document.getElementById('finMonthLabel').innerHTML = `${MONTHS[m]}<br><span class="period-sublabel">${y}</span>`;
-    document.getElementById('finInitCash').value = activeS.finAccounts.cash || '';
-    document.getElementById('finInitBank').value = activeS.finAccounts.bank || '';
-    document.getElementById('finInitMobile').value = activeS.finAccounts.mobile || '';
+    // Fonds initiaux : champs retirés de l'interface (les montants déjà saisis restent pris en compte dans le solde global)
+    const initC = document.getElementById('finInitCash'); if (initC) initC.value = activeS.finAccounts.cash || '';
+    const initB = document.getElementById('finInitBank'); if (initB) initB.value = activeS.finAccounts.bank || '';
+    const initM = document.getElementById('finInitMobile'); if (initM) initM.value = activeS.finAccounts.mobile || '';
 
     // Totals
     const mIncome = sumTx(txs, 'income');

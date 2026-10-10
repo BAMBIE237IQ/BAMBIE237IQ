@@ -68,6 +68,10 @@
                 Santé
             </button>
         </div>
+        <button class="notif-btn" onclick="openNotifPanel()" aria-label="Alertes abonnements" title="Alertes abonnements">
+            <span class="material-icons-outlined">notifications</span>
+            <span class="notif-count" hidden>0</span>
+        </button>
         <div class="sync-status" id="syncStatus" title="État de la synchronisation Firebase">
             <span class="sync-dot"></span>
             <div class="sync-text"><strong id="syncLabel">Connexion…</strong><span id="syncSub">Synchronisation en cours</span></div>
@@ -305,24 +309,6 @@
                 <div class="fin-form-card">
                     <div class="card-title"><span class="material-icons-outlined">add_card</span> Nouvelle transaction</div>
                     
-                    <div class="fin-field" style="border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 14px;">
-                        <label class="fin-label">Fonds Initiaux (Ce que vous avez déjà)</label>
-                        <div style="display:flex; flex-direction:column; gap:8px;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; font-size:12px;">
-                                <span>Espèces (En poche)</span>
-                                <input type="number" class="fin-input" id="finInitCash" style="width:120px; padding:6px 10px;" onchange="updateInitBals()">
-                            </div>
-                            <div style="display:flex; align-items:center; justify-content:space-between; font-size:12px;">
-                                <span>Banques</span>
-                                <input type="number" class="fin-input" id="finInitBank" style="width:120px; padding:6px 10px;" onchange="updateInitBals()">
-                            </div>
-                            <div style="display:flex; align-items:center; justify-content:space-between; font-size:12px;">
-                                <span>Mobile Money</span>
-                                <input type="number" class="fin-input" id="finInitMobile" style="width:120px; padding:6px 10px;" onchange="updateInitBals()">
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="fin-field">
                         <label class="fin-label">Type</label>
                         <div class="fin-type-toggle">
@@ -632,6 +618,7 @@
     <script src="js/finance.js"></script>
     <script src="js/subscriptions.js"></script>
     <script src="js/today.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -673,6 +660,23 @@
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ===== NOTIFICATIONS PANEL ===== -->
+    <div class="qa-overlay" id="notifOverlay" onclick="if(event.target===this)closeNotifPanel()">
+        <div class="qa-sheet notif-sheet" role="dialog" aria-modal="true" aria-labelledby="notifTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="notifTitle">Alertes abonnements</h2>
+                <button class="icon-btn" onclick="closeNotifPanel()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div id="notifList" class="notif-list"></div>
+            <div class="notif-perm">
+                <span id="notifPermText"></span>
+                <button class="btn-primary" id="notifPermBtn" onclick="requestNotifPermission()" hidden>Activer les notifications</button>
+            </div>
+            <p class="notif-foot">Rappel Telegram chaque matin à 8 h (J-5, jour J et expirés), même app fermée.</p>
         </div>
     </div>
 

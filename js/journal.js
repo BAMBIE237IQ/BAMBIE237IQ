@@ -150,6 +150,7 @@ function renderJournalHistory() {
 // Hook into renderAll
 
 function renderAll() {
+renderNotifications();
 renderJournal();
     if (S.currentView==='today') renderToday();
     else if (S.currentView==='weekly') renderWeekly();

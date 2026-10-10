@@ -93,7 +93,7 @@ export default async function handler(req, res) {
            code: "Via Telegram"
        };
 
-       const subUrl = `${FIREBASE_DB_URL}subscriptions.json`;
+       const subUrl = `${FIREBASE_DB_URL}userData/subscriptions.json`; // l'app lit sous /userData
        const fetchRes = await fetch(subUrl);
        let subs = await fetchRes.json() || [];
        if (!Array.isArray(subs)) subs = Object.values(subs);
@@ -156,7 +156,7 @@ export default async function handler(req, res) {
     const cameroonTime = new Date(date.getTime() + (60 * 60 * 1000)); 
     const year = cameroonTime.getFullYear();
     const month = cameroonTime.getMonth();
-    const monthKey = `${year}-${month}`;
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`; // même format que l'app (YYYY-MM)
     const dateStr = cameroonTime.toISOString().split('T')[0];
 
     // Création de l'objet transaction
@@ -171,7 +171,7 @@ export default async function handler(req, res) {
     };
 
     // Firebase REST API - Fetch puis PUT pour préserver la structure tableau
-    const monthUrl = `${FIREBASE_DB_URL}transactions/${monthKey}.json`;
+    const monthUrl = `${FIREBASE_DB_URL}userData/transactions/${monthKey}.json`;
     
     const fetchRes = await fetch(monthUrl);
     let currentTxs = await fetchRes.json();
