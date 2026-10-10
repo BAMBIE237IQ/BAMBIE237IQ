@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handy Stephane — Habit Tracker</title>
     <meta name="description" content="Premium dark mode habit tracker for Handy Stephane">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/finance.css">
     <link rel="stylesheet" href="css/views.css">
+    <link rel="stylesheet" href="css/today.css">
 </head>
 <body>
     <!-- ===== TOP NAV ===== -->
@@ -25,34 +26,38 @@
             <span class="material-icons-outlined mobile-dropdown-icon">expand_more</span>
         </div>
         <div class="nav-tabs" id="mainTabs">
-            <button class="nav-tab active" onclick="switchView('weekly')">
+            <button class="nav-tab active" onclick="switchView('today')">
+                <span class="material-icons-outlined">home</span>
+                Aujourd’hui
+            </button>
+            <button class="nav-tab" onclick="switchView('weekly')">
                 <span class="material-icons-outlined">view_week</span>
-                Task Tracker
+                Habitudes
             </button>
             <button class="nav-tab" onclick="switchView('monthly')">
                 <span class="material-icons-outlined">calendar_month</span>
-                Habit Tracker
+                Vue mensuelle
+            </button>
+            <button class="nav-tab" onclick="switchView('calendar')">
+                <span class="material-icons-outlined">format_list_bulleted</span>
+                Journal de bord
             </button>
             <button class="nav-tab" onclick="switchView('finance')">
-                  <span class="material-icons-outlined">account_balance_wallet</span>
-                  Dashboard
-              </button>
-              <button class="nav-tab" onclick="switchView('subscriptions')">
-                  <span class="material-icons-outlined">subscriptions</span>
-                  Abonnements
-              </button>
-              <button class="nav-tab" onclick="switchView('finance2')">
-                  <span class="material-icons-outlined">account_balance_wallet</span>
-                  Finance
-              </button>
-              <button class="nav-tab" onclick="switchView('calendar')">
-                    <span class="material-icons-outlined">format_list_bulleted</span>
-                    Journal de bord
-                </button>
-              <button class="nav-tab" onclick="switchView('fitness')">
-                  <span class="material-icons-outlined">fitness_center</span>
-                  Santé
-              </button>
+                <span class="material-icons-outlined">account_balance_wallet</span>
+                Finance
+            </button>
+            <button class="nav-tab" onclick="switchView('subscriptions')">
+                <span class="material-icons-outlined">subscriptions</span>
+                Abonnements
+            </button>
+            <button class="nav-tab" onclick="switchView('fitness')">
+                <span class="material-icons-outlined">favorite</span>
+                Santé
+            </button>
+        </div>
+        <div class="sync-status" id="syncStatus" title="État de la synchronisation Firebase">
+            <span class="sync-dot"></span>
+            <div class="sync-text"><strong id="syncLabel">Connexion…</strong><span id="syncSub">Synchronisation en cours</span></div>
         </div>
         <div class="nav-actions">
             <button class="nav-btn" title="Masquer/Afficher les montants" id="blurBtnContainer" onclick="toggleBlur()" style="display:none;">
@@ -72,7 +77,49 @@
 
     <!-- ===== WEEKLY VIEW ===== -->
     <div class="main-content">
-        <div id="weeklyView" class="view active">
+        <!-- ===== TODAY VIEW ===== -->
+        <div id="todayView" class="view active">
+            <header class="today-head">
+                <div class="today-title">
+                    <span class="today-date" id="todayDateLabel"></span>
+                    <h1>Bonjour Handy</h1>
+                </div>
+                <div class="today-actions desk-only">
+                    <button class="icon-btn" onclick="shiftTodayDate(-1)" aria-label="Jour précédent"><span class="material-icons-outlined">chevron_left</span></button>
+                    <button class="btn" onclick="setTodayDate(new Date())">Aujourd’hui</button>
+                    <button class="icon-btn" onclick="shiftTodayDate(1)" aria-label="Jour suivant"><span class="material-icons-outlined">chevron_right</span></button>
+                    <button class="btn-primary" onclick="openQuickAdd()"><span class="material-icons-outlined">add</span> Ajouter</button>
+                </div>
+                <div class="online-chip mob-only" id="onlineChip"><span class="sync-dot"></span><span id="onlineChipLabel">Connexion…</span></div>
+            </header>
+            <section class="today-kpis desk-only" id="todayKpis"></section>
+            <section class="today-ring mob-only" id="todayRing"></section>
+            <div class="today-strip mob-only" id="todayStrip"></div>
+            <div class="today-grid">
+                <section class="t-card">
+                    <div class="t-card-head">
+                        <h2 id="todayHabitsTitle">Habitudes du jour</h2>
+                        <div class="t-week-head desk-only" id="todayWeekHead"></div>
+                    </div>
+                    <div class="desk-only" id="todayHabitsDesk"></div>
+                    <div class="mob-only" id="todayHabitsMob"></div>
+                </section>
+                <div class="today-side">
+                    <section class="t-card">
+                        <h2>Journal de bord</h2>
+                        <form class="t-task-form" onsubmit="addTodayTask(event)">
+                            <label for="todayTaskInput" class="sr-only">Nouvelle tâche</label>
+                            <input id="todayTaskInput" placeholder="Ajouter une tâche…" autocomplete="off">
+                            <button type="submit" class="icon-btn primary" aria-label="Ajouter la tâche"><span class="material-icons-outlined">add</span></button>
+                        </form>
+                        <div id="todayTasks"></div>
+                    </section>
+                    <section class="t-card" id="todayWeightCard"></section>
+                </div>
+            </div>
+        </div>
+
+        <div id="weeklyView" class="view">
             <!-- Week Selector -->
             <div class="period-selector">
                 <button class="period-nav" onclick="changeWeek(-1)"><span class="material-icons-outlined">chevron_left</span></button>
@@ -195,6 +242,10 @@
 
         <!-- ===== FINANCE VIEW ===== -->
         <div id="financeView" class="view">
+            <div class="ledger-switch" role="tablist" aria-label="Carnet">
+                <button role="tab" id="ledgerBtn-finance" class="active" onclick="switchView('finance')">Journal</button>
+                <button role="tab" id="ledgerBtn-finance2" onclick="switchView('finance2')">Dashboard global</button>
+            </div>
             <!-- Month Selector -->
             <div class="period-selector">
                 <button class="period-nav" onclick="changeFinMonth(-1)"><span class="material-icons-outlined">chevron_left</span></button>
@@ -560,33 +611,49 @@
     <script src="js/ui.js"></script>
     <script src="js/finance.js"></script>
     <script src="js/subscriptions.js"></script>
+    <script src="js/today.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
-    <div class="mobile-bottom-nav">
-        <div class="mobile-nav-item active" onclick="switchView('weekly')" id="mobNav-weekly">
+    <nav class="mobile-bottom-nav" aria-label="Navigation">
+        <button class="mobile-nav-item active" onclick="switchView('today')" id="mobNav-today">
             <span class="material-icons-outlined">home</span>
+            <span>Accueil</span>
+        </button>
+        <button class="mobile-nav-item" onclick="switchView('weekly')" id="mobNav-weekly">
+            <span class="material-icons-outlined">task_alt</span>
             <span>Habitudes</span>
-        </div>
-        <div class="mobile-nav-item" onclick="switchView('fitness')" id="mobNav-fitness">
-            <span class="material-icons-outlined">fitness_center</span>
+        </button>
+        <button class="mobile-fab" onclick="openQuickAdd()" aria-label="Ajout rapide"><span class="material-icons-outlined">add</span></button>
+        <button class="mobile-nav-item" onclick="switchView('finance')" id="mobNav-finance">
+            <span class="material-icons-outlined">account_balance_wallet</span>
+            <span>Finance</span>
+        </button>
+        <button class="mobile-nav-item" onclick="switchView('fitness')" id="mobNav-fitness">
+            <span class="material-icons-outlined">favorite</span>
             <span>Santé</span>
-        </div>
-        <div class="mobile-nav-item" onclick="switchView('finance')" id="mobNav-finance">
-            <span class="material-icons-outlined">receipt_long</span>
-            <span>Journal Fin.</span>
-        </div>
-        <div class="mobile-nav-item" onclick="switchView('finance2')" id="mobNav-finance2">
-            <span class="material-icons-outlined">query_stats</span>
-            <span>Dashboard Fin.</span>
-        </div>
-        <div class="mobile-nav-item" onclick="switchView('calendar')" id="mobNav-calendar">
-            <span class="material-icons-outlined">format_list_bulleted</span>
-            <span>Journal</span>
-        </div>
-        <div class="mobile-nav-item" onclick="switchView('subscriptions')" id="mobNav-subscriptions">
-            <span class="material-icons-outlined">subscriptions</span>
-            <span>Abos</span>
+        </button>
+    </nav>
+
+    <!-- ===== QUICK ADD SHEET ===== -->
+    <div class="qa-overlay" id="qaOverlay" onclick="if(event.target===this)closeQuickAdd()">
+        <div class="qa-sheet" role="dialog" aria-modal="true" aria-labelledby="qaTitle">
+            <div class="qa-head">
+                <button class="icon-btn" onclick="closeQuickAdd()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+                <h2 id="qaTitle">Nouvelle transaction</h2>
+                <span style="width:44px"></span>
+            </div>
+            <div class="qa-type" role="tablist" aria-label="Type">
+                <button role="tab" id="qaType-expense" onclick="setQaType('expense')">Dépense</button>
+                <button role="tab" id="qaType-income" onclick="setQaType('income')">Entrée</button>
+            </div>
+            <div class="qa-amount" aria-live="polite"><span id="qaAmount">0</span><small>FCFA</small></div>
+            <div class="qa-date" id="qaDateLabel"></div>
+            <div class="qa-chips" id="qaChips" aria-label="Libellé"></div>
+            <label for="qaLabel" class="sr-only">Libellé</label>
+            <input id="qaLabel" class="qa-input" placeholder="Libellé (ou choisis ci-dessus)" autocomplete="off">
+            <div class="qa-keys" id="qaKeys"></div>
+            <button class="qa-save" id="qaSave" onclick="saveQuickAdd()">Enregistrer</button>
         </div>
     </div>
 </body>

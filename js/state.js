@@ -7,7 +7,7 @@ const COLOR_HEX = {teal:'#2dd4bf',pink:'#f472b6',purple:'#a78bfa',yellow:'#fbbf2
 const EXTENDED_MOOD_EMOJIS = ['😭','😫','😞','🙁','😕','😐','🙂','😊','😄','😁','🤩'];
 const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'weekly', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, calendarChecked:{}, calendarEvents:{}, fitness:{ targetWeight: 82, height:1.81, records:{} } };
+let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'today', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, calendarChecked:{}, calendarEvents:{}, fitness:{ targetWeight: 82, height:1.81, records:{} } };
 let subFilter = 'netflix';
 let editingSubId = null;
 

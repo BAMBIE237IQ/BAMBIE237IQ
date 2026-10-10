@@ -9,7 +9,7 @@ function toggleMobileMenu() {
 function switchView(v) {
     // Mobile nav update
     document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
-    let targetNav = v;
+    let targetNav = (v === 'finance2') ? 'finance' : v; // un seul onglet Finance
     const activeMobNav = document.getElementById('mobNav-' + targetNav);
     if (activeMobNav) activeMobNav.classList.add('active');
 
@@ -23,9 +23,13 @@ function switchView(v) {
     if (vEl) vEl.classList.add('active');
     
     document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-    let activeTab = document.querySelector(`.nav-tab[onclick*="${v}"]`);
+    let activeTab = document.querySelector(`.nav-tab[onclick*="'${targetNav}'"]`);
     if (activeTab) activeTab.classList.add('active');
     
+    ['finance', 'finance2'].forEach(l => { const b = document.getElementById('ledgerBtn-' + l); if (b) { b.classList.toggle('active', v === l); b.setAttribute('aria-selected', v === l); } });
+    window.scrollTo(0, 0);
+    const mc = document.querySelector('.main-content'); if (mc) mc.scrollTop = 0;
+
     let blurBtn = document.getElementById('blurBtnContainer');
     if (blurBtn) blurBtn.style.display = (v === 'finance' || v === 'finance2') ? 'flex' : 'none';
     
@@ -37,7 +41,7 @@ function switchView(v) {
     if (v === 'finance' || v === 'finance2') {
         const titleEl = document.querySelector('#financeView .section-title');
         if (titleEl) {
-            titleEl.innerHTML = v === 'finance' ? '<span class="material-icons-outlined">account_balance_wallet</span> Dashboard Financier' : '<span class="material-icons-outlined">account_balance_wallet</span> Finance Pro';
+            titleEl.innerHTML = v === 'finance' ? '<span class="material-icons-outlined">account_balance_wallet</span> Journal financier' : '<span class="material-icons-outlined">query_stats</span> Dashboard global';
         }
     }
     

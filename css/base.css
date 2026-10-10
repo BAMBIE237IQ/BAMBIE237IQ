@@ -2,17 +2,17 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg-darkest: #0a0e17;
-    --bg-dark: #0d1117;
-    --bg-card: #151b28;
-    --bg-card-hover: #1c2333;
+    --bg-darkest: #0b0f17;
+    --bg-dark: #0e131d;
+    --bg-card: #131a26;
+    --bg-card-hover: #182131;
     --bg-elevated: #1e2538;
-    --bg-input: #1a2030;
-    --border: #21283b;
-    --border-light: #2d3548;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #484f58;
+    --bg-input: #0e131d;
+    --border: #232c3d;
+    --border-light: #3a4558;
+    --text-primary: #e8ecf3;
+    --text-secondary: #8d97aa;
+    --text-muted: #5b6577;
     --accent-teal: #2dd4bf;
     --accent-teal-bg: rgba(45,212,191,.12);
     --accent-pink: #f472b6;
@@ -41,7 +41,8 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
     background: var(--bg-darkest);
     color: var(--text-primary);
     overflow: hidden;

@@ -5,6 +5,7 @@ function genId() { return 'h'+Date.now().toString(36)+'_'+Math.random().toString
 // Local YYYY-MM-DD (toISOString() is UTC and can be off by one day around midnight)
 function localDateStr(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function escHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function escAttr(s) { return escHtml(s).replace(/"/g, "&quot;"); }
 
 function setWeekStartFromDate(d) {
     const day = d.getDay();
