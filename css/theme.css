@@ -189,3 +189,16 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
 @media (max-width: 768px) {
     .sidebar .notif-btn { margin-left: auto; }
 }
+
+/* ===== FINANCE : plus de formulaire collé qui recouvre l'historique ===== */
+@media (max-width: 900px) {
+    .fin-form-card { position: static; }
+}
+/* Sur téléphone : historique en pleine largeur, on ajoute avec le bouton + (carnet de l'onglet actif) */
+@media (max-width: 768px) {
+    #financeView .fin-form-card { display: none; }
+    #financeView .finance-layout { display: block; }
+}
+@media (max-width: 768px) {
+    #financeView .fin-form-card.is-editing { display: block; margin-bottom: 16px; }
+}

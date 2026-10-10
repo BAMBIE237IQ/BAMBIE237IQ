@@ -254,10 +254,16 @@ function initSyncIndicator() {
 let qaState = { type: 'expense', amount: '', label: '' };
 const QA_DEFAULT_LABELS = { expense: ['Alimentation', 'Transport', 'Recharge', 'Maison', 'Santé', 'Autres'], income: ['Salaire', 'Vente', 'Cadeau', 'Remboursement', 'Autres'] };
 
+// Carnet cible : Finance (finance2) si on est sur cet onglet, sinon Dashboard
+function qaLedger() {
+    if (S.currentView === 'finance2') { if (!S.finance2Transactions) S.finance2Transactions = {}; return S.finance2Transactions; }
+    return S.transactions;
+}
+
 function getQaLabels(type) {
     // Les libellés les plus utilisés d'abord (les camemberts regroupent par libellé)
-    const count = {};
-    for (const k in S.transactions) for (const t of S.transactions[k] || []) if (t.type === type && t.label) count[t.label] = (count[t.label] || 0) + 1;
+    const count = {}, ledger = qaLedger();
+    for (const k in ledger) for (const t of ledger[k] || []) if (t.type === type && t.label) count[t.label] = (count[t.label] || 0) + 1;
     const top = Object.keys(count).sort((a, b) => count[b] - count[a]).slice(0, 6);
     for (const l of QA_DEFAULT_LABELS[type]) if (top.length < 6 && !top.includes(l)) top.push(l);
     return top;
@@ -272,6 +278,7 @@ function openQuickAdd() {
         : `<button onclick="qaKey('${k}')">${k}</button>`).join('');
     const t = new Date();
     document.getElementById('qaDateLabel').textContent = `Aujourd’hui · ${DAYS_FULL[t.getDay()].toLowerCase()} ${t.getDate()} ${MONTHS[t.getMonth()].toLowerCase()}`;
+    document.getElementById('qaTitle').textContent = S.currentView === 'finance2' ? 'Nouvelle transaction · Finance' : 'Nouvelle transaction · Dashboard';
     setQaType('expense');
     document.getElementById('qaOverlay').classList.add('active');
 }
@@ -305,9 +312,9 @@ function saveQuickAdd() {
     if (!label) { toast('⚠ Choisis ou écris un libellé'); return; }
     const d = new Date(), mk = monthKey(d.getFullYear(), d.getMonth());
     pushUndo();
-    // Toujours dans le Journal financier (ledger "dashboard"), quelle que soit la vue active
-    if (!S.transactions[mk]) S.transactions[mk] = [];
-    S.transactions[mk].push({
+    const ledger = qaLedger();
+    if (!ledger[mk]) ledger[mk] = [];
+    ledger[mk].push({
         id: 't' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4),
         type: qaState.type, amount, label, justification: '', day: d.getDate(), date: localDateStr(d)
     });

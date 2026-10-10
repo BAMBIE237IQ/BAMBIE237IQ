@@ -63,6 +63,7 @@ function addTransaction() {
             id: oldId, type: activeS.finType, amount, label, justification: justif, day: d.getDate(), date: dateStr
         });
         editingTxInfo = null;
+        document.querySelector('.fin-form-card').classList.remove('is-editing');
         document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">add_circle</span> Ajouter la transaction';
         toast('Transaction mise à jour ✓');
     } else {
@@ -99,6 +100,8 @@ function editTransaction(mk, txId) {
     document.getElementById('finDate').value = tx.date;
     
     document.getElementById('finSubmitBtn').innerHTML = '<span class="material-icons-outlined">save</span> Mettre à jour la transaction';
+    // Sur mobile le formulaire est masqué (ajout via le bouton +) : on l'affiche le temps de la modification
+    document.querySelector('.fin-form-card').classList.add('is-editing');
     document.querySelector('.fin-form-card').scrollIntoView({behavior:'smooth'});
 }
 
