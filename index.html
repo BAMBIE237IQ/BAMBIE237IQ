@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handy Stephane — Habit Tracker</title>
     <meta name="description" content="Premium dark mode habit tracker for Handy Stephane">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/finance.css">
     <link rel="stylesheet" href="css/views.css">
     <link rel="stylesheet" href="css/today.css">
+    <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
     <!-- ===== TOP NAV ===== -->
@@ -39,7 +40,7 @@
                 Habit Tracker
             </button>
             <button class="nav-tab" onclick="switchView('finance')">
-                <span class="material-icons-outlined">account_balance_wallet</span>
+                <span class="material-icons-outlined">donut_large</span>
                 Dashboard
             </button>
             <button class="nav-tab" onclick="switchView('subscriptions')">
@@ -47,7 +48,7 @@
                 Abonnements
             </button>
             <button class="nav-tab" onclick="switchView('finance2')">
-                <span class="material-icons-outlined">query_stats</span>
+                <span class="material-icons-outlined">account_balance_wallet</span>
                 Finance
             </button>
             <button class="nav-tab" onclick="switchView('calendar')">
@@ -83,7 +84,7 @@
     <div class="main-content">
         <!-- ===== TODAY VIEW ===== -->
         <div id="todayView" class="view active">
-            <header class="today-head">
+            <header class="today-head today-hero">
                 <div class="today-title">
                     <span class="today-date" id="todayDateLabel"></span>
                     <h1>Bonjour Handy</h1>
@@ -380,12 +381,12 @@
                 <span class="material-icons-outlined" style="color:var(--text-secondary); margin: 0 5px;">calendar_today</span>
                 <input type="date" id="journalDate" onchange="renderJournal()" style="margin: 0 5px; width:120px; background:transparent; border:none; color:var(--text-primary); outline:none;">
                 <button onclick="changeJournalDate(1)" style="background:transparent; border:none; color:var(--text-primary); cursor:pointer; display:flex; align-items:center;"><span class="material-icons-outlined">chevron_right</span></button>
-                <button onclick="setJournalDateToday()" style="background:var(--accent-teal); color:#0a0e17; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; margin-left:10px;">Aujourd'hui</button>
+                <button onclick="setJournalDateToday()" style="background:var(--brand-grad); color:#fff; box-shadow:var(--brand-shadow); border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; margin-left:10px;">Aujourd'hui</button>
             </div>
 
             <div style="display:flex; gap:10px; margin-bottom: 20px;">
                 <input type="text" id="journalNewTask" placeholder="Ajouter une tâche pour ce jour..." style="flex:1; padding: 12px 15px; border-radius:12px; background:var(--bg-input); border:1px solid var(--border); color:var(--text-primary); outline:none;" onkeypress="if(event.key==='Enter') addJournalTask()">
-                <button onclick="addJournalTask()" style="padding: 12px 20px; border-radius:12px; background:var(--accent-teal); color:#000; border:none; font-weight:bold; cursor:pointer;">Ajouter</button>
+                <button onclick="addJournalTask()" style="padding: 12px 20px; border-radius:12px; background:var(--brand-grad); color:#fff; box-shadow:var(--brand-shadow); border:none; font-weight:bold; cursor:pointer;">Ajouter</button>
             </div>
 
             <div id="journalTaskList" style="display:flex; flex-direction:column; gap:10px;">
@@ -608,6 +609,7 @@
 
     <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleImport(event)">
 
+    <script src="js/icons.js"></script>
     <script src="js/state.js"></script>
     <script src="js/helpers.js"></script>
     <script src="js/habits.js"></script>
@@ -636,7 +638,7 @@
         </button>
         <button class="mobile-fab" onclick="openQuickAdd()" aria-label="Ajout rapide"><span class="material-icons-outlined">add</span></button>
         <button class="mobile-nav-item" onclick="switchView('finance')" id="mobNav-finance">
-            <span class="material-icons-outlined">account_balance_wallet</span>
+            <span class="material-icons-outlined">donut_large</span>
             <span>Dashboard</span>
         </button>
         <button class="mobile-nav-item" onclick="openMoreMenu()" id="mobNav-more" aria-haspopup="dialog">
@@ -657,9 +659,9 @@
                 <button onclick="closeMoreMenu();switchView('today')" data-view="today"><span class="material-icons-outlined">home</span>Accueil</button>
                 <button onclick="closeMoreMenu();switchView('weekly')" data-view="weekly"><span class="material-icons-outlined">view_week</span>Task Tracker</button>
                 <button onclick="closeMoreMenu();switchView('monthly')" data-view="monthly"><span class="material-icons-outlined">calendar_month</span>Habit Tracker</button>
-                <button onclick="closeMoreMenu();switchView('finance')" data-view="finance"><span class="material-icons-outlined">account_balance_wallet</span>Dashboard</button>
+                <button onclick="closeMoreMenu();switchView('finance')" data-view="finance"><span class="material-icons-outlined">donut_large</span>Dashboard</button>
                 <button onclick="closeMoreMenu();switchView('subscriptions')" data-view="subscriptions"><span class="material-icons-outlined">subscriptions</span>Abonnements</button>
-                <button onclick="closeMoreMenu();switchView('finance2')" data-view="finance2"><span class="material-icons-outlined">query_stats</span>Finance</button>
+                <button onclick="closeMoreMenu();switchView('finance2')" data-view="finance2"><span class="material-icons-outlined">account_balance_wallet</span>Finance</button>
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
             </div>

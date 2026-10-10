@@ -200,9 +200,9 @@ function buildTodaySummary(d, now, doneN, totalN, best, wt, h, target) {
     return [
         sumCard('weekly', 'view_week', 'var(--accent-teal)', 'Task Tracker', `${doneN}<small>/ ${totalN} aujourd’hui</small>`, `Semaine : ${weekPct} % · série ${best} j`),
         sumCard('monthly', 'calendar_month', 'var(--accent-purple)', 'Habit Tracker', `${monthPct}<small>% ce mois</small>`, top ? `Top : ${escHtml(top.name)} (${top.p} %)` : 'Aucune habitude'),
-        sumCard('finance', 'account_balance_wallet', 'var(--accent-blue)', 'Dashboard', money(inc1 - exp1), `Entrées ${formatFCFA(inc1)} · Sorties ${formatFCFA(exp1)}`, ' blurable'),
+        sumCard('finance', 'donut_large', 'var(--accent-blue)', 'Dashboard', money(inc1 - exp1), `Entrées ${formatFCFA(inc1)} · Sorties ${formatFCFA(exp1)}`, ' blurable'),
         sumCard('subscriptions', 'subscriptions', 'var(--accent-pink)', 'Abonnements', `${active}<small>clients actifs</small>`, soon || expired ? `<span class="${soon ? 'warn' : ''}">${soon} expire${soon > 1 ? 'nt' : ''} sous 3 j</span> · ${expired} expiré${expired > 1 ? 's' : ''}` : 'Rien à renouveler'),
-        sumCard('finance2', 'query_stats', 'var(--accent-yellow)', 'Finance', money(inc2 - exp2), `Entrées ${formatFCFA(inc2)} · Sorties ${formatFCFA(exp2)}`, ' blurable'),
+        sumCard('finance2', 'account_balance_wallet', 'var(--accent-yellow)', 'Finance', money(inc2 - exp2), `Entrées ${formatFCFA(inc2)} · Sorties ${formatFCFA(exp2)}`, ' blurable'),
         sumCard('calendar', 'format_list_bulleted', 'var(--accent-green)', 'Journal de bord', `${dayTasks.filter(t => t.done).length}<small>/ ${dayTasks.length} tâches</small>`, openWeek ? `${openWeek} non terminée${openWeek > 1 ? 's' : ''} sur 7 jours` : 'Tout est à jour'),
         sumCard('fitness', 'fitness_center', 'var(--accent-red)', 'Santé', wt ? `${fmtKg(wt.value)}<small>kg</small>` : '—', wt ? `Objectif ${fmtKg(target)} kg · ${toGo > 0 ? 'encore ' + fmtKg(toGo) + ' kg' : 'atteint'} · IMC ${bmi}` : `Objectif ${fmtKg(target)} kg`)
     ].join('');

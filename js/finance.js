@@ -223,7 +223,7 @@ function buildCompareCard(title, currentLabel, prevLabel, currentBal, prevBal) {
     const badgeClass = isUp ? 'up' : isDown ? 'down' : 'neutral';
     const badgeIcon = isUp ? 'arrow_upward' : isDown ? 'arrow_downward' : 'remove';
     const diffClass = isUp ? 'positive' : isDown ? 'negative' : 'zero';
-    const curColor = currentBal >= 0 ? 'var(--accent-teal)' : 'var(--accent-pink)';
+    const curColor = currentBal >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
     const prevColor = prevBal >= 0 ? 'var(--text-secondary)' : 'var(--accent-pink)';
 
     return `<div class="compare-card">
@@ -414,8 +414,8 @@ function renderFinance() {
             <div class="stat-info"><div class="stat-label">Sorties du mois</div><div class="stat-value" style="color:var(--accent-red)">${formatMoney(mExpense)}</div></div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background:${mBalance>=0?'var(--accent-teal-bg)':'var(--accent-pink-bg)'}"><span class="material-icons-outlined" style="color:${mBalance>=0?'var(--accent-teal)':'var(--accent-pink)'}">${mBalance>=0?'account_balance':'money_off'}</span></div>
-            <div class="stat-info"><div class="stat-label">Solde mensuel</div><div class="stat-value" style="color:${mBalance>=0?'var(--accent-teal)':'var(--accent-pink)'}">${mBalance>=0?'+':''}${formatMoney(mBalance)}</div></div>
+            <div class="stat-icon" style="background:${mBalance>=0?'var(--accent-green-bg)':'var(--accent-red-bg)'}"><span class="material-icons-outlined" style="color:${mBalance>=0?'var(--accent-green)':'var(--accent-red)'}">${mBalance>=0?'account_balance':'money_off'}</span></div>
+            <div class="stat-info"><div class="stat-label">Solde mensuel</div><div class="stat-value" style="color:${mBalance>=0?'var(--accent-green)':'var(--accent-red)'}">${mBalance>=0?'+':''}${formatMoney(mBalance)}</div></div>
         </div>
         <div class="stat-card">
             <div class="stat-icon" style="background:${globalBalance>=0?'var(--accent-blue-bg)':'var(--accent-orange-bg)'}"><span class="material-icons-outlined" style="color:${globalBalance>=0?'var(--accent-blue)':'var(--accent-orange)'}">${globalBalance>=0?'savings':'warning'}</span></div>
@@ -441,7 +441,7 @@ function renderFinance() {
             <div class="fin-summary-row">
                 <div class="fin-summary-item"><div class="fin-s-label">Entrées</div><div class="fin-s-val" style="color:var(--accent-green)">${formatMoney(wIn)}</div></div>
                 <div class="fin-summary-item"><div class="fin-s-label">Sorties</div><div class="fin-s-val" style="color:var(--accent-red)">${formatMoney(wOut)}</div></div>
-                <div class="fin-summary-item"><div class="fin-s-label">Solde</div><div class="fin-s-val" style="color:${wBal>=0?'var(--accent-teal)':'var(--accent-pink)'}">${wBal>=0?'+':''}${formatMoney(wBal)}</div></div>
+                <div class="fin-summary-item"><div class="fin-s-label">Solde</div><div class="fin-s-val" style="color:${wBal>=0?'var(--accent-green)':'var(--accent-red)'}">${wBal>=0?'+':''}${formatMoney(wBal)}</div></div>
             </div>
         </div>`;
     }
