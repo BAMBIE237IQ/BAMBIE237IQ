@@ -181,7 +181,8 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
 .notif-empty { padding: 24px 8px; text-align: center; color: var(--text-secondary); font-size: 14px; }
 .notif-perm { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #111; border: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); }
 .notif-perm .btn-primary { justify-content: center; }
-.notif-perm .btn-primary[hidden] { display: none; }
+.notif-perm .btn-primary[hidden], .notif-perm .btn[hidden] { display: none; }
+.notif-perm .btn { justify-content: center; height: 40px; }
 .notif-foot { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
 /* Sur les écrans abonnements : J-5 → J-1 en ambre (et non plus seulement J-3) */
 .sub-badge.warning { background: rgba(245, 181, 68, .16); color: #f5b544; }
@@ -202,3 +203,30 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
 @media (max-width: 768px) {
     #financeView .fin-form-card.is-editing { display: block; margin-bottom: 16px; }
 }
+
+/* ===== CA DES ABONNEMENTS ===== */
+.section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ca-btn { height: 40px; padding: 0 16px; font-size: 14px; font-weight: 700; color: #fff; border-color: var(--border-light); }
+.ca-sheet { max-width: 480px; }
+.ca-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ca-nav strong { font-size: 17px; font-weight: 800; }
+.ca-hero {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 12px; border-radius: 18px;
+    background: radial-gradient(90% 140% at 100% 0%, rgba(229, 28, 44, .22), transparent 60%), var(--bg-card); border: 1px solid var(--border-light);
+}
+.ca-total { font-size: 40px; font-weight: 900; letter-spacing: -.03em; }
+.ca-total small { font-size: 16px; color: var(--text-secondary); font-weight: 700; }
+.ca-compare { font-size: 13px; color: var(--text-secondary); }
+.ca-compare .up { color: var(--accent-green); font-weight: 800; }
+.ca-compare .down { color: var(--brand-bright); font-weight: 800; }
+.ca-services { display: flex; flex-direction: column; gap: 10px; }
+.ca-svc-head { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.ca-svc-head span { font-weight: 700; }
+.ca-bar { height: 8px; border-radius: 4px; background: #1f1f23; overflow: hidden; }
+.ca-bar div { height: 100%; border-radius: 4px; background: var(--brand-bright); }
+.ca-rows { display: flex; flex-direction: column; gap: 6px; max-height: 38vh; overflow-y: auto; }
+.ca-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); }
+.ca-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ca-row-main strong { font-size: 14px; }
+.ca-row-main span { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ca-part { font-size: 15px; font-weight: 900; color: var(--accent-green); white-space: nowrap; }

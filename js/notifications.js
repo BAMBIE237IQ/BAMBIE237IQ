@@ -76,26 +76,63 @@ function openSubFromNotif(id) {
 }
 
 // ----- Notifications sur l'appareil (quand l'app est ouverte ; Telegram prend le relais app fermée) -----
+// ----- Notifications push : arrivent sur le téléphone même app fermée (envoyées par api/cron.js chaque matin) -----
+const VAPID_PUBLIC_KEY = 'BGg0hVJMDZO57ph2XW7OQc1WSpkFFQtUeBkynJTwkVKXLMfsWOqUJyXEO6iBcObi0DbTW3Z3EU7CpF6DAeA-G_k';
+const PUSH_FLAG = 'handy-push-on';
+
+function pushSupported() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function urlB64ToUint8Array(b64) {
+    const pad = '='.repeat((4 - b64.length % 4) % 4), raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, ch => ch.charCodeAt(0));
+}
+function pushKey(endpoint) { let h = 5381; for (let i = 0; i < endpoint.length; i++) h = ((h << 5) + h + endpoint.charCodeAt(i)) >>> 0; return 'd' + h.toString(36) + endpoint.length.toString(36); }
+function isPushOn() { try { return localStorage.getItem(PUSH_FLAG) === '1'; } catch (e) { return false; } }
+
 function updateNotifPermissionUI() {
-    const btn = document.getElementById('notifPermBtn'), txt = document.getElementById('notifPermText');
+    const btn = document.getElementById('notifPermBtn'), off = document.getElementById('notifPushOff'), txt = document.getElementById('notifPermText');
     if (!btn || !txt) return;
-    if (!('Notification' in window)) { btn.hidden = true; txt.textContent = 'Ce navigateur ne gère pas les notifications. Le rappel Telegram de 8 h reste actif.'; return; }
-    const p = Notification.permission;
-    btn.hidden = p !== 'default';
-    txt.textContent = p === 'granted' ? 'Notifications activées sur cet appareil (J-5 et jour J).'
-        : p === 'denied' ? 'Notifications bloquées : autorise-les dans les réglages du navigateur.'
-        : 'Active les notifications pour être prévenu sur cet appareil.';
+    if (off) off.hidden = true;
+    if (!pushSupported()) { btn.hidden = true; txt.textContent = 'Ce navigateur ne gère pas les notifications. Sur iPhone : ajoute d\x27abord l\x27app à l\x27écran d\x27accueil.'; return; }
+    if (Notification.permission === 'denied') { btn.hidden = true; txt.textContent = 'Notifications bloquées : autorise-les dans les réglages du téléphone pour cette app.'; return; }
+    if (isPushOn() && Notification.permission === 'granted') {
+        btn.hidden = true; if (off) off.hidden = false;
+        txt.textContent = 'Rappels activés sur cet appareil : chaque matin à 8 h, à J-5 et le jour de fin, même app fermée.';
+        return;
+    }
+    btn.hidden = false;
+    txt.textContent = 'Reçois une notification sur ce téléphone 5 jours avant la fin d\x27un abonnement et le jour même.';
 }
 
 async function requestNotifPermission() {
-    if (!('Notification' in window)) return;
-    const p = await Notification.requestPermission();
+    if (!pushSupported()) return;
+    try {
+        const p = await Notification.requestPermission();
+        if (p !== 'granted') { updateNotifPermissionUI(); return; }
+        const reg = await navigator.serviceWorker.ready;
+        const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY) });
+        const j = sub.toJSON();
+        await firebase.database().ref('pushSubscriptions/' + pushKey(j.endpoint)).set({ endpoint: j.endpoint, keys: j.keys, device: navigator.userAgent.slice(0, 120), createdAt: new Date().toISOString() });
+        try { localStorage.setItem(PUSH_FLAG, '1'); } catch (e) {}
+        updateNotifPermissionUI();
+        toast('Rappels activés sur ce téléphone ✓');
+    } catch (e) {
+        console.error('Push', e);
+        toast('⚠ Impossible d\x27activer les rappels sur cet appareil');
+    }
+}
+
+async function disablePush() {
+    try {
+        const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+        if (sub) { await firebase.database().ref('pushSubscriptions/' + pushKey(sub.endpoint)).remove(); await sub.unsubscribe(); }
+    } catch (e) { console.error('Push', e); }
+    try { localStorage.removeItem(PUSH_FLAG); } catch (e) {}
     updateNotifPermissionUI();
-    if (p === 'granted') { toast('Notifications activées ✓'); maybeShowDeviceNotifications(getSubAlerts()); }
+    toast('Rappels désactivés sur ce téléphone');
 }
 
 function maybeShowDeviceNotifications(alerts) {
-    if (!('Notification' in window) || Notification.permission !== 'granted' || isInitialLoad) return;
+    if (!('Notification' in window) || Notification.permission !== 'granted' || isInitialLoad || isPushOn()) return;
     for (const { c, diff } of alerts) {
         if (diff !== 5 && diff !== 0) continue;
         const key = `handy-notif:${c.id}:${c.end}:${diff}`;

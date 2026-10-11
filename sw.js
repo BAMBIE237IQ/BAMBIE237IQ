@@ -1,6 +1,6 @@
 // Service worker : réseau d'abord (toujours la dernière version en ligne),
 // copie en cache pour pouvoir ouvrir l'app sans réseau. Firebase n'est jamais mis en cache.
-const CACHE = 'handy-tracker-v2';
+const CACHE = 'handy-tracker-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
@@ -23,12 +23,26 @@ self.addEventListener('fetch', e => {
     );
 });
 
-// Clic sur une notification d'abonnement : ouvre (ou ramène) l'app sur l'onglet Abonnements
+// Notification push envoyée par le serveur (api/cron.js)
+self.addEventListener('push', e => {
+    let d = {};
+    try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: 'Handy Tracker', body: e.data ? e.data.text() : '' }; }
+    e.waitUntil(self.registration.showNotification(d.title || 'Handy Tracker', {
+        body: d.body || '',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: d.tag || 'handy-subs',
+        renotify: true,
+        data: { url: d.url || '/#abonnements', view: 'subscriptions' }
+    }));
+});
+
+// Clic sur une notification : ouvre (ou ramène) l'app sur l'onglet Abonnements
 self.addEventListener('notificationclick', e => {
     e.notification.close();
-    const view = (e.notification.data && e.notification.data.view) || 'subscriptions';
+    const data = e.notification.data || {};
     e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-        for (const c of list) { c.postMessage({ view }); return c.focus(); }
-        return self.clients.openWindow('/#abonnements');
+        for (const c of list) { c.postMessage({ view: data.view || 'subscriptions' }); return c.focus(); }
+        return self.clients.openWindow(data.url || '/#abonnements');
     }));
 });

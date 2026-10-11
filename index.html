@@ -345,6 +345,7 @@
         <div class="section-header">
             <h2 class="section-title"><span class="material-icons-outlined">subscriptions</span> Mes Abonnements</h2>
             <div class="section-actions">
+                <button class="btn ca-btn" onclick="openCAPanel()"><span class="material-icons-outlined">bar_chart</span> CA du mois</button>
                 <button class="btn primary" onclick="openSubModal()"><span class="material-icons-outlined">add</span> Ajouter Client</button>
             </div>
         </div>
@@ -557,7 +558,7 @@
                     <div style="flex:1;"><label class="fin-label">Fin</label><input type="date" id="subEnd" class="fin-input"></div>
                 </div>
                 <div><label class="fin-label">Durée</label><input type="text" id="subDuration" class="fin-input" placeholder="Ex: 1Mois, For Life"></div>
-                <div><label class="fin-label">Facturation / Code</label><input type="text" id="subCode" class="fin-input" placeholder="Ex: 0001, 1500 FCFA"></div>
+                <div><label class="fin-label">Montant payé (FCFA)</label><input type="text" id="subCode" class="fin-input" inputmode="numeric" placeholder="Ex : 5 000 pour 2 mois"></div>
             </div>
             <div class="modal-actions" style="margin-top:20px;">
                 <button class="modal-btn cancel" onclick="closeSubModal()">Annuler</button>
@@ -616,6 +617,7 @@
     <script src="js/subscriptions.js"></script>
     <script src="js/today.js"></script>
     <script src="js/notifications.js"></script>
+    <script src="js/ca.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -671,9 +673,33 @@
             <div id="notifList" class="notif-list"></div>
             <div class="notif-perm">
                 <span id="notifPermText"></span>
-                <button class="btn-primary" id="notifPermBtn" onclick="requestNotifPermission()" hidden>Activer les notifications</button>
+                <button class="btn-primary" id="notifPermBtn" onclick="requestNotifPermission()" hidden><span class="material-icons-outlined">notifications</span> Recevoir les rappels sur ce téléphone</button>
+                <button class="btn" id="notifPushOff" onclick="disablePush()" hidden>Désactiver les rappels sur cet appareil</button>
             </div>
-            <p class="notif-foot">Rappel Telegram chaque matin à 8 h (J-5, jour J et expirés), même app fermée.</p>
+            <p class="notif-foot">À activer sur chaque téléphone ou ordinateur qui doit recevoir les rappels.</p>
+        </div>
+    </div>
+
+    <!-- ===== CA ABONNEMENTS ===== -->
+    <div class="qa-overlay" id="caOverlay" onclick="if(event.target===this)closeCAPanel()">
+        <div class="qa-sheet ca-sheet" role="dialog" aria-modal="true" aria-labelledby="caTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="caTitle">CA des abonnements</h2>
+                <button class="icon-btn" onclick="closeCAPanel()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="ca-nav">
+                <button class="icon-btn" onclick="changeCAMonth(-1)" aria-label="Mois précédent"><span class="material-icons-outlined">chevron_left</span></button>
+                <strong id="caMonthLabel"></strong>
+                <button class="icon-btn" onclick="changeCAMonth(1)" aria-label="Mois suivant"><span class="material-icons-outlined">chevron_right</span></button>
+            </div>
+            <div class="ca-hero">
+                <span class="ca-total"><span id="caTotal">0</span> <small>FCFA</small></span>
+                <span class="ca-compare" id="caCompare"></span>
+            </div>
+            <div id="caServices" class="ca-services"></div>
+            <div id="caRows" class="ca-rows"></div>
+            <p class="notif-foot">Chaque paiement est divisé par le nombre de mois couverts : seule la part du mois est comptée.</p>
         </div>
     </div>
 
