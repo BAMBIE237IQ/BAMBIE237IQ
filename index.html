@@ -351,12 +351,7 @@
         </div>
 
         <div class="period-selector" style="justify-content:center; margin-bottom: 24px;">
-            <div class="nav-tabs" style="display:flex; width:auto; padding:0; border:none; box-shadow:none; position:relative; top:0; left:0; flex-direction:row;">
-                <button class="nav-tab sub-tab-btn active" onclick="setSubFilter('netflix')">Netflix</button>
-                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('spotify')">Spotify</button>
-                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('prime')">Prime Video</button>
-                <button class="nav-tab sub-tab-btn" onclick="setSubFilter('proton')">ProtonVPN</button>
-            </div>
+            <div class="nav-tabs sub-tabs" id="subTabs"></div>
         </div>
 
         <div id="subContent"></div>
@@ -548,7 +543,7 @@
         <div class="modal" style="width:350px;">
             <h3 id="subModalTitle">Nouveau Client</h3>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-                <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"><option value="netflix">Netflix</option><option value="spotify">Spotify</option><option value="prime">Prime Video</option><option value="proton">ProtonVPN</option></select></div>
+                <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"></select></div>
                 <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
                 <div id="subProfileDiv"><label class="fin-label">Profil</label><select id="subProfile" class="fin-input"><option value="Rouge">Rouge</option><option value="Violet">Violet</option><option value="Jaune">Jaune</option><option value="Vert">Vert</option><option value="Blanc">Blanc</option></select></div>
                 <div><label class="fin-label">Nom du client</label><input type="text" id="subName" class="fin-input" placeholder="Ex: Jean Dupont"></div>

@@ -16,7 +16,7 @@ function todayCameroonUTC() {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
-function collectAlerts(subs) {
+function collectAlerts(subs, names) {
   const today = todayCameroonUTC();
   const out = { j0: [], j5: [], expired: [] };
   for (const c of subs) {
@@ -26,7 +26,10 @@ function collectAlerts(subs) {
     const [y, m, d] = String(c.end).split('-').map(Number);
     if (!y || !m || !d) continue;
     const diff = Math.round((Date.UTC(y, m - 1, d) - today) / 86400000);
-    const who = `${c.name || 'Client'} (${SERVICES[c.service] || c.service || ''}${c.account ? ' ' + c.account : ''}${c.profile ? ' ' + c.profile : ''})`;
+    // Nom personnalisé du compte (onglet Abonnements) s'il existe, sinon "Service N"
+    const svc = names.services[c.service]?.name || SERVICES[c.service] || c.service || '';
+    const acc = c.account ? (names.accounts[`${c.service}_${c.account}`] || `${svc} ${c.account}`) : svc;
+    const who = `${c.name || 'Client'} (${acc}${c.profile ? ' ' + c.profile : ''})`;
     if (diff === 0) out.j0.push(who);
     else if (diff === 5) out.j5.push(who);
     else if (diff < 0 && diff >= -3) out.expired.push(who);
@@ -58,7 +61,11 @@ export default async function handler(req, res) {
     // L'app enregistre tout sous /userData (et non à la racine)
     let subs = (await (await fetch(`${FIREBASE_DB_URL}userData/subscriptions.json`)).json()) || [];
     if (!Array.isArray(subs)) subs = Object.values(subs);
-    const alerts = collectAlerts(subs);
+    const names = {
+      services: (await (await fetch(`${FIREBASE_DB_URL}userData/subServices.json`)).json()) || {},
+      accounts: (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountNames.json`)).json()) || {}
+    };
+    const alerts = collectAlerts(subs, names);
     if (!alerts.j0.length && !alerts.j5.length && !alerts.expired.length) return res.status(200).send('Rien à signaler');
 
     // Téléphones qui ont activé les rappels (stockés hors de /userData pour ne pas être écrasés par l'app)

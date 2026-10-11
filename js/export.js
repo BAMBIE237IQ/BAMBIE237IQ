@@ -51,6 +51,7 @@ function importJSON(input) {
             S.blurAmounts = parsed.blurAmounts || false;
             S.subscriptions = parsed.subscriptions || [];
             S.subAccountNames = parsed.subAccountNames || {};
+            S.subServices = parsed.subServices || null;
             S.calendarChecked = parsed.calendarChecked || {};
             S.calendarEvents = parsed.calendarEvents || {};
             S.fitness = parsed.fitness || { targetWeight: 82, height:1.81, records:{} };

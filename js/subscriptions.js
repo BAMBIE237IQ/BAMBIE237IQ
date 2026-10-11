@@ -1,34 +1,119 @@
 // ==================== SUBSCRIPTIONS ====================
-const SUB_CONFIG = {
-    netflix: { accounts: [1,2,3,4], hasProfiles: true },
-    spotify: { accounts: [1,2], hasProfiles: false },
-    prime: { accounts: [1], hasProfiles: false },
-    proton: { accounts: [1], hasProfiles: false }
+// Services et comptes modifiables (enregistrés dans S.subServices, synchronisés).
+// Valeurs de départ = l'ancienne configuration fixe.
+const DEFAULT_SUB_SERVICES = {
+    netflix: { name: 'Netflix', accounts: [1, 2, 3, 4], hasProfiles: true },
+    spotify: { name: 'Spotify', accounts: [1, 2], hasProfiles: false },
+    prime: { name: 'Prime Video', accounts: [1], hasProfiles: false },
+    proton: { name: 'ProtonVPN', accounts: [1], hasProfiles: false }
 };
+const SUB_PROFILES = ['Rouge', 'Violet', 'Jaune', 'Vert', 'Blanc'];
+
+function subServices() {
+    if (!S.subServices || typeof S.subServices !== 'object' || !Object.keys(S.subServices).length) {
+        S.subServices = JSON.parse(JSON.stringify(DEFAULT_SUB_SERVICES));
+    }
+    // Firebase peut renvoyer les tableaux sous forme d'objets : on normalise
+    for (const id in S.subServices) {
+        const sv = S.subServices[id];
+        sv.accounts = (Array.isArray(sv.accounts) ? sv.accounts : Object.values(sv.accounts || {})).map(Number).filter(n => n > 0);
+    }
+    return S.subServices;
+}
+function subServiceName(id) { const sv = subServices()[id]; return sv ? sv.name : (id || ''); }
+// Nom affiché d'un compte : le nom personnalisé s'il existe, sinon "Service · Compte N"
+function subAccountLabel(service, acc) {
+    const custom = S.subAccountNames && S.subAccountNames[`${service}_${acc}`];
+    return custom || `${subServiceName(service)} · Compte ${acc}`;
+}
+function subClientsOf(service, acc) {
+    return (S.subscriptions || []).filter(c => c.service === service && (acc === undefined || Number(c.account) === Number(acc)));
+}
+
+function renderSubTabs() {
+    const box = document.getElementById('subTabs');
+    if (!box) return;
+    const svcs = subServices();
+    if (!svcs[subFilter]) subFilter = Object.keys(svcs)[0];
+    box.innerHTML = Object.keys(svcs).map(id => `<button class="nav-tab sub-tab-btn${id === subFilter ? ' active' : ''}" data-svc="${escAttr(id)}" onclick="setSubFilter(this.dataset.svc)">${escHtml(svcs[id].name)} <span class="sub-tab-count">${subClientsOf(id).length}</span></button>`).join('')
+        + `<button class="nav-tab sub-tab-add" onclick="addSubService()"><span class="material-icons-outlined">add</span> Service</button>`;
+}
 
 function setSubFilter(f) {
     subFilter = f;
-    document.querySelectorAll('.sub-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.sub-tab-btn[onclick*="${f}"]`).classList.add('active');
     renderSubscriptions();
+}
+
+function addSubService() {
+    const name = (prompt('Nom du nouveau service (ex : Disney+, YouTube Premium, Canva) :') || '').trim();
+    if (!name) return;
+    const svcs = subServices();
+    if (Object.values(svcs).some(sv => sv.name.toLowerCase() === name.toLowerCase())) return toast('Ce service existe déjà');
+    let id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '') || 'service';
+    const base = id; let i = 2;
+    while (svcs[id]) id = base + i++;
+    const hasProfiles = confirm('Ce service utilise-t-il des profils de couleur, comme Netflix (Rouge, Violet, Jaune, Vert, Blanc) ?\n\nOK = oui, Annuler = non');
+    svcs[id] = { name, accounts: [1], hasProfiles };
+    subFilter = id;
+    save(); renderSubscriptions();
+    toast(`Service ${name} ajouté ✓`);
+}
+
+function removeSubService(id) {
+    const n = subClientsOf(id).length;
+    if (n) return toast(`Impossible : ${n} client${n > 1 ? 's' : ''} dans ce service. Supprime-les ou change-les de service d'abord.`);
+    if (Object.keys(subServices()).length <= 1) return toast('Garde au moins un service');
+    if (!confirm(`Supprimer le service ${subServiceName(id)} et tous ses comptes ?`)) return;
+    delete S.subServices[id];
+    for (const k of Object.keys(S.subAccountNames || {})) if (k.startsWith(id + '_')) delete S.subAccountNames[k];
+    subFilter = Object.keys(S.subServices)[0];
+    save(); renderSubscriptions();
+    toast('Service supprimé');
+}
+
+function addSubAccount(service) {
+    const sv = subServices()[service];
+    if (!sv) return;
+    const next = sv.accounts.length ? Math.max(...sv.accounts) + 1 : 1;
+    const name = prompt(`Nom du nouveau compte ${sv.name} (laisse vide pour « Compte ${next} ») :`);
+    if (name === null) return;
+    sv.accounts.push(next);
+    if (name.trim()) { if (!S.subAccountNames) S.subAccountNames = {}; S.subAccountNames[`${service}_${next}`] = name.trim(); }
+    save(); renderSubscriptions();
+    toast('Compte ajouté ✓');
+}
+
+function removeSubAccount(service, acc) {
+    const n = subClientsOf(service, acc).length;
+    if (n) return toast(`Impossible : ${n} client${n > 1 ? 's' : ''} sur ce compte. Supprime-les ou déplace-les d'abord.`);
+    if (!confirm(`Supprimer le compte « ${subAccountLabel(service, acc)} » ?`)) return;
+    const sv = subServices()[service];
+    sv.accounts = sv.accounts.filter(a => Number(a) !== Number(acc));
+    if (S.subAccountNames) delete S.subAccountNames[`${service}_${acc}`];
+    save(); renderSubscriptions();
+    toast('Compte supprimé');
 }
 
 function renderSubscriptions() {
     const c = document.getElementById('subContent');
-    const conf = SUB_CONFIG[subFilter];
+    renderSubTabs();
+    const conf = subServices()[subFilter];
     let html = '<div class="sub-grid">';
 
     for (const acc of conf.accounts) {
-        const accKey = `${subFilter}_${acc}`;
-        const defaultName = `${subFilter.toUpperCase()} - Compte ${acc}`;
-        const accName = (S.subAccountNames && S.subAccountNames[accKey]) ? S.subAccountNames[accKey] : defaultName;
+        const accName = subAccountLabel(subFilter, acc);
         
         html += `<div class="sub-card">
             <div class="sub-card-header">
                 <span>${escHtml(accName)}</span>
-                <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc}, '${escHtml(accName)}')">
-                    <span class="material-icons-outlined" style="font-size:14px;">edit</span>
-                </button>
+                <span class="sub-card-actions">
+                    <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc})" aria-label="Renommer le compte" title="Renommer">
+                        <span class="material-icons-outlined" style="font-size:14px;">edit</span>
+                    </button>
+                    <button class="btn" style="padding:4px 8px;" onclick="removeSubAccount('${subFilter}', ${acc})" aria-label="Supprimer le compte" title="Supprimer le compte">
+                        <span class="material-icons-outlined" style="font-size:14px;">delete</span>
+                    </button>
+                </span>
             </div>
             <div class="sub-table-wrapper">
                 <table class="sub-table">
@@ -47,7 +132,7 @@ function renderSubscriptions() {
                     <tbody>`;
         
         if (conf.hasProfiles) {
-            const profiles = ['Rouge', 'Violet', 'Jaune', 'Vert', 'Blanc'];
+            const profiles = SUB_PROFILES;
             let hasData = false;
             for (const p of profiles) {
                 const rows = getSubClientsRowsHtml(subFilter, acc, p);
@@ -65,7 +150,9 @@ function renderSubscriptions() {
             </div>
         </div>`;
     }
+    html += `<button class="sub-add-account" onclick="addSubAccount('${subFilter}')"><span class="material-icons-outlined">add</span> Ajouter un compte ${escHtml(conf.name)}</button>`;
     html += '</div>';
+    html += `<div class="sub-service-foot"><button class="sub-remove-service" onclick="removeSubService('${subFilter}')">Supprimer le service ${escHtml(conf.name)}</button></div>`;
     c.innerHTML = html;
 }
 
@@ -120,17 +207,24 @@ function getSubClientsRowsHtml(service, acc, profile) {
 
 function updateSubModalFields() {
     const s = document.getElementById('subService').value;
-    const c = SUB_CONFIG[s];
+    const c = subServices()[s];
+    if (!c) return;
     
     const accSel = document.getElementById('subAccount');
-    accSel.innerHTML = '';
-    for (const a of c.accounts) accSel.innerHTML += `<option value="${a}">Compte ${a}</option>`;
+    accSel.innerHTML = c.accounts.map(a => `<option value="${a}">${escHtml(subAccountLabel(s, a))}</option>`).join('');
     
     document.getElementById('subProfileDiv').style.display = c.hasProfiles ? 'block' : 'none';
 }
 
+function fillSubServiceSelect() {
+    const sel = document.getElementById('subService');
+    const svcs = subServices();
+    sel.innerHTML = Object.keys(svcs).map(id => `<option value="${escAttr(id)}">${escHtml(svcs[id].name)}</option>`).join('');
+}
+
 function openSubModal(id = null) {
     editingSubId = id;
+    fillSubServiceSelect();
     document.getElementById('subModalTitle').textContent = id ? 'Modifier Client' : 'Nouveau Client';
     const m = document.getElementById('subModalOverlay');
     
@@ -140,7 +234,7 @@ function openSubModal(id = null) {
             document.getElementById('subService').value = c.service;
             updateSubModalFields();
             document.getElementById('subAccount').value = c.account;
-            if (SUB_CONFIG[c.service].hasProfiles) document.getElementById('subProfile').value = c.profile;
+            if ((subServices()[c.service] || {}).hasProfiles) document.getElementById('subProfile').value = c.profile;
             document.getElementById('subName').value = c.name;
             document.getElementById('subStatus').value = c.status;
             document.getElementById('subStart').value = c.start;
@@ -171,7 +265,7 @@ function saveSub() {
         id: editingSubId || Date.now().toString(),
         service: s,
         account: parseInt(document.getElementById('subAccount').value),
-        profile: SUB_CONFIG[s].hasProfiles ? document.getElementById('subProfile').value : null,
+        profile: (subServices()[s] || {}).hasProfiles ? document.getElementById('subProfile').value : null,
         name: document.getElementById('subName').value.trim(),
         status: document.getElementById('subStatus').value.trim(),
         start: document.getElementById('subStart').value,
@@ -181,6 +275,7 @@ function saveSub() {
     };
 
     if (!obj.name) return toast("Erreur : Nom requis");
+    if (!obj.account) return toast("Erreur : ajoute d'abord un compte à ce service");
 
     if (editingSubId) {
         const idx = S.subscriptions.findIndex(x => x.id === editingSubId);
@@ -195,8 +290,8 @@ function saveSub() {
     toast("Client sauvegardé ✓");
 }
 
-function renameSubAccount(service, acc, currentName) {
-    const newName = prompt("Nouveau nom pour ce compte :", currentName);
+function renameSubAccount(service, acc) {
+    const newName = prompt("Nouveau nom pour ce compte :", subAccountLabel(service, acc));
     if (newName !== null && newName.trim() !== "") {
         if (!S.subAccountNames) S.subAccountNames = {};
         S.subAccountNames[`${service}_${acc}`] = newName.trim();

@@ -202,10 +202,23 @@ function buildTodaySummary(d, now, doneN, totalN, best, wt, h, target) {
         sumCard('monthly', 'calendar_month', 'var(--accent-purple)', 'Habit Tracker', `${monthPct}<small>% ce mois</small>`, top ? `Top : ${escHtml(top.name)} (${top.p} %)` : 'Aucune habitude'),
         sumCard('finance', 'donut_large', 'var(--accent-blue)', 'Dashboard', money(inc1 - exp1), `Entrées ${formatFCFA(inc1)} · Sorties ${formatFCFA(exp1)}`, ' blurable'),
         sumCard('subscriptions', 'subscriptions', 'var(--accent-pink)', 'Abonnements', `${active}<small>clients actifs</small>`, soon || expired ? `<span class="${soon ? 'warn' : ''}">${soon} expire${soon > 1 ? 'nt' : ''} sous 5 j</span> · ${expired} expiré${expired > 1 ? 's' : ''}` : 'Rien à renouveler'),
+        caCard(now),
         sumCard('finance2', 'account_balance_wallet', 'var(--accent-yellow)', 'Finance', money(inc2 - exp2), `Entrées ${formatFCFA(inc2)} · Sorties ${formatFCFA(exp2)}`, ' blurable'),
         sumCard('calendar', 'format_list_bulleted', 'var(--accent-green)', 'Journal de bord', `${dayTasks.filter(t => t.done).length}<small>/ ${dayTasks.length} tâches</small>`, openWeek ? `${openWeek} non terminée${openWeek > 1 ? 's' : ''} sur 7 jours` : 'Tout est à jour'),
         sumCard('fitness', 'fitness_center', 'var(--accent-red)', 'Santé', wt ? `${fmtKg(wt.value)}<small>kg</small>` : '—', wt ? `Objectif ${fmtKg(target)} kg · ${toGo > 0 ? 'encore ' + fmtKg(toGo) + ' kg' : 'atteint'} · IMC ${bmi}` : `Objectif ${fmtKg(target)} kg`)
     ].join('');
+}
+
+// Bulle « CA abonnements » de l'Accueil : part du mois de chaque paiement (voir js/ca.js)
+function caCard(now) {
+    const y = now.getFullYear(), m = now.getMonth(), p = new Date(y, m - 1, 1);
+    const cur = computeSubCA(y, m).total, prev = computeSubCA(p.getFullYear(), p.getMonth()).total, diff = cur - prev;
+    const sub = prev || cur ? `<span class="${diff >= 0 ? 'up' : 'warn'}">${diff >= 0 ? '+' : '\u2212'}${formatFCFA(Math.abs(Math.round(diff)))}</span> vs ${MONTHS[p.getMonth()].toLowerCase()}` : 'Aucun paiement ce mois';
+    return `<button class="sum-card ca-card blurable" onclick="switchView('subscriptions'); openCAPanel()">
+        <span class="sum-head"><span class="material-icons-outlined" style="color:var(--accent-green)">bar_chart</span>CA abonnements · ${MONTHS[m].toLowerCase()}</span>
+        <span class="sum-value"><span class="pos">${formatFCFA(Math.round(cur))}</span><small>FCFA</small></span>
+        <span class="sum-sub">${sub}</span>
+    </button>`;
 }
 
 function openMoreMenu() { document.getElementById('moreOverlay').classList.add('active'); }

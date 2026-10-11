@@ -2,7 +2,6 @@
 // Même règle que le rappel Telegram (api/cron.js) : alerte à J-5 et le jour même,
 // la cloche liste aussi tout ce qui expire sous 5 jours et les expirés depuis moins de 7 jours.
 const SUB_INACTIVE = /annul|stop|inactif|termin|fini|rembours/i;
-const SUB_SERVICE_NAMES = { netflix: 'Netflix', spotify: 'Spotify', prime: 'Prime Video', proton: 'ProtonVPN' };
 
 function subDaysLeft(end) {
     const [y, m, d] = String(end).split('-').map(Number);
@@ -35,8 +34,9 @@ function subAlertLabel(diff) {
 }
 
 function subAlertTitle(c) {
-    const svc = SUB_SERVICE_NAMES[c.service] || c.service || '';
-    return `${svc}${c.account ? ' · compte ' + c.account : ''}${c.profile ? ' · ' + c.profile : ''}`;
+    // Nom personnalisé du compte s'il existe (ex. « Spotify Famille »), sinon « Spotify · Compte 1 »
+    const acc = c.account ? subAccountLabel(c.service, c.account) : subServiceName(c.service);
+    return `${acc}${c.profile ? ' · ' + c.profile : ''}`;
 }
 
 function renderNotifications() {
@@ -72,7 +72,7 @@ function openSubFromNotif(id) {
     closeNotifPanel();
     const c = (S.subscriptions || []).find(x => String(x.id) === String(id));
     switchView('subscriptions');
-    if (c && SUB_CONFIG[c.service]) { setSubFilter(c.service); openSubModal(c.id); }
+    if (c && subServices()[c.service]) { setSubFilter(c.service); openSubModal(c.id); }
 }
 
 // ----- Notifications sur l'appareil (quand l'app est ouverte ; Telegram prend le relais app fermée) -----

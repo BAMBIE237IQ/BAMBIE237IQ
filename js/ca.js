@@ -78,7 +78,7 @@ function renderCAPanel() {
     const max = Math.max(1, ...Object.values(cur.byService));
     document.getElementById('caServices').innerHTML = Object.keys(cur.byService).sort((a, b) => cur.byService[b] - cur.byService[a]).map(s => `
         <div class="ca-svc">
-            <div class="ca-svc-head"><span>${escHtml(SUB_SERVICE_NAMES[s] || s)}</span><strong>${f(cur.byService[s])} FCFA</strong></div>
+            <div class="ca-svc-head"><span>${escHtml(subServiceName(s))}</span><strong>${f(cur.byService[s])} FCFA</strong></div>
             <div class="ca-bar"><div style="width:${Math.round(cur.byService[s] / max * 100)}%"></div></div>
         </div>`).join('');
 

@@ -230,3 +230,21 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
 .ca-row-main strong { font-size: 14px; }
 .ca-row-main span { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ca-part { font-size: 15px; font-weight: 900; color: var(--accent-green); white-space: nowrap; }
+
+/* ===== ABONNEMENTS : services et comptes modifiables ===== */
+.sub-tabs { display: flex !important; flex-direction: row !important; flex-wrap: wrap; justify-content: center; gap: 6px; width: auto; padding: 0; border: none; box-shadow: none; position: relative; top: 0; left: 0; background: none; margin: 0 auto !important; overflow: visible !important; }
+.sub-tabs .nav-tab { width: auto; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); font-size: 14px; font-weight: 700; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; }
+.sub-tabs .nav-tab.active { background: var(--brand-grad); color: #fff; border-color: transparent; box-shadow: var(--brand-shadow); }
+.sub-tab-count { font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, .1); }
+.sub-tabs .sub-tab-add { border-style: dashed; color: #fff; }
+.sub-tabs .sub-tab-add .ph-duotone { font-size: 16px; }
+.sub-card-actions { display: inline-flex; gap: 6px; }
+.sub-add-account {
+    min-height: 64px; border-radius: var(--radius); border: 1.5px dashed var(--border-light); background: transparent;
+    color: var(--text-secondary); font: inherit; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+}
+.sub-add-account:hover { color: #fff; border-color: var(--brand-bright); background: var(--accent-teal-bg); }
+.sub-service-foot { display: flex; justify-content: center; margin-top: 18px; }
+.sub-remove-service { border: none; background: none; color: var(--text-muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; padding: 8px; }
+.sub-remove-service:hover { color: var(--brand-bright); }
+.sum-sub .up { color: var(--accent-green); font-weight: 800; }
