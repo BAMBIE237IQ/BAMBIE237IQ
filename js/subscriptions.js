@@ -103,9 +103,14 @@ function renderSubscriptions() {
     for (const acc of conf.accounts) {
         const accName = subAccountLabel(subFilter, acc);
         
-        html += `<div class="sub-card">
+        html += `<div class="sub-card" data-acc="${acc}">
             <div class="sub-card-header">
-                <span>${escHtml(accName)}</span>
+                <span class="sub-card-title">
+                    <button class="sub-drag" data-acc="${acc}" aria-label="Déplacer le compte ${escAttr(accName)} (glisser, ou flèches haut/bas)" title="Glisser pour changer l'ordre">
+                        <span class="material-icons-outlined">drag_indicator</span>
+                    </button>
+                    <span>${escHtml(accName)}</span>
+                </span>
                 <span class="sub-card-actions">
                     <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc})" aria-label="Renommer le compte" title="Renommer">
                         <span class="material-icons-outlined" style="font-size:14px;">edit</span>
@@ -156,6 +161,7 @@ function renderSubscriptions() {
     html += '</div>';
     html += `<div class="sub-service-foot"><button class="sub-remove-service" onclick="removeSubService('${subFilter}')">Supprimer le service ${escHtml(conf.name)}</button></div>`;
     c.innerHTML = html;
+    initSubAccountDrag();
 }
 
 function getSubClientsRowsHtml(service, acc, profile) {
@@ -328,4 +334,70 @@ function renameSubAccount(service, acc) {
         renderSubscriptions();
         toast("Compte renommé");
     }
+}
+
+// ==================== ORDRE DES COMPTES (glisser-déposer) ====================
+// La poignée ⋮⋮ de chaque compte se fait glisser au doigt (téléphone) ou à la souris (PC).
+// L'ordre est enregistré dans subServices()[service].accounts, donc synchronisé partout.
+function moveSubAccount(service, acc, delta) {
+    const sv = subServices()[service];
+    const i = sv.accounts.findIndex(a => Number(a) === Number(acc)), j = i + delta;
+    if (i < 0 || j < 0 || j >= sv.accounts.length) return;
+    [sv.accounts[i], sv.accounts[j]] = [sv.accounts[j], sv.accounts[i]];
+    save(); renderSubscriptions();
+    const h = document.querySelector(`.sub-drag[data-acc="${acc}"]`); if (h) h.focus();
+}
+
+function initSubAccountDrag() {
+    const grid = document.querySelector('#subContent .sub-grid');
+    if (!grid) return;
+    grid.querySelectorAll('.sub-drag').forEach(handle => {
+        handle.addEventListener('keydown', e => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); moveSubAccount(subFilter, handle.dataset.acc, e.key === 'ArrowUp' ? -1 : 1); }
+        });
+        handle.addEventListener('pointerdown', e => {
+            if (e.button !== undefined && e.button !== 0) return;
+            e.preventDefault();
+            const card = handle.closest('.sub-card');
+            const scroller = document.querySelector('.main-content');
+            let lastY = e.clientY, raf = 0, moved = false;
+            try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+            card.classList.add('dragging');
+            document.body.classList.add('is-dragging');
+
+            const reorder = () => {
+                const others = [...grid.querySelectorAll('.sub-card:not(.dragging)')];
+                const before = others.find(o => { const r = o.getBoundingClientRect(); return lastY < r.top + r.height / 2; });
+                const target = before || grid.querySelector('.sub-add-account');
+                if (target && card.nextElementSibling !== target) { grid.insertBefore(card, target); moved = true; }
+            };
+            // Défilement automatique près des bords de l'écran
+            const tick = () => {
+                const edge = 90, h = window.innerHeight;
+                const speed = lastY < edge ? -(edge - lastY) / 5 : lastY > h - edge ? (lastY - (h - edge)) / 5 : 0;
+                if (speed) { if (scroller && scroller.scrollHeight > scroller.clientHeight) scroller.scrollTop += speed; else window.scrollBy(0, speed); reorder(); }
+                raf = requestAnimationFrame(tick);
+            };
+            raf = requestAnimationFrame(tick);
+
+            const onMove = ev => { lastY = ev.clientY; reorder(); };
+            const onUp = () => {
+                cancelAnimationFrame(raf);
+                handle.removeEventListener('pointermove', onMove);
+                handle.removeEventListener('pointerup', onUp);
+                handle.removeEventListener('pointercancel', onUp);
+                card.classList.remove('dragging');
+                document.body.classList.remove('is-dragging');
+                if (!moved) return;
+                const order = [...grid.querySelectorAll('.sub-card')].map(el => Number(el.dataset.acc));
+                const sv = subServices()[subFilter];
+                if (order.length === sv.accounts.length) { sv.accounts = order; save(); }
+                renderSubscriptions();
+                toast('Ordre des comptes enregistré ✓');
+            };
+            handle.addEventListener('pointermove', onMove);
+            handle.addEventListener('pointerup', onUp);
+            handle.addEventListener('pointercancel', onUp);
+        });
+    });
 }
