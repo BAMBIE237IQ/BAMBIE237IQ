@@ -132,7 +132,9 @@ function renderSubscriptions() {
                     <tbody>`;
         
         if (conf.hasProfiles) {
-            const profiles = SUB_PROFILES;
+            const custom = (S.subscriptions || []).filter(x => x.service === subFilter && Number(x.account) === Number(acc) && x.profile && !SUB_PROFILES.includes(x.profile)).map(x => x.profile);
+            const profiles = [...SUB_PROFILES, ...new Set(custom)];
+            if ((S.subscriptions || []).some(x => x.service === subFilter && Number(x.account) === Number(acc) && !x.profile)) profiles.push('__none__');
             let hasData = false;
             for (const p of profiles) {
                 const rows = getSubClientsRowsHtml(subFilter, acc, p);
@@ -157,7 +159,7 @@ function renderSubscriptions() {
 }
 
 function getSubClientsRowsHtml(service, acc, profile) {
-    let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile ? s.profile === profile : true));
+    let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile === '__none__' ? !s.profile : profile ? s.profile === profile : true));
     if (!clients.length) return '';
     
     let html = '';
@@ -188,7 +190,8 @@ function getSubClientsRowsHtml(service, acc, profile) {
 
         let profCell = '';
         if (profile) {
-            profCell = `<td class="profil-cell profil-${profile.toLowerCase()}">${profile}</td>`;
+            const pc = SUB_PROFILES.includes(profile) ? 'profil-' + profile.toLowerCase() : 'profil-custom';
+            profCell = `<td class="profil-cell ${pc}">${profile === '__none__' ? '—' : escHtml(profile)}</td>`;
         }
 
         html += `<tr onclick="openSubModal('${c.id}')">
@@ -214,6 +217,29 @@ function updateSubModalFields() {
     accSel.innerHTML = c.accounts.map(a => `<option value="${a}">${escHtml(subAccountLabel(s, a))}</option>`).join('');
     
     document.getElementById('subProfileDiv').style.display = c.hasProfiles ? 'block' : 'none';
+    const used = (S.subscriptions || []).filter(x => x.service === s && x.profile).map(x => x.profile);
+    const names = [...new Set([...SUB_PROFILES, ...used])];
+    document.getElementById('subProfileList').innerHTML = names.map(n => `<option value="${escAttr(n)}"></option>`).join('');
+}
+
+// Durée choisie -> nombre de mois ("01Mois", "12 Mois" -> 12 ; "For Life" -> 'life')
+function subDurationValue(duration) {
+    if (duration && /life|vie/i.test(duration)) return 'life';
+    const n = parseInt(String(duration || '').replace(/[^\d]/g, ''), 10);
+    return n > 0 ? String(n) : '1';
+}
+
+// Début + N mois (même jour ; 31 janv. + 1 mois -> 28/29 févr.)
+function addMonthsToDate(dateStr, months) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const last = new Date(y, m - 1 + months + 1, 0).getDate();
+    return localDateStr(new Date(y, m - 1 + months, Math.min(d, last)));
+}
+
+function updateSubEndDate() {
+    const start = document.getElementById('subStart').value, dur = document.getElementById('subDuration').value;
+    if (dur === 'life') { document.getElementById('subEnd').value = ''; return; }
+    if (start) document.getElementById('subEnd').value = addMonthsToDate(start, parseInt(dur, 10) || 1);
 }
 
 function fillSubServiceSelect() {
@@ -234,12 +260,14 @@ function openSubModal(id = null) {
             document.getElementById('subService').value = c.service;
             updateSubModalFields();
             document.getElementById('subAccount').value = c.account;
-            if ((subServices()[c.service] || {}).hasProfiles) document.getElementById('subProfile').value = c.profile;
+            document.getElementById('subProfile').value = c.profile || '';
             document.getElementById('subName').value = c.name;
             document.getElementById('subStatus').value = c.status;
             document.getElementById('subStart').value = c.start;
             document.getElementById('subEnd').value = c.end;
-            document.getElementById('subDuration').value = c.duration;
+            const dv = subDurationValue(c.duration), sel = document.getElementById('subDuration');
+            if (![...sel.options].some(o => o.value === dv)) sel.insertAdjacentHTML('beforeend', `<option value="${dv}">${dv} mois</option>`);
+            sel.value = dv;
             document.getElementById('subCode').value = c.code;
         }
     } else {
@@ -248,8 +276,9 @@ function openSubModal(id = null) {
         document.getElementById('subName').value = '';
         document.getElementById('subStatus').value = 'Sell';
         document.getElementById('subStart').value = localDateStr();
-        document.getElementById('subEnd').value = '';
-        document.getElementById('subDuration').value = '01Mois';
+        document.getElementById('subProfile').value = '';
+        document.getElementById('subDuration').value = '1';
+        updateSubEndDate();
         document.getElementById('subCode').value = '';
     }
     
@@ -265,12 +294,12 @@ function saveSub() {
         id: editingSubId || Date.now().toString(),
         service: s,
         account: parseInt(document.getElementById('subAccount').value),
-        profile: (subServices()[s] || {}).hasProfiles ? document.getElementById('subProfile').value : null,
+        profile: (subServices()[s] || {}).hasProfiles ? (document.getElementById('subProfile').value.trim() || null) : null,
         name: document.getElementById('subName').value.trim(),
         status: document.getElementById('subStatus').value.trim(),
         start: document.getElementById('subStart').value,
         end: document.getElementById('subEnd').value,
-        duration: document.getElementById('subDuration').value.trim(),
+        duration: document.getElementById('subDuration').value === 'life' ? 'For Life' : `${document.getElementById('subDuration').value} Mois`,
         code: document.getElementById('subCode').value.trim()
     };
 

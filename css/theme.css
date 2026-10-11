@@ -248,3 +248,4 @@ h1, h2, h3, .section-title, .period-label, .stat-value, .kpi-value, .sum-value {
 .sub-remove-service { border: none; background: none; color: var(--text-muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; padding: 8px; }
 .sub-remove-service:hover { color: var(--brand-bright); }
 .sum-sub .up { color: var(--accent-green); font-weight: 800; }
+.sub-table td.profil-custom { color: #fca5a5; border-left: 4px solid var(--brand-bright); background: rgba(229, 28, 44, .06); }

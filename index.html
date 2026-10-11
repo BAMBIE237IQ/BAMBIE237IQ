@@ -545,14 +545,22 @@
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
                 <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"></select></div>
                 <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
-                <div id="subProfileDiv"><label class="fin-label">Profil</label><select id="subProfile" class="fin-input"><option value="Rouge">Rouge</option><option value="Violet">Violet</option><option value="Jaune">Jaune</option><option value="Vert">Vert</option><option value="Blanc">Blanc</option></select></div>
+                <div id="subProfileDiv"><label class="fin-label" for="subProfile">Profil (nom libre)</label><input type="text" id="subProfile" class="fin-input" list="subProfileList" placeholder="Ex : Rouge, VIP, Famille…" autocomplete="off"><datalist id="subProfileList"></datalist></div>
                 <div><label class="fin-label">Nom du client</label><input type="text" id="subName" class="fin-input" placeholder="Ex: Jean Dupont"></div>
                 <div><label class="fin-label">Statut</label><input type="text" id="subStatus" class="fin-input" placeholder="Ex: Okay, Sell..."></div>
-                <div style="display:flex; gap:8px;">
-                    <div style="flex:1;"><label class="fin-label">Début</label><input type="date" id="subStart" class="fin-input"></div>
-                    <div style="flex:1;"><label class="fin-label">Fin</label><input type="date" id="subEnd" class="fin-input"></div>
+                <div><label class="fin-label" for="subDuration">Durée</label>
+                    <select id="subDuration" class="fin-input" onchange="updateSubEndDate()">
+                        <option value="1">1 mois</option><option value="2">2 mois</option><option value="3">3 mois</option>
+                        <option value="4">4 mois</option><option value="5">5 mois</option><option value="6">6 mois</option>
+                        <option value="9">9 mois</option><option value="12">12 mois (1 an)</option><option value="24">24 mois (2 ans)</option>
+                        <option value="life">À vie</option>
+                    </select>
                 </div>
-                <div><label class="fin-label">Durée</label><input type="text" id="subDuration" class="fin-input" placeholder="Ex: 1Mois, For Life"></div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;"><label class="fin-label" for="subStart">Début</label><input type="date" id="subStart" class="fin-input" onchange="updateSubEndDate()"></div>
+                    <div style="flex:1;"><label class="fin-label" for="subEnd">Fin <small style="opacity:.7">(calculée, modifiable)</small></label><input type="date" id="subEnd" class="fin-input"></div>
+                </div>
+                
                 <div><label class="fin-label">Montant payé (FCFA)</label><input type="text" id="subCode" class="fin-input" inputmode="numeric" placeholder="Ex : 5 000 pour 2 mois"></div>
             </div>
             <div class="modal-actions" style="margin-top:20px;">
