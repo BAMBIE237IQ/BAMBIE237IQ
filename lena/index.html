@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script>if (location.pathname.endsWith('/lena')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0b0b">
+    <meta name="app-id" content="lena">
+    <title>Ma plateforme</title>
+    <meta name="description" content="Gestion des abonnements streaming : clients, comptes, échéances et chiffre d'affaires mensuel.">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ===== BARRE LATÉRALE (PC) / BARRE DU HAUT (mobile) ===== -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-mark" id="brandMark" aria-hidden="true">S</span>
+            <div class="brand-text">
+                <span class="brand-top" id="brandTop">Ma plateforme</span>
+                <span class="brand-bottom">Abonnements</span>
+            </div>
+        </div>
+        <nav class="side-nav" aria-label="Navigation principale">
+            <button class="nav-item active" data-view="home" onclick="go('home')"><i class="ph-duotone ph-house"></i><span>Accueil</span></button>
+            <button class="nav-item" data-view="subs" onclick="go('subs')"><i class="ph-duotone ph-television-simple"></i><span>Abonnements</span></button>
+            <button class="nav-item" data-view="ca" onclick="go('ca')"><i class="ph-duotone ph-chart-line-up"></i><span>Chiffre d'affaires</span></button>
+            <button class="nav-item" data-view="settings" onclick="go('settings')"><i class="ph-duotone ph-gear-six"></i><span>Réglages</span></button>
+        </nav>
+        <div class="side-foot">
+            <button class="btn-grad full" onclick="openClientModal()"><i class="ph-duotone ph-plus"></i> Nouveau client</button>
+        </div>
+        <button class="bell" onclick="openAlerts()" aria-label="Alertes d'échéance"><i class="ph-duotone ph-bell"></i><span class="bell-count" id="bellCount" hidden>0</span></button>
+    </aside>
+
+    <main class="main">
+        <!-- ===== ACCUEIL ===== -->
+        <section class="view active" id="view-home">
+            <header class="hero">
+                <div class="hero-text">
+                    <span class="eyebrow" id="homeDate"></span>
+                    <h1>Bonjour <span class="grad-text" id="homeName"></span></h1>
+                    <p id="homeSummary">Tes abonnements, tes clients et ton chiffre d'affaires au même endroit.</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn-grad" onclick="openClientModal()"><i class="ph-duotone ph-plus"></i> Nouveau client</button>
+                    <button class="btn-ghost" onclick="go('ca')"><i class="ph-duotone ph-chart-bar"></i> Voir le CA</button>
+                </div>
+            </header>
+
+            <div class="kpis" id="homeKpis"></div>
+
+            <div class="grid-2">
+                <section class="card chart-card">
+                    <div class="card-head">
+                        <h2>Chiffre d'affaires · 12 derniers mois</h2>
+                        <span class="muted" id="chartTotal"></span>
+                    </div>
+                    <div class="chart-box"><canvas id="homeChart"></canvas></div>
+                </section>
+                <section class="card">
+                    <div class="card-head">
+                        <h2>À relancer</h2>
+                        <button class="link" onclick="openAlerts()">Tout voir</button>
+                    </div>
+                    <div id="homeRenew" class="list"></div>
+                </section>
+            </div>
+
+            <div class="grid-2">
+                <section class="card">
+                    <div class="card-head"><h2>CA du mois par service</h2><span class="muted" id="homeSvcMonth"></span></div>
+                    <div id="homeServices" class="bars"></div>
+                </section>
+                <section class="card">
+                    <div class="card-head"><h2>Derniers clients</h2><button class="link" onclick="go('subs')">Abonnements</button></div>
+                    <div id="homeRecent" class="list"></div>
+                </section>
+            </div>
+        </section>
+
+        <!-- ===== ABONNEMENTS ===== -->
+        <section class="view" id="view-subs">
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Abonnements</span>
+                    <h1>Comptes et clients</h1>
+                </div>
+                <div class="page-actions">
+                    <label class="search"><i class="ph-duotone ph-magnifying-glass"></i><input id="clientSearch" type="search" placeholder="Rechercher un client…" oninput="renderSubs()"></label>
+                    <button class="btn-grad" onclick="openClientModal()"><i class="ph-duotone ph-plus"></i> Client</button>
+                </div>
+            </header>
+            <div class="svc-tabs" id="svcTabs" role="tablist" aria-label="Services"></div>
+            <div id="svcContent"></div>
+        </section>
+
+        <!-- ===== CHIFFRE D'AFFAIRES ===== -->
+        <section class="view" id="view-ca">
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Chiffre d'affaires</span>
+                    <h1>CA mensuel</h1>
+                </div>
+                <div class="month-nav">
+                    <button class="icon-btn" onclick="changeCaMonth(-1)" aria-label="Mois précédent"><i class="ph-duotone ph-caret-left"></i></button>
+                    <strong id="caMonthLabel"></strong>
+                    <button class="icon-btn" onclick="changeCaMonth(1)" aria-label="Mois suivant"><i class="ph-duotone ph-caret-right"></i></button>
+                </div>
+            </header>
+            <div class="grid-ca">
+                <section class="card ca-hero">
+                    <span class="muted">CA du mois</span>
+                    <span class="ca-total"><span id="caTotal">0</span> <small class="cur">FCFA</small></span>
+                    <span id="caCompare" class="muted"></span>
+                    <p class="hint">Chaque paiement est divisé par le nombre de mois couverts : seule la part du mois est comptée.</p>
+                </section>
+                <section class="card">
+                    <div class="card-head"><h2>Par service</h2></div>
+                    <div id="caServices" class="bars"></div>
+                </section>
+            </div>
+            <section class="card">
+                <div class="card-head"><h2>Détail par client</h2><span class="muted" id="caCount"></span></div>
+                <div id="caRows" class="list"></div>
+            </section>
+        </section>
+
+        <!-- ===== RÉGLAGES ===== -->
+        <section class="view" id="view-settings">
+            <header class="page-head">
+                <div>
+                    <span class="eyebrow">Réglages</span>
+                    <h1>Mon activité</h1>
+                </div>
+            </header>
+            <div class="grid-2">
+                <section class="card form">
+                    <div class="card-head"><h2>Informations</h2></div>
+                    <label>Nom de ta plateforme de streaming<input id="setBusiness" placeholder="Ex : Lena Streaming"></label>
+                    <label>Ton prénom (affiché sur l'accueil)<input id="setName" placeholder="Ex : Lena"></label>
+                    <label>Devise<input id="setCurrency" placeholder="FCFA"></label>
+                    <label>Alerte avant la fin (jours)<input id="setAlertDays" type="number" min="1" max="30" placeholder="5"></label>
+                    <button class="btn-grad" onclick="saveSettings()"><i class="ph-duotone ph-floppy-disk"></i> Enregistrer</button>
+                </section>
+                <section class="card">
+                    <div class="card-head"><h2>Services proposés</h2><button class="link" onclick="addService()">+ Ajouter</button></div>
+                    <div id="setServices" class="list"></div>
+                </section>
+            </div>
+            <section class="card">
+                <div class="card-head"><h2>Sauvegarde</h2></div>
+                <p class="muted">Les données sont enregistrées sur cet appareil. Exporte une sauvegarde régulièrement pour ne rien perdre ou pour changer d'appareil.</p>
+                <div class="row-actions">
+                    <button class="btn-ghost" onclick="exportData()"><i class="ph-duotone ph-download-simple"></i> Exporter</button>
+                    <label class="btn-ghost file-btn"><i class="ph-duotone ph-upload-simple"></i> Importer<input type="file" accept=".json" onchange="importData(event)" hidden></label>
+                    <button class="btn-ghost" onclick="loadDemo()"><i class="ph-duotone ph-sparkle"></i> Charger une démo</button>
+                    <button class="btn-danger" onclick="resetAll()"><i class="ph-duotone ph-trash"></i> Tout effacer</button>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <!-- ===== BARRE DU BAS (mobile) ===== -->
+    <nav class="bottom-nav" aria-label="Navigation">
+        <button class="bn-item active" data-view="home" onclick="go('home')"><i class="ph-duotone ph-house"></i><span>Accueil</span></button>
+        <button class="bn-item" data-view="subs" onclick="go('subs')"><i class="ph-duotone ph-television-simple"></i><span>Abos</span></button>
+        <button class="bn-fab" onclick="openClientModal()" aria-label="Nouveau client"><i class="ph-duotone ph-plus"></i></button>
+        <button class="bn-item" data-view="ca" onclick="go('ca')"><i class="ph-duotone ph-chart-line-up"></i><span>CA</span></button>
+        <button class="bn-item" data-view="settings" onclick="go('settings')"><i class="ph-duotone ph-gear-six"></i><span>Réglages</span></button>
+    </nav>
+
+    <!-- ===== FICHE CLIENT ===== -->
+    <div class="overlay" id="clientOverlay" onclick="if(event.target===this)closeClientModal()">
+        <form class="sheet" role="dialog" aria-modal="true" aria-labelledby="clientTitle" onsubmit="saveClient(event)">
+            <div class="sheet-head">
+                <h2 id="clientTitle">Nouveau client</h2>
+                <button type="button" class="icon-btn" onclick="closeClientModal()" aria-label="Fermer"><i class="ph-duotone ph-x"></i></button>
+            </div>
+            <div class="form-grid">
+                <label>Service<select id="fService" onchange="fillAccountSelect()"></select></label>
+                <label>Compte<select id="fAccount"></select></label>
+                <label class="span-2">Nom du client<input id="fName" required placeholder="Ex : Jean Dupont" autocomplete="off"></label>
+                <label>Contact (téléphone)<input id="fContact" inputmode="tel" placeholder="Ex : 6 90 00 00 00" autocomplete="off"></label>
+                <label>Profil (facultatif)<input id="fProfile" list="profileList" placeholder="Nom du profil" autocomplete="off"><datalist id="profileList"></datalist></label>
+                <label>Durée
+                    <select id="fDuration" onchange="updateEndDate()">
+                        <option value="1">1 mois</option><option value="2">2 mois</option><option value="3">3 mois</option>
+                        <option value="6">6 mois</option><option value="12">12 mois (1 an)</option><option value="24">24 mois</option>
+                        <option value="life">À vie</option>
+                    </select>
+                </label>
+                <label>Montant payé<input id="fAmount" inputmode="numeric" placeholder="Ex : 5 000" autocomplete="off"></label>
+                <label>Début<input id="fStart" type="date" onchange="updateEndDate()"></label>
+                <label><span class="lbl-row">Fin <small>calculée, modifiable</small></span><input id="fEnd" type="date"></label>
+                <label class="span-2">Statut
+                    <select id="fStatus"><option value="actif">Actif</option><option value="attente">En attente de paiement</option><option value="annule">Annulé</option></select>
+                </label>
+                <label class="span-2">Note<textarea id="fNote" rows="2" placeholder="Identifiants envoyés, remarque…"></textarea></label>
+            </div>
+            <div class="sheet-actions">
+                <button type="button" class="btn-danger" id="fDelete" onclick="deleteClient()" hidden><i class="ph-duotone ph-trash"></i> Supprimer</button>
+                <span class="spacer"></span>
+                <button type="button" class="btn-ghost" onclick="closeClientModal()">Annuler</button>
+                <button type="submit" class="btn-grad"><i class="ph-duotone ph-check"></i> Enregistrer</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ===== ALERTES ===== -->
+    <div class="overlay" id="alertsOverlay" onclick="if(event.target===this)closeAlerts()">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="alertsTitle">
+            <div class="sheet-head">
+                <h2 id="alertsTitle">Échéances</h2>
+                <button class="icon-btn" onclick="closeAlerts()" aria-label="Fermer"><i class="ph-duotone ph-x"></i></button>
+            </div>
+            <div id="alertsList" class="list"></div>
+        </div>
+    </div>
+
+    <!-- ===== BIENVENUE (premier lancement) ===== -->
+    <div class="overlay" id="welcomeOverlay">
+        <form class="sheet welcome-sheet" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" onsubmit="saveWelcome(event)">
+            <span class="welcome-mark"><i class="ph-duotone ph-play-circle"></i></span>
+            <h2 id="welcomeTitle">Bienvenue 👋</h2>
+            <p>Personnalise ton espace en deux secondes. Tu pourras tout modifier plus tard dans Réglages.</p>
+            <label>Ton prénom<input id="wName" required placeholder="Ex : Lena" autocomplete="given-name"></label>
+            <label>Nom de ta plateforme de streaming<input id="wBusiness" required placeholder="Ex : Lena Streaming" autocomplete="organization"></label>
+            <button type="submit" class="btn-grad"><i class="ph-duotone ph-arrow-right"></i> Commencer</button>
+        </form>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <script src="app.js"></script>
+</body>
+</html>
