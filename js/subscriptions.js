@@ -173,9 +173,10 @@ function subDaysChip(c) {
     if (!c.end || (c.duration && /life|vie/i.test(c.duration))) return '';
     const d = subDaysLeft(c.end);
     if (d === null) return '';
-    if (d < 0) return `<span class="days-left expired">expiré depuis ${-d} j</span>`;
-    if (d === 0) return '<span class="days-left today">dernier jour</span>';
-    return `<span class="days-left${d <= 5 ? ' soon' : ''}">${d} jour${d > 1 ? 's' : ''} restant${d > 1 ? 's' : ''}</span>`;
+    const jrs = n => `${n} ${n > 1 ? 'jrs' : 'jr'}`; // abrégé pour un affichage compact
+    if (d < 0) return `<span class="days-left expired" title="Expiré depuis ${jrs(-d)}">exp. ${jrs(-d)}</span>`;
+    if (d === 0) return '<span class="days-left today" title="Dernier jour">auj.</span>';
+    return `<span class="days-left${d <= 5 ? ' soon' : ''}" title="${jrs(d)} restants">${jrs(d)}</span>`;
 }
 
 function getSubClientsRowsHtml(service, acc, profile) {
