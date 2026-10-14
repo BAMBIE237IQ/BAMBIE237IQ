@@ -70,9 +70,34 @@ function removeSubService(id) {
     if (!confirm(`Supprimer le service ${subServiceName(id)} et tous ses comptes ?`)) return;
     delete S.subServices[id];
     for (const k of Object.keys(S.subAccountNames || {})) if (k.startsWith(id + '_')) delete S.subAccountNames[k];
+    for (const k of Object.keys(S.subAccountCosts || {})) if (k.startsWith(id + '_')) delete S.subAccountCosts[k];
     subFilter = Object.keys(S.subServices)[0];
     save(); renderSubscriptions();
     toast('Service supprimé');
+}
+
+// ----- Coût d'achat mensuel d'un compte (saisi à la main) -----
+// Stocké dans S.subAccountCosts["service_compte"] = { amount, since: "AAAA-MM" } :
+// compté chaque mois à partir du mois où il a été saisi.
+function subAccountCost(service, acc) {
+    const c = S.subAccountCosts && S.subAccountCosts[`${service}_${acc}`];
+    return c && c.amount > 0 ? c : null;
+}
+function accountCostChip(service, acc) {
+    const c = subAccountCost(service, acc);
+    return `<button class="acc-cost${c ? '' : ' empty'}" onclick="editAccountCost('${service}', ${acc})" title="Coût d'achat mensuel du compte">${c ? `Coût : ${formatFCFA(c.amount)} / mois` : '+ Coût d’achat'}</button>`;
+}
+function editAccountCost(service, acc) {
+    const c = subAccountCost(service, acc);
+    const v = prompt(`Coût d'achat mensuel du compte « ${subAccountLabel(service, acc)} » (FCFA par mois).\nLaisse vide pour le retirer.`, c ? String(c.amount) : '');
+    if (v === null) return;
+    const n = parseInt(v.replace(/[^\d]/g, ''), 10);
+    if (!S.subAccountCosts) S.subAccountCosts = {};
+    const key = `${service}_${acc}`, t = new Date();
+    if (!n) delete S.subAccountCosts[key];
+    else S.subAccountCosts[key] = { amount: n, since: c ? c.since : monthKey(t.getFullYear(), t.getMonth()) };
+    save(); renderSubscriptions();
+    toast(n ? 'Coût du compte enregistré ✓' : 'Coût retiré');
 }
 
 function addSubAccount(service) {
@@ -94,6 +119,7 @@ function removeSubAccount(service, acc) {
     const sv = subServices()[service];
     sv.accounts = sv.accounts.filter(a => Number(a) !== Number(acc));
     if (S.subAccountNames) delete S.subAccountNames[`${service}_${acc}`];
+    if (S.subAccountCosts) delete S.subAccountCosts[`${service}_${acc}`];
     save(); renderSubscriptions();
     toast('Compte supprimé');
 }
@@ -114,6 +140,7 @@ function renderSubscriptions() {
                         <span class="material-icons-outlined">drag_indicator</span>
                     </button>
                     <span>${escHtml(accName)}</span>
+                    ${accountCostChip(subFilter, acc)}
                 </span>
                 <span class="sub-card-actions">
                     <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc})" aria-label="Renommer le compte" title="Renommer">
@@ -134,7 +161,7 @@ function renderSubscriptions() {
                             <th>Durée</th>
                             <th>Début</th>
                             <th>Fin</th>
-                            <th class="th-days">Jrs restants</th>
+                            <th class="th-days">Jours restants</th>
                             <th>Facturation</th>
                             <th>État</th>
                         </tr>

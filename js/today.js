@@ -212,12 +212,12 @@ function buildTodaySummary(d, now, doneN, totalN, best, wt, h, target) {
 // Bulle « CA abonnements » de l'Accueil : part du mois de chaque paiement (voir js/ca.js)
 function caCard(now) {
     const y = now.getFullYear(), m = now.getMonth(), p = new Date(y, m - 1, 1);
-    const cur = computeSubCA(y, m).total, prev = computeSubCA(p.getFullYear(), p.getMonth()).total, diff = cur - prev;
+    const ca = computeSubCA(y, m), cur = ca.total, prev = computeSubCA(p.getFullYear(), p.getMonth()).total, diff = cur - prev;
     const sub = prev || cur ? `<span class="${diff >= 0 ? 'up' : 'warn'}">${diff >= 0 ? '+' : '\u2212'}${formatFCFA(Math.abs(Math.round(diff)))}</span> vs ${MONTHS[p.getMonth()].toLowerCase()}` : 'Aucun paiement ce mois';
     return `<button class="sum-card ca-card blurable" onclick="switchView('subscriptions'); openCAPanel()">
         <span class="sum-head"><span class="material-icons-outlined" style="color:var(--accent-green)">bar_chart</span>CA abonnements · ${MONTHS[m].toLowerCase()}</span>
         <span class="sum-value"><span class="pos">${formatFCFA(Math.round(cur))}</span><small>FCFA</small></span>
-        <span class="sum-sub">${sub}</span>
+        <span class="sum-sub">${ca.cost ? `Bénéfice <strong class="${ca.profit < 0 ? 'warn' : 'up'}">${ca.profit < 0 ? '−' : ''}${formatFCFA(Math.abs(Math.round(ca.profit)))}</strong> · ` : ''}${sub}</span>
     </button>`;
 }
 

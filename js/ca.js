@@ -47,7 +47,15 @@ function computeSubCA(y, m) {
         rows.push({ c, amount, months, idx, part });
     }
     rows.sort((a, b) => b.part - a.part);
-    return { total, byService, rows };
+    // Coûts d'achat des comptes, comptés à partir du mois où ils ont été saisis
+    let cost = 0; const costByService = {};
+    const mk = monthKey(y, m), svcs = subServices();
+    for (const id in svcs) for (const acc of svcs[id].accounts) {
+        const c = subAccountCost(id, acc);
+        if (!c || (c.since && c.since > mk)) continue;
+        cost += c.amount; costByService[id] = (costByService[id] || 0) + c.amount;
+    }
+    return { total, cost, profit: total - cost, costByService, byService, rows };
 }
 
 function openCAPanel() {
@@ -71,6 +79,10 @@ function renderCAPanel() {
     const f = n => formatFCFA(Math.round(n));
     document.getElementById('caMonthLabel').textContent = `${MONTHS[caMonth]} ${caYear}`;
     document.getElementById('caTotal').textContent = f(cur.total);
+    document.getElementById('caCost').textContent = cur.cost ? `−${f(cur.cost)} FCFA` : '0';
+    const pe = document.getElementById('caProfit');
+    pe.textContent = `${cur.profit < 0 ? '−' : ''}${f(Math.abs(cur.profit))} FCFA`;
+    pe.className = cur.profit < 0 ? 'down' : 'up';
     document.getElementById('caCompare').innerHTML = prev.total || cur.total
         ? `<span class="${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '+' : '−'}${f(Math.abs(diff))} FCFA</span> vs ${MONTHS[pd.getMonth()].toLowerCase()}`
         : 'Aucun abonnement payé sur ce mois';
@@ -78,7 +90,7 @@ function renderCAPanel() {
     const max = Math.max(1, ...Object.values(cur.byService));
     document.getElementById('caServices').innerHTML = Object.keys(cur.byService).sort((a, b) => cur.byService[b] - cur.byService[a]).map(s => `
         <div class="ca-svc">
-            <div class="ca-svc-head"><span>${escHtml(subServiceName(s))}</span><strong>${f(cur.byService[s])} FCFA</strong></div>
+            <div class="ca-svc-head"><span>${escHtml(subServiceName(s))}${cur.costByService[s] ? ` <small class="ca-svc-cost">coût ${f(cur.costByService[s])}</small>` : ''}</span><strong>${f(cur.byService[s])} FCFA</strong></div>
             <div class="ca-bar"><div style="width:${Math.round(cur.byService[s] / max * 100)}%"></div></div>
         </div>`).join('');
 

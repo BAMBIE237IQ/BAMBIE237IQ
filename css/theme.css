@@ -272,3 +272,16 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 .sub-table td.sub-days .days-left { margin-left: 0; }
 .days-none { color: var(--text-muted); }
 .sub-table th, .sub-table td { white-space: nowrap; }
+
+/* ===== Coût d'achat des comptes et bénéfice ===== */
+.acc-cost { margin-left: 10px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(255, 61, 74, .35); background: rgba(255, 61, 74, .1); color: #ffb3b9; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.acc-cost:hover { border-color: var(--brand-bright); color: #fff; }
+.acc-cost.empty { border-style: dashed; background: transparent; color: var(--text-secondary); font-weight: 700; }
+.sub-card-title { flex-wrap: wrap; }
+.ca-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
+.ca-split div { display: flex; flex-direction: column; gap: 2px; padding: 10px; border-radius: 12px; background: rgba(0, 0, 0, .25); border: 1px solid var(--border); text-align: left; }
+.ca-split span { font-size: 12px; color: var(--text-secondary); font-weight: 700; }
+.ca-split strong { font-size: 16px; font-weight: 900; }
+.ca-split strong.up { color: var(--accent-green); }
+.ca-split strong.down { color: var(--brand-bright); }
+.ca-svc-cost { font-size: 11px; font-weight: 700; color: #ff9aa2; margin-left: 6px; }
