@@ -7,6 +7,9 @@ const DEFAULT_SUB_SERVICES = {
     prime: { name: 'Prime Video', accounts: [1], hasProfiles: false },
     proton: { name: 'ProtonVPN', accounts: [1], hasProfiles: false }
 };
+// Seuls ces services ont des profils (choix de l'utilisateur) : Netflix, Prime Video, Crunchyroll
+function serviceNeedsProfiles(id, name) { return /netflix|prime|crunchy/i.test(String(id) + ' ' + String(name || '')); }
+
 const SUB_PROFILES = ['Rouge', 'Violet', 'Jaune', 'Vert', 'Blanc'];
 
 function subServices() {
@@ -17,6 +20,7 @@ function subServices() {
     for (const id in S.subServices) {
         const sv = S.subServices[id];
         sv.accounts = (Array.isArray(sv.accounts) ? sv.accounts : Object.values(sv.accounts || {})).map(Number).filter(n => n > 0);
+        sv.hasProfiles = serviceNeedsProfiles(id, sv.name);
     }
     return S.subServices;
 }
@@ -52,7 +56,7 @@ function addSubService() {
     let id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '') || 'service';
     const base = id; let i = 2;
     while (svcs[id]) id = base + i++;
-    const hasProfiles = confirm('Ce service utilise-t-il des profils de couleur, comme Netflix (Rouge, Violet, Jaune, Vert, Blanc) ?\n\nOK = oui, Annuler = non');
+    const hasProfiles = serviceNeedsProfiles(id, name);
     svcs[id] = { name, accounts: [1], hasProfiles };
     subFilter = id;
     save(); renderSubscriptions();
@@ -164,6 +168,16 @@ function renderSubscriptions() {
     initSubAccountDrag();
 }
 
+// Pastille « jours restants » affichée à côté de la date de fin
+function subDaysChip(c) {
+    if (!c.end || (c.duration && /life|vie/i.test(c.duration))) return '';
+    const d = subDaysLeft(c.end);
+    if (d === null) return '';
+    if (d < 0) return `<span class="days-left expired">expiré depuis ${-d} j</span>`;
+    if (d === 0) return '<span class="days-left today">dernier jour</span>';
+    return `<span class="days-left${d <= 5 ? ' soon' : ''}">${d} jour${d > 1 ? 's' : ''} restant${d > 1 ? 's' : ''}</span>`;
+}
+
 function getSubClientsRowsHtml(service, acc, profile) {
     let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile === '__none__' ? !s.profile : profile ? s.profile === profile : true));
     if (!clients.length) return '';
@@ -206,7 +220,7 @@ function getSubClientsRowsHtml(service, acc, profile) {
             <td>${escHtml(c.status)}</td>
             <td>${escHtml(c.duration)}</td>
             <td>${c.start || '-'}</td>
-            <td>${c.end || '-'}</td>
+            <td class="sub-end">${c.end || '-'}${subDaysChip(c)}</td>
             <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span></td>
             <td><span class="sub-badge ${badgeClass}">${badgeText}</span></td>
         </tr>`;
