@@ -268,3 +268,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 .days-left.soon { background: rgba(245, 181, 68, .16); color: #f5b544; }
 .days-left.today { background: var(--brand-grad); color: #fff; }
 .days-left.expired { background: rgba(255, 61, 74, .14); color: var(--brand-bright); }
+.sub-table td.sub-days { white-space: nowrap; }
+.sub-table td.sub-days .days-left { margin-left: 0; }
+.days-none { color: var(--text-muted); }
+.sub-table th, .sub-table td { white-space: nowrap; }

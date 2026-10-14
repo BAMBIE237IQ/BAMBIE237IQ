@@ -134,6 +134,7 @@ function renderSubscriptions() {
                             <th>Durée</th>
                             <th>Début</th>
                             <th>Fin</th>
+                            <th class="th-days">Jrs restants</th>
                             <th>Facturation</th>
                             <th>État</th>
                         </tr>
@@ -149,11 +150,11 @@ function renderSubscriptions() {
                 const rows = getSubClientsRowsHtml(subFilter, acc, p);
                 if (rows) { html += rows; hasData = true; }
             }
-            if (!hasData) html += `<tr><td colspan="8" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
+            if (!hasData) html += `<tr><td colspan="9" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
         } else {
             const rows = getSubClientsRowsHtml(subFilter, acc, null);
             if (rows) html += rows;
-            else html += `<tr><td colspan="7" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
+            else html += `<tr><td colspan="8" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
         }
 
         html += `       </tbody>
@@ -221,7 +222,8 @@ function getSubClientsRowsHtml(service, acc, profile) {
             <td>${escHtml(c.status)}</td>
             <td>${escHtml(c.duration)}</td>
             <td>${c.start || '-'}</td>
-            <td class="sub-end">${c.end || '-'}${subDaysChip(c)}</td>
+            <td class="sub-end">${c.end || '-'}</td>
+            <td class="sub-days">${subDaysChip(c) || '<span class="days-none">—</span>'}</td>
             <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span></td>
             <td><span class="sub-badge ${badgeClass}">${badgeText}</span></td>
         </tr>`;
