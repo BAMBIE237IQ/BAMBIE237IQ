@@ -53,6 +53,7 @@ function importJSON(input) {
             S.subAccountNames = parsed.subAccountNames || {};
             S.subServices = parsed.subServices || null;
             S.subAccountCosts = parsed.subAccountCosts || {};
+            S.subAccountMeta = parsed.subAccountMeta || {};
             S.calendarChecked = parsed.calendarChecked || {};
             S.calendarEvents = parsed.calendarEvents || {};
             S.fitness = parsed.fitness || { targetWeight: 82, height:1.81, records:{} };

@@ -7,7 +7,7 @@ const COLOR_HEX = {teal:'#2dd4bf',pink:'#f472b6',purple:'#a78bfa',yellow:'#fbbf2
 const EXTENDED_MOOD_EMOJIS = ['😭','😫','😞','🙁','😕','😐','🙂','😊','😄','😁','🤩'];
 const STORAGE_KEY = 'qp-habit-tracker-v2';
 
-let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'today', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, subServices:null, subAccountCosts:{}, calendarChecked:{}, calendarEvents:{}, fitness:{ targetWeight: 82, height:1.81, records:{} } };
+let S = { habits:[], data:{}, moods:{}, transactions:{}, currentView:'today', weekStart:null, monthYear:null, monthIdx:null, finYear:null, finMonth:null, finType:'income', ctxHabitId:null, finAccounts:{cash:0, bank:0, mobile:0}, fin2Accounts:{cash:0, bank:0, mobile:0}, finance2Transactions:{}, activeLedger:'dashboard', fin2Year:null, fin2Month:null, fin2Type:'income', blurAmounts:false, subscriptions:[], subAccountNames:{}, subServices:null, subAccountCosts:{}, subAccountMeta:{}, calendarChecked:{}, calendarEvents:{}, fitness:{ targetWeight: 82, height:1.81, records:{} } };
 let subFilter = 'netflix';
 let editingSubId = null;
 
@@ -72,6 +72,7 @@ function init() {
             S.subAccountNames = parsed.subAccountNames || {};
             S.subServices = parsed.subServices || null;
             S.subAccountCosts = parsed.subAccountCosts || {};
+            S.subAccountMeta = parsed.subAccountMeta || {};
             S.calendarChecked = parsed.calendarChecked || {};
             S.calendarEvents = parsed.calendarEvents || {};
             S.fitness = parsed.fitness || { targetWeight: 82, height:1.81, records:{} };
@@ -121,6 +122,7 @@ function init() {
                 S.subAccountNames = data.subAccountNames || {};
                 S.subServices = data.subServices || null;
                 S.subAccountCosts = data.subAccountCosts || {};
+                S.subAccountMeta = data.subAccountMeta || {};
             S.calendarChecked = data.calendarChecked || {};
             S.calendarEvents = data.calendarEvents || {};
             S.fitness = data.fitness || { targetWeight: 82, height:1.81, records:{} };
@@ -151,7 +153,7 @@ function getPersistedState() {
         finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
         blurAmounts: S.blurAmounts,
         subscriptions: S.subscriptions,
-        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
+        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, subAccountMeta: S.subAccountMeta, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
     };
 }
 

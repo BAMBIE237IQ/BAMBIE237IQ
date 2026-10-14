@@ -42,10 +42,11 @@ function buildNotification(a) {
   if (a.j0.length) parts.push(`Se termine aujourd'hui : ${a.j0.join(', ')}`);
   if (a.j5.length) parts.push(`Fin dans 5 jours : ${a.j5.join(', ')}`);
   if (a.expired.length) parts.push(`Expiré : ${a.expired.join(', ')}`);
+  if (a.accounts && a.accounts.length) parts.push(`Compte à repayer : ${a.accounts.join(', ')}`);
   const n = a.j0.length + a.j5.length + a.expired.length;
   const title = a.j0.length
     ? (a.j0.length === 1 ? `Abonnement terminé aujourd'hui : ${a.j0[0].split(' (')[0]}` : `${a.j0.length} abonnements se terminent aujourd'hui`)
-    : `${n} abonnement${n > 1 ? 's' : ''} à renouveler`;
+    : n ? `${n} abonnement${n > 1 ? 's' : ''} à renouveler` : `Compte à repayer : ${a.accounts[0]}`;
   return { title, body: parts.join('\n'), url: `${APP_URL}/#abonnements`, tag: `subs-${new Date().toISOString().slice(0, 10)}` };
 }
 
@@ -66,7 +67,17 @@ export default async function handler(req, res) {
       accounts: (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountNames.json`)).json()) || {}
     };
     const alerts = collectAlerts(subs, names);
-    if (!alerts.j0.length && !alerts.j5.length && !alerts.expired.length) return res.status(200).send('Rien à signaler');
+    // Comptes à repayer chez le fournisseur : 3 jours avant et le jour même
+    const meta = (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountMeta.json`)).json()) || {};
+    const today = todayCameroonUTC();
+    alerts.accounts = Object.entries(meta).filter(([, v]) => v && v.renew).map(([key, v]) => {
+      const [y, m, d] = String(v.renew).split('-').map(Number);
+      const diff = Math.round((Date.UTC(y, m - 1, d) - today) / 86400000);
+      const svc = key.split('_')[0];
+      const label = names.accounts[key] || `${names.services[svc]?.name || SERVICES[svc] || svc} ${key.split('_')[1]}`;
+      return diff === 3 ? `${label} (dans 3 jours)` : diff === 0 ? `${label} (aujourd'hui)` : null;
+    }).filter(Boolean);
+    if (!alerts.j0.length && !alerts.j5.length && !alerts.expired.length && !alerts.accounts.length) return res.status(200).send('Rien à signaler');
 
     // Téléphones qui ont activé les rappels (stockés hors de /userData pour ne pas être écrasés par l'app)
     const devices = (await (await fetch(`${FIREBASE_DB_URL}pushSubscriptions.json`)).json()) || {};

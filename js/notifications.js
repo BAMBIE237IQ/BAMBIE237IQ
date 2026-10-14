@@ -40,26 +40,32 @@ function subAlertTitle(c) {
 }
 
 function renderNotifications() {
-    const alerts = getSubAlerts();
+    const alerts = getSubAlerts(), accAlerts = typeof getAccountRenewAlerts === 'function' ? getAccountRenewAlerts() : [];
+    const totalAlerts = alerts.length + accAlerts.length;
     document.querySelectorAll('.notif-count').forEach(el => {
-        el.textContent = alerts.length > 9 ? '9+' : String(alerts.length);
-        el.hidden = alerts.length === 0;
+        el.textContent = totalAlerts > 9 ? '9+' : String(totalAlerts);
+        el.hidden = totalAlerts === 0;
     });
     document.querySelectorAll('.notif-btn').forEach(b => {
-        b.classList.toggle('has-alerts', alerts.length > 0);
-        b.setAttribute('aria-label', alerts.length ? `${alerts.length} alerte${alerts.length > 1 ? 's' : ''} abonnements` : 'Aucune alerte');
+        b.classList.toggle('has-alerts', totalAlerts > 0);
+        b.setAttribute('aria-label', totalAlerts ? `${totalAlerts} alerte${totalAlerts > 1 ? 's' : ''} abonnements` : 'Aucune alerte');
     });
 
     const list = document.getElementById('notifList');
     if (list) {
-        list.innerHTML = alerts.length ? alerts.map(({ c, diff }) => {
+        const accHtml = accAlerts.map(a => `<button class="notif-item ${a.diff < 0 ? 'expired' : a.diff === 0 ? 'today' : 'soon'}" onclick="openAccountFromNotif('${escAttr(a.service)}')">
+                <span class="notif-dot"></span>
+                <span class="notif-text"><strong>Compte à repayer · ${escHtml(subAccountLabel(a.service, a.acc))}</strong><span>${escHtml(subServiceName(a.service))} · le ${escHtml(subEndShort(a.date))}</span></span>
+                <span class="notif-badge">${subAlertLabel(a.diff)}</span>
+            </button>`).join('');
+        list.innerHTML = accHtml + (alerts.length ? alerts.map(({ c, diff }) => {
             const lvl = diff < 0 ? 'expired' : diff === 0 ? 'today' : 'soon';
             return `<button class="notif-item ${lvl}" onclick="openSubFromNotif('${escAttr(c.id)}')">
                 <span class="notif-dot"></span>
                 <span class="notif-text"><strong>${escHtml(c.name || 'Client')}</strong><span>${escHtml(subAlertTitle(c))} · fin le ${escHtml(subEndShort(c.end))}</span></span>
                 <span class="notif-badge">${subAlertLabel(diff)}</span>
             </button>`;
-        }).join('') : '<div class="notif-empty">Aucun abonnement ne se termine dans les 5 prochains jours.</div>';
+        }).join('') : (accHtml ? '' : '<div class="notif-empty">Aucun abonnement ne se termine dans les 5 prochains jours.</div>'));
     }
     updateNotifPermissionUI();
     maybeShowDeviceNotifications(alerts);

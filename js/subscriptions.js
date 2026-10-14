@@ -141,6 +141,7 @@ function renderSubscriptions() {
                     </button>
                     <span>${escHtml(accName)}</span>
                     ${accountCostChip(subFilter, acc)}
+                    ${accountMetaChips(subFilter, acc)}
                 </span>
                 <span class="sub-card-actions">
                     <button class="btn" style="padding:4px 8px;" onclick="renameSubAccount('${subFilter}', ${acc})" aria-label="Renommer le compte" title="Renommer">
@@ -251,7 +252,7 @@ function getSubClientsRowsHtml(service, acc, profile) {
             <td>${c.start || '-'}</td>
             <td class="sub-end">${c.end || '-'}</td>
             <td class="sub-days">${subDaysChip(c) || '<span class="days-none">—</span>'}</td>
-            <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span></td>
+            <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span>${subDueChip(c)}</td>
             <td><span class="sub-badge ${badgeClass}">${badgeText}</span></td>
         </tr>`;
     }
@@ -332,6 +333,7 @@ function openSubModal(id = null) {
         document.getElementById('subCode').value = '';
     }
     
+    subModalExtras(id);
     m.classList.add('active');
     document.getElementById('subName').focus();
 }
@@ -350,7 +352,8 @@ function saveSub() {
         start: document.getElementById('subStart').value,
         end: document.getElementById('subEnd').value,
         duration: document.getElementById('subDuration').value === 'life' ? 'For Life' : `${document.getElementById('subDuration').value} Mois`,
-        code: document.getElementById('subCode').value.trim()
+        code: document.getElementById('subCode').value.trim(),
+        paid: document.getElementById('subPaid').value.trim()
     };
 
     if (!obj.name) return toast("Erreur : Nom requis");
@@ -358,7 +361,7 @@ function saveSub() {
 
     if (editingSubId) {
         const idx = S.subscriptions.findIndex(x => x.id === editingSubId);
-        if (idx > -1) S.subscriptions[idx] = obj;
+        if (idx > -1) { if (S.subscriptions[idx].history) obj.history = S.subscriptions[idx].history; S.subscriptions[idx] = obj; }
     } else {
         S.subscriptions.push(obj);
     }

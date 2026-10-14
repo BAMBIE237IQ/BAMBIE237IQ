@@ -35,16 +35,19 @@ function computeSubCA(y, m) {
     let total = 0;
     for (const c of S.subscriptions || []) {
         if (c.status && /rembours/i.test(c.status)) continue;
-        const amount = subAmount(c);
-        if (!amount) continue;
-        const months = subMonths(c), first = subFirstMonth(c, months);
-        if (!first) continue;
-        const idx = (y - first.y) * 12 + (m - first.m); // position du mois demandé dans la période payée
-        if (idx < 0 || idx >= months) continue;
-        const part = amount / months;
-        total += part;
-        byService[c.service] = (byService[c.service] || 0) + part;
-        rows.push({ c, amount, months, idx, part });
+        // Période en cours + périodes déjà renouvelées (historique)
+        for (const p of subPeriods(c)) {
+            const amount = subAmount(p);
+            if (!amount) continue;
+            const months = subMonths(p), first = subFirstMonth(p, months);
+            if (!first) continue;
+            const idx = (y - first.y) * 12 + (m - first.m); // position du mois demandé dans la période payée
+            if (idx < 0 || idx >= months) continue;
+            const part = amount / months;
+            total += part;
+            byService[c.service] = (byService[c.service] || 0) + part;
+            rows.push({ c, p, amount, months, idx, part });
+        }
     }
     rows.sort((a, b) => b.part - a.part);
     // Coûts d'achat des comptes, comptés à partir du mois où ils ont été saisis
@@ -61,8 +64,9 @@ function computeSubCA(y, m) {
 function openCAPanel() {
     const t = new Date();
     if (caYear === null) { caYear = t.getFullYear(); caMonth = t.getMonth(); }
-    renderCAPanel();
+    // Afficher d'abord : le graphique a besoin d'une fenêtre visible pour prendre sa taille
     document.getElementById('caOverlay').classList.add('active');
+    renderCAPanel();
 }
 function closeCAPanel() { document.getElementById('caOverlay').classList.remove('active'); }
 function changeCAMonth(dir) {
@@ -102,4 +106,6 @@ function renderCAPanel() {
             </div>
             <span class="ca-part">${f(r.part)}</span>
         </div>`).join('') : '<div class="notif-empty">Aucun montant pour ce mois. Renseigne le montant payé dans la fiche du client.</div>';
+    renderCAChart();
+    renderCADue();
 }

@@ -345,6 +345,7 @@
         <div class="section-header">
             <h2 class="section-title"><span class="material-icons-outlined">subscriptions</span> Mes Abonnements</h2>
             <div class="section-actions">
+                <button class="btn ca-btn" onclick="openSubSettings()" title="Classement des clients, export"><span class="material-icons-outlined">settings</span> Paramètres</button>
                 <button class="btn ca-btn" onclick="openCAPanel()"><span class="material-icons-outlined">bar_chart</span> CA du mois</button>
                 <button class="btn primary" onclick="openSubModal()"><span class="material-icons-outlined">add</span> Ajouter Client</button>
             </div>
@@ -540,9 +541,18 @@
 
     <!-- ===== SUB MODAL ===== -->
     <div class="modal-overlay" id="subModalOverlay">
-        <div class="modal" style="width:350px;">
+        <div class="modal sub-modal" style="width:400px;">
             <h3 id="subModalTitle">Nouveau Client</h3>
-            <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+            <div class="sub-tabs-modal" role="tablist">
+                <button type="button" role="tab" data-tab="fiche" class="active" onclick="showSubTab('fiche')">Fiche</button>
+                <button type="button" role="tab" data-tab="hist" id="subHistTabBtn" onclick="showSubTab('hist')" hidden>Historique</button>
+            </div>
+            <div id="subTabHist" class="sub-hist" hidden></div>
+            <div id="subTabFiche" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+                <div class="sub-actions" id="subActions" hidden>
+                    <button type="button" class="btn" onclick="renewSub()"><span class="material-icons-outlined">refresh</span> Renouveler</button>
+                    <button type="button" class="btn" onclick="copySubRelance()"><span class="material-icons-outlined">content_copy</span> Message de relance</button>
+                </div>
                 <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"></select></div>
                 <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
                 <div id="subProfileDiv"><label class="fin-label" for="subProfile">Profil (nom libre)</label><input type="text" id="subProfile" class="fin-input" list="subProfileList" placeholder="Ex : Rouge, VIP, Famille…" autocomplete="off"><datalist id="subProfileList"></datalist></div>
@@ -561,7 +571,10 @@
                     <div style="flex:1;"><label class="fin-label" for="subEnd">Fin <small style="opacity:.7">(calculée, modifiable)</small></label><input type="date" id="subEnd" class="fin-input"></div>
                 </div>
                 
-                <div><label class="fin-label">Montant payé (FCFA)</label><input type="text" id="subCode" class="fin-input" inputmode="numeric" placeholder="Ex : 5 000 pour 2 mois"></div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;"><label class="fin-label" for="subCode">Montant (FCFA)</label><input type="text" id="subCode" class="fin-input" inputmode="numeric" placeholder="Ex : 5 000"></div>
+                    <div style="flex:1;"><label class="fin-label" for="subPaid">Déjà payé <small style="opacity:.7">(vide = tout)</small></label><input type="text" id="subPaid" class="fin-input" inputmode="numeric" placeholder="Ex : 3 000"></div>
+                </div>
             </div>
             <div class="modal-actions" style="margin-top:20px;">
                 <button class="modal-btn cancel" onclick="closeSubModal()">Annuler</button>
@@ -621,6 +634,7 @@
     <script src="js/today.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/ca.js"></script>
+    <script src="js/subs-extra.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -683,6 +697,18 @@
         </div>
     </div>
 
+    <!-- ===== PARAMÈTRES ABONNEMENTS ===== -->
+    <div class="qa-overlay" id="subSettingsOverlay" onclick="if(event.target===this)closeSubSettings()">
+        <div class="qa-sheet ca-sheet" role="dialog" aria-modal="true" aria-labelledby="subSettingsTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="subSettingsTitle">Paramètres</h2>
+                <button class="icon-btn" onclick="closeSubSettings()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div id="subSettingsBody"></div>
+        </div>
+    </div>
+
     <!-- ===== CA ABONNEMENTS ===== -->
     <div class="qa-overlay" id="caOverlay" onclick="if(event.target===this)closeCAPanel()">
         <div class="qa-sheet ca-sheet" role="dialog" aria-modal="true" aria-labelledby="caTitle">
@@ -704,6 +730,8 @@
                     <div><span>Bénéfice</span><strong id="caProfit">0</strong></div>
                 </div>
             </div>
+            <div class="ca-chart"><canvas id="caChart" aria-label="CA et bénéfice sur 12 mois" role="img"></canvas></div>
+            <div id="caDue" class="ca-due" hidden></div>
             <div id="caServices" class="ca-services"></div>
             <div id="caRows" class="ca-rows"></div>
             <p class="notif-foot">Chaque paiement est divisé par le nombre de mois couverts : seule la part du mois est comptée.</p>
