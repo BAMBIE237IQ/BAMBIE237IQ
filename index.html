@@ -18,6 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/habits.css">
     <link rel="stylesheet" href="css/components.css">
@@ -72,7 +73,7 @@
             <span class="material-icons-outlined">notifications</span>
             <span class="notif-count" hidden>0</span>
         </button>
-        <div class="sync-status" id="syncStatus" title="État de la synchronisation Firebase">
+        <div class="sync-status" id="syncStatus" role="button" tabindex="0" onclick="openSecurity()" onkeydown="if(event.key==='Enter')openSecurity()" title="État de la synchronisation Firebase">
             <span class="sync-dot"></span>
             <div class="sync-text"><strong id="syncLabel">Connexion…</strong><span id="syncSub">Synchronisation en cours</span></div>
         </div>
@@ -104,7 +105,7 @@
                     <button class="icon-btn" onclick="shiftTodayDate(1)" aria-label="Jour suivant"><span class="material-icons-outlined">chevron_right</span></button>
                     <button class="btn-primary" onclick="openQuickAdd()"><span class="material-icons-outlined">add</span> Ajouter</button>
                 </div>
-                <div class="online-chip mob-only" id="onlineChip"><span class="sync-dot"></span><span id="onlineChipLabel">Connexion…</span></div>
+                <div class="online-chip mob-only" id="onlineChip" role="button" tabindex="0" onclick="openSecurity()"><span class="sync-dot"></span><span id="onlineChipLabel">Connexion…</span></div>
             </header>
             <section class="today-summary" id="todaySummary" aria-label="Résumé de tous les onglets"></section>
             <section class="today-ring mob-only" id="todayRing"></section>
@@ -635,6 +636,7 @@
     <script src="js/notifications.js"></script>
     <script src="js/ca.js"></script>
     <script src="js/subs-extra.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -694,6 +696,18 @@
                 <button class="btn" id="notifPushOff" onclick="disablePush()" hidden>Désactiver les rappels sur cet appareil</button>
             </div>
             <p class="notif-foot">À activer sur chaque téléphone ou ordinateur qui doit recevoir les rappels.</p>
+        </div>
+    </div>
+
+    <!-- ===== SÉCURITÉ (connexion Google) ===== -->
+    <div class="qa-overlay" id="securityOverlay" onclick="if(event.target===this)closeSecurity()">
+        <div class="qa-sheet notif-sheet" role="dialog" aria-modal="true" aria-labelledby="securityTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="securityTitle">Compte et sécurité</h2>
+                <button class="icon-btn" onclick="closeSecurity()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div id="securityBody" class="sec-body"></div>
         </div>
     </div>
 

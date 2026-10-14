@@ -4,6 +4,8 @@
 import webpush from 'web-push';
 
 const FIREBASE_DB_URL = "https://bambie237iq-default-rtdb.firebaseio.com/";
+// Accès serveur à la base sécurisée : secret de base de données dans Vercel (FIREBASE_DB_SECRET)
+const FB_AUTH = process.env.FIREBASE_DB_SECRET ? `?auth=${encodeURIComponent(process.env.FIREBASE_DB_SECRET)}` : '';
 // Clé publique VAPID (la même que dans js/notifications.js). La clé privée est dans Vercel : VAPID_PRIVATE_KEY.
 const VAPID_PUBLIC_KEY = "BGg0hVJMDZO57ph2XW7OQc1WSpkFFQtUeBkynJTwkVKXLMfsWOqUJyXEO6iBcObi0DbTW3Z3EU7CpF6DAeA-G_k";
 const APP_URL = "https://bambie-237-iq.vercel.app";
@@ -60,15 +62,15 @@ export default async function handler(req, res) {
     webpush.setVapidDetails(APP_URL, VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 
     // L'app enregistre tout sous /userData (et non à la racine)
-    let subs = (await (await fetch(`${FIREBASE_DB_URL}userData/subscriptions.json`)).json()) || [];
+    let subs = (await (await fetch(`${FIREBASE_DB_URL}userData/subscriptions.json${FB_AUTH}`)).json()) || [];
     if (!Array.isArray(subs)) subs = Object.values(subs);
     const names = {
-      services: (await (await fetch(`${FIREBASE_DB_URL}userData/subServices.json`)).json()) || {},
-      accounts: (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountNames.json`)).json()) || {}
+      services: (await (await fetch(`${FIREBASE_DB_URL}userData/subServices.json${FB_AUTH}`)).json()) || {},
+      accounts: (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountNames.json${FB_AUTH}`)).json()) || {}
     };
     const alerts = collectAlerts(subs, names);
     // Comptes à repayer chez le fournisseur : 3 jours avant et le jour même
-    const meta = (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountMeta.json`)).json()) || {};
+    const meta = (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountMeta.json${FB_AUTH}`)).json()) || {};
     const today = todayCameroonUTC();
     alerts.accounts = Object.entries(meta).filter(([, v]) => v && v.renew).map(([key, v]) => {
       const [y, m, d] = String(v.renew).split('-').map(Number);
@@ -80,7 +82,7 @@ export default async function handler(req, res) {
     if (!alerts.j0.length && !alerts.j5.length && !alerts.expired.length && !alerts.accounts.length) return res.status(200).send('Rien à signaler');
 
     // Téléphones qui ont activé les rappels (stockés hors de /userData pour ne pas être écrasés par l'app)
-    const devices = (await (await fetch(`${FIREBASE_DB_URL}pushSubscriptions.json`)).json()) || {};
+    const devices = (await (await fetch(`${FIREBASE_DB_URL}pushSubscriptions.json${FB_AUTH}`)).json()) || {};
     const payload = JSON.stringify(buildNotification(alerts));
     let sent = 0;
     for (const [key, dev] of Object.entries(devices)) {
@@ -90,7 +92,7 @@ export default async function handler(req, res) {
         sent++;
       } catch (e) {
         // Abonnement révoqué ou expiré côté téléphone : on le supprime
-        if (e.statusCode === 404 || e.statusCode === 410) await fetch(`${FIREBASE_DB_URL}pushSubscriptions/${key}.json`, { method: 'DELETE' });
+        if (e.statusCode === 404 || e.statusCode === 410) await fetch(`${FIREBASE_DB_URL}pushSubscriptions/${key}.json${FB_AUTH}`, { method: 'DELETE' });
         else console.error('Push error', e.statusCode, e.body);
       }
     }

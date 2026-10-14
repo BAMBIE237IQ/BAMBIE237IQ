@@ -103,7 +103,7 @@ function init() {
         firebase.initializeApp(firebaseConfig);
         dbRef = firebase.database().ref('userData');
 
-        dbRef.on('value', (snapshot) => {
+        const onSnap = (snapshot) => {
             isInitialLoad = false;
             const data = snapshot.val();
             if (data) {
@@ -134,7 +134,14 @@ function init() {
             } else if (S.habits.length > 0 || Object.keys(S.data).length > 0) {
                 save();
             }
-        });
+        };
+        // (Re)démarre l'écoute : appelé au lancement puis après la connexion Google (voir js/auth.js).
+        // Si la base refuse l'accès (règles sécurisées, pas connecté), on reste sur les données locales sans rien écraser.
+        window.startSync = () => {
+            dbRef.off('value');
+            dbRef.on('value', onSnap, err => { console.warn('Firebase', err && err.code); if (typeof onSyncDenied === 'function') onSyncDenied(err); });
+        };
+        startSync();
     } catch (e) {
         console.error("Firebase init error", e);
     }

@@ -55,8 +55,8 @@ function subRelanceText(c) {
         `Réponds-moi pour continuer à en profiter sans coupure 🙏`
     ].filter(Boolean).join('\n');
 }
-function copyText(text) {
-    const done = () => toast('Message copié ✓ Colle-le dans WhatsApp');
+function copyText(text, msg) {
+    const done = () => toast(msg || 'Message copié ✓ Colle-le dans WhatsApp');
     if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(done).catch(() => fallback());
     fallback();
     function fallback() {

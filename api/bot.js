@@ -21,6 +21,8 @@ export default async function handler(req, res) {
 
     const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const FIREBASE_DB_URL = "https://bambie237iq-default-rtdb.firebaseio.com/";
+// Accès serveur à la base sécurisée : secret de base de données dans Vercel (FIREBASE_DB_SECRET)
+const FB_AUTH = process.env.FIREBASE_DB_SECRET ? `?auth=${encodeURIComponent(process.env.FIREBASE_DB_SECRET)}` : '';
 
     // Fonction pour renvoyer un message sur Telegram
     const sendMessage = async (msg) => {
@@ -93,7 +95,7 @@ export default async function handler(req, res) {
            code: "Via Telegram"
        };
 
-       const subUrl = `${FIREBASE_DB_URL}userData/subscriptions.json`; // l'app lit sous /userData
+       const subUrl = `${FIREBASE_DB_URL}userData/subscriptions.json${FB_AUTH}`; // l'app lit sous /userData
        const fetchRes = await fetch(subUrl);
        let subs = await fetchRes.json() || [];
        if (!Array.isArray(subs)) subs = Object.values(subs);
@@ -171,7 +173,7 @@ export default async function handler(req, res) {
     };
 
     // Firebase REST API - Fetch puis PUT pour préserver la structure tableau
-    const monthUrl = `${FIREBASE_DB_URL}userData/transactions/${monthKey}.json`;
+    const monthUrl = `${FIREBASE_DB_URL}userData/transactions/${monthKey}.json${FB_AUTH}`;
     
     const fetchRes = await fetch(monthUrl);
     let currentTxs = await fetchRes.json();
