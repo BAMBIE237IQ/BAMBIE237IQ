@@ -1,6 +1,6 @@
 // Service worker : réseau d'abord (toujours la dernière version en ligne),
 // copie en cache pour pouvoir ouvrir l'app sans réseau. Firebase n'est jamais mis en cache.
-const CACHE = 'handy-tracker-v3';
+const CACHE = 'handy-tracker-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {

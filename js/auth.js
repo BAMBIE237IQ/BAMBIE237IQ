@@ -15,19 +15,15 @@ function initAuth() {
     });
 }
 
-function isStandaloneOrMobile() {
-    return window.matchMedia('(display-mode: standalone)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
-}
-
 async function signInGoogle() {
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        if (isStandaloneOrMobile()) await firebase.auth().signInWithRedirect(provider);
-        else await firebase.auth().signInWithPopup(provider);
+        // Fenêtre de connexion partout : la redirection tourne en rond sur les navigateurs récents
+        await firebase.auth().signInWithPopup(provider);
     } catch (e) {
         // Fenêtre bloquée : on bascule sur la redirection
-        if (e && /popup/i.test(e.code || '')) { try { await firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; } catch (e2) { e = e2; } }
+        if (e && /popup-blocked|operation-not-supported/i.test(e.code || '')) { try { await firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider()); return; } catch (e2) { e = e2; } }
         authError(e);
     }
 }
