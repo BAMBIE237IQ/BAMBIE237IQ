@@ -179,6 +179,7 @@ function buildTodaySummary(d, now, doneN, totalN, best, wt, h, target) {
     const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let active = 0, soon = 0, expired = 0;
     for (const c of S.subscriptions || []) {
+        if (c.suspended) continue;   // ancien client : ne compte plus
         const life = c.duration && String(c.duration).toLowerCase().includes('life');
         if (!c.end || life) { active++; continue; }
         const [ey, em, ed] = c.end.split('-').map(Number);

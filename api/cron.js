@@ -64,6 +64,7 @@ export default async function handler(req, res) {
     // L'app enregistre tout sous /userData (et non à la racine)
     let subs = (await (await fetch(`${FIREBASE_DB_URL}userData/subscriptions.json${FB_AUTH}`)).json()) || [];
     if (!Array.isArray(subs)) subs = Object.values(subs);
+    subs = subs.filter(s => s && !s.suspended);   // anciens clients : plus de rappel
     const names = {
       services: (await (await fetch(`${FIREBASE_DB_URL}userData/subServices.json${FB_AUTH}`)).json()) || {},
       accounts: (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountNames.json${FB_AUTH}`)).json()) || {}

@@ -13,7 +13,7 @@ function subDaysLeft(end) {
 function getSubAlerts() {
     const out = [];
     for (const c of S.subscriptions || []) {
-        if (!c || !c.end) continue;
+        if (!c || !c.end || c.suspended) continue;
         if (c.duration && /life|vie/i.test(c.duration)) continue;
         if (c.status && SUB_INACTIVE.test(c.status)) continue;
         const diff = subDaysLeft(c.end);

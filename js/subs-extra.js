@@ -99,7 +99,7 @@ function setSubAccountMeta(service, acc, patch) {
 }
 function accountHasSlots(service) { return /spotify/i.test(`${service} ${subServiceName(service)}`); }
 function activeClientsOn(service, acc) {
-    return (S.subscriptions || []).filter(c => c.service === service && Number(c.account) === Number(acc)
+    return (S.subscriptions || []).filter(c => !c.suspended && c.service === service && Number(c.account) === Number(acc)
         && !(c.status && SUB_INACTIVE.test(c.status))
         && ((c.duration && /life|vie/i.test(c.duration)) || !c.end || (subDaysLeft(c.end) ?? 0) >= 0)).length;
 }

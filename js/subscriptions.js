@@ -39,7 +39,7 @@ function renderSubTabs() {
     if (!box) return;
     const svcs = subServices();
     if (!svcs[subFilter]) subFilter = Object.keys(svcs)[0];
-    box.innerHTML = Object.keys(svcs).map(id => `<button class="nav-tab sub-tab-btn${id === subFilter ? ' active' : ''}" data-svc="${escAttr(id)}" onclick="setSubFilter(this.dataset.svc)">${escHtml(svcs[id].name)} <span class="sub-tab-count">${subClientsOf(id).length}</span></button>`).join('')
+    box.innerHTML = Object.keys(svcs).map(id => `<button class="nav-tab sub-tab-btn${id === subFilter ? ' active' : ''}" data-svc="${escAttr(id)}" onclick="setSubFilter(this.dataset.svc)">${escHtml(svcs[id].name)} <span class="sub-tab-count">${subClientsOf(id).filter(c => !c.suspended).length}</span></button>`).join('')
         + `<button class="nav-tab sub-tab-add" onclick="addSubService()"><span class="material-icons-outlined">add</span> Service</button>`;
 }
 
@@ -165,24 +165,25 @@ function renderSubscriptions() {
                             <th class="th-days">Jours restants</th>
                             <th>Facturation</th>
                             <th>État</th>
+                            <th class="th-act"></th>
                         </tr>
                     </thead>
                     <tbody>`;
         
         if (conf.hasProfiles) {
-            const custom = (S.subscriptions || []).filter(x => x.service === subFilter && Number(x.account) === Number(acc) && x.profile && !SUB_PROFILES.includes(x.profile)).map(x => x.profile);
+            const custom = (S.subscriptions || []).filter(x => !x.suspended && x.service === subFilter && Number(x.account) === Number(acc) && x.profile && !SUB_PROFILES.includes(x.profile)).map(x => x.profile);
             const profiles = [...SUB_PROFILES, ...new Set(custom)];
-            if ((S.subscriptions || []).some(x => x.service === subFilter && Number(x.account) === Number(acc) && !x.profile)) profiles.push('__none__');
+            if ((S.subscriptions || []).some(x => !x.suspended && x.service === subFilter && Number(x.account) === Number(acc) && !x.profile)) profiles.push('__none__');
             let hasData = false;
             for (const p of profiles) {
                 const rows = getSubClientsRowsHtml(subFilter, acc, p);
                 if (rows) { html += rows; hasData = true; }
             }
-            if (!hasData) html += `<tr><td colspan="9" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
+            if (!hasData) html += `<tr><td colspan="10" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
         } else {
             const rows = getSubClientsRowsHtml(subFilter, acc, null);
             if (rows) html += rows;
-            else html += `<tr><td colspan="8" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
+            else html += `<tr><td colspan="9" style="text-align:center; color:#6b7280; font-style:italic;">Aucun client enregistré</td></tr>`;
         }
 
         html += `       </tbody>
@@ -192,9 +193,39 @@ function renderSubscriptions() {
     }
     html += `<button class="sub-add-account" onclick="addSubAccount('${subFilter}')"><span class="material-icons-outlined">add</span> Ajouter un compte ${escHtml(conf.name)}</button>`;
     html += '</div>';
+    html += oldClientsHtml(subFilter);
     html += `<div class="sub-service-foot"><button class="sub-remove-service" onclick="removeSubService('${subFilter}')">Supprimer le service ${escHtml(conf.name)}</button></div>`;
     c.innerHTML = html;
     initSubAccountDrag();
+}
+
+// ----- Clients suspendus : abonnement terminé, non renouvelé -----
+// Ils quittent les tableaux des comptes (et les rappels) mais restent dans l'historique et le CA.
+let oldClientsOpen = false;
+function suspendSub(id) {
+    const c = (S.subscriptions || []).find(x => String(x.id) === String(id)); if (!c) return;
+    c.suspended = true; c.suspendedAt = new Date().toISOString().slice(0, 10);
+    save(); renderSubscriptions();
+    toast(`${c.name} déplacé dans Anciens clients`);
+}
+function reactivateSub(id) {
+    const c = (S.subscriptions || []).find(x => String(x.id) === String(id)); if (!c) return;
+    delete c.suspended; delete c.suspendedAt;
+    save(); renderSubscriptions();
+    toast(`${c.name} réactivé ✓`);
+}
+function toggleOldClients() { oldClientsOpen = !oldClientsOpen; renderSubscriptions(); }
+function oldClientsHtml(service) {
+    const list = (S.subscriptions || []).filter(c => c.suspended && c.service === service)
+        .sort((a, b) => String(b.suspendedAt || b.end || '').localeCompare(String(a.suspendedAt || a.end || '')));
+    if (!list.length) return '';
+    return `<div class="old-clients${oldClientsOpen ? ' open' : ''}">
+        <button class="old-head" onclick="toggleOldClients()"><span class="material-icons-outlined">history</span> Anciens clients <span class="sub-tab-count">${list.length}</span><span class="material-icons-outlined old-caret">expand_more</span></button>
+        ${oldClientsOpen ? `<div class="old-list">${list.map(c => `<div class="old-row" onclick="openSubModal('${c.id}')">
+            <span class="old-main"><strong>${escHtml(c.name)}</strong><span>${escHtml(subAccountLabel(c.service, c.account))}${c.profile ? ' · ' + escHtml(c.profile) : ''} · fin ${c.end || '—'}${c.suspendedAt ? ' · suspendu le ' + c.suspendedAt : ''}</span></span>
+            <button class="btn old-react" onclick="event.stopPropagation(); reactivateSub('${c.id}')"><span class="material-icons-outlined">play_circle</span> Réactiver</button>
+        </div>`).join('')}</div>` : ''}
+    </div>`;
 }
 
 // Pastille « jours restants » affichée à côté de la date de fin
@@ -209,7 +240,7 @@ function subDaysChip(c) {
 }
 
 function getSubClientsRowsHtml(service, acc, profile) {
-    let clients = S.subscriptions.filter(s => s.service === service && s.account == acc && (profile === '__none__' ? !s.profile : profile ? s.profile === profile : true));
+    let clients = S.subscriptions.filter(s => !s.suspended && s.service === service && s.account == acc && (profile === '__none__' ? !s.profile : profile ? s.profile === profile : true));
     if (!clients.length) return '';
     
     let html = '';
@@ -254,6 +285,7 @@ function getSubClientsRowsHtml(service, acc, profile) {
             <td class="sub-days">${subDaysChip(c) || '<span class="days-none">—</span>'}</td>
             <td><span style="font-family:monospace; background:#1f2937; padding:2px 6px; border-radius:4px;">${escHtml(c.code) || '-'}</span>${subDueChip(c)}</td>
             <td><span class="sub-badge ${badgeClass}">${badgeText}</span></td>
+            <td class="sub-act"><button class="sub-suspend" onclick="event.stopPropagation(); suspendSub('${c.id}')" title="Suspendre : fin d’abonnement, ne renouvelle pas" aria-label="Suspendre ${escAttr(c.name)}"><span class="material-icons-outlined">pause_circle</span></button></td>
         </tr>`;
     }
     return html;
