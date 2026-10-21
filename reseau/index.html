@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script>if (location.pathname.endsWith('/reseau')) location.replace(location.pathname + '/' + location.search + location.hash);</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1018">
+<title>Streamify Réseau</title>
+<meta name="description" content="Adresses e-mail et comptes YouTube, TikTok, Instagram, Facebook, Snapchat et X, avec des notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 16 0"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg></div>
+      <div><h1>Streamify Réseau</h1><p class="sub">Tes adresses e-mail et les comptes rattachés, réseau par réseau.</p></div>
+    </div>
+    <div class="head-right">
+      <div class="stats" id="stats"></div>
+      <div id="who" class="who"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="card">
+      <div class="toolbar">
+        <input id="q" class="search" type="search" placeholder="Rechercher une adresse, une chaîne, un compte…">
+        <button id="addBtn">+ Nouvelle ligne</button>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="body"></tbody>
+      </table></div>
+      <div id="state" class="state"><h3>Chargement…</h3><p>Connexion à ta base.</p></div>
+    </section>
+
+    <aside class="card notes">
+      <h2>Notes</h2>
+      <textarea id="noteIn" rows="3" placeholder="Une idée, un rappel…"></textarea>
+      <button id="noteBtn">Ajouter la note</button>
+      <div class="notelist" id="notes"></div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
