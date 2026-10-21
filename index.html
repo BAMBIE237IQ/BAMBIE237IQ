@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="css/today.css">
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/anim.css">
+    <link rel="stylesheet" href="css/descriptions.css">
 </head>
 <body>
     <!-- ===== DÉMARRAGE ANIMÉ ===== -->
@@ -83,6 +84,10 @@
             <button class="nav-tab" onclick="switchView('fitness')">
                 <span class="material-icons-outlined">fitness_center</span>
                 Santé
+            </button>
+            <button class="nav-tab" onclick="switchView('descriptions')">
+                <span class="material-icons-outlined">movie</span>
+                Descriptions vidéos
             </button>
         </div>
         <button class="notif-btn" onclick="openNotifPanel()" aria-label="Alertes abonnements" title="Alertes abonnements">
@@ -376,6 +381,15 @@
     </div>
 
     
+    <!-- ===== DESCRIPTIONS VIDÉOS ===== -->
+    <div id="descriptionsView" class="view">
+        <div class="section-header">
+            <h2 class="section-title"><span class="material-icons-outlined">movie</span> Descriptions vidéos</h2>
+            <div class="section-actions" id="descHeadActions"></div>
+        </div>
+        <div id="descContent"></div>
+    </div>
+
     <!-- ===== CALENDAR VIEW ===== -->
     <div id="calendarView" class="view">
         <div class="section-title" style="margin-bottom: 20px;"><span class="material-icons-outlined">format_list_bulleted</span> Journal de bord</div>
@@ -655,6 +669,7 @@
     <script src="js/auth.js"></script>
     <script src="js/anim.js"></script>
     <script src="js/brands.js"></script>
+    <script src="js/descriptions.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -695,6 +710,7 @@
                 <button onclick="closeMoreMenu();switchView('finance2')" data-view="finance2"><span class="material-icons-outlined">account_balance_wallet</span>Finance</button>
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
+                <button onclick="closeMoreMenu();switchView('descriptions')" data-view="descriptions"><span class="material-icons-outlined">movie</span>Descriptions vidéos</button>
             </div>
         </div>
     </div>

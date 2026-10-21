@@ -159,4 +159,5 @@ renderJournal();
     else if (S.currentView==='monthly') renderMonthly();
     else if (S.currentView==='finance' || S.currentView==='finance2') renderFinance();
     else if (S.currentView==='subscriptions') renderSubscriptions();
+    else if (S.currentView==='descriptions') renderDescriptions();
 }

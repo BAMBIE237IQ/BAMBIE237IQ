@@ -19,7 +19,8 @@ const MI_TO_PH = {
     download: 'file-csv', refresh: 'arrow-clockwise', receipt_long: 'receipt', restaurant: 'fork-knife',
     psychology: 'brain', monitor_weight: 'scales', accessibility_new: 'person-simple', backspace: 'backspace',
     account_balance: 'bank', money_off: 'money', favorite: 'heart', notifications: 'bell', drag_indicator: 'dots-six-vertical', settings: 'gear-six', content_copy: 'copy', login: 'sign-in',
-    pause_circle: 'pause-circle', play_circle: 'play-circle'
+    pause_circle: 'pause-circle', play_circle: 'play-circle',
+    movie: 'video-camera', folder: 'folder-simple'
 };
 
 function convertIcon(el) {

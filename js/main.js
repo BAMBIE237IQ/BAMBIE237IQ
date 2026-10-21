@@ -2,6 +2,7 @@
 init();
 initSyncIndicator();
 openViewFromHash();
+attachDescSync();
 initAuth();
 
 // PWA : installable sur l'écran d'accueil (https ou localhost uniquement)

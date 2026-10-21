@@ -11,7 +11,7 @@ function initAuth() {
         const wasSignedIn = !!currentUser;
         currentUser = user;
         updateAuthUI();
-        if (user && !wasSignedIn && typeof startSync === 'function') startSync();
+        if (user && !wasSignedIn && typeof startSync === 'function') { startSync(); attachDescSync(); }
     });
 }
 
