@@ -1,7 +1,7 @@
 // ==================== CA DES ABONNEMENTS ====================
-// Le montant payé par un client est réparti à parts égales sur chaque mois couvert :
-// 5 000 FCFA du 12 sept. au 12 nov. (2 mois) -> 2 500 en septembre + 2 500 en octobre.
-// 20 000 FCFA pour 12 mois -> 1 667 par mois, de septembre à août.
+// Le montant payé est réparti au prorata des jours couverts dans chaque mois :
+// 1 500 FCFA du 26 sept. au 26 oct. (30 jours) -> 250 en septembre (5 j) + 1 250 en octobre (25 j).
+// Sans date de fin (à vie) ou sans dates exploitables : réparti à parts égales par mois, à partir du mois de début.
 let caYear = null, caMonth = null;
 
 // Montant : champ "Montant payé / Code" (ex. "5 000", "1500 FCFA")
@@ -30,6 +30,15 @@ function subFirstMonth(c, months) {
     return null;
 }
 
+// Période en jours [début, fin[ si les deux dates sont valides
+function subDaySpan(p) {
+    if (!p.start || !p.end) return null;
+    const [y1, m1, d1] = p.start.split('-').map(Number), [y2, m2, d2] = p.end.split('-').map(Number);
+    if (!y1 || !y2) return null;
+    const start = new Date(y1, m1 - 1, d1), end = new Date(y2, m2 - 1, d2), days = Math.round((end - start) / 86400000);
+    return days > 0 ? { start, end, days } : null;
+}
+
 function computeSubCA(y, m) {
     const rows = [], byService = {};
     let total = 0;
@@ -39,6 +48,18 @@ function computeSubCA(y, m) {
         for (const p of subPeriods(c)) {
             const amount = subAmount(p);
             if (!amount) continue;
+            const span = subDaySpan(p);
+            if (span) {
+                // jours de la période [début, fin[ qui tombent dans le mois demandé
+                const m0 = new Date(y, m, 1), m1 = new Date(y, m + 1, 1);
+                const days = Math.round((Math.min(span.end, m1) - Math.max(span.start, m0)) / 86400000);
+                if (days <= 0) continue;
+                const part = amount * days / span.days;
+                total += part;
+                byService[c.service] = (byService[c.service] || 0) + part;
+                rows.push({ c, p, amount, days, totalDays: span.days, part });
+                continue;
+            }
             const months = subMonths(p), first = subFirstMonth(p, months);
             if (!first) continue;
             const idx = (y - first.y) * 12 + (m - first.m); // position du mois demandé dans la période payée
@@ -102,7 +123,7 @@ function renderCAPanel() {
         <div class="ca-row">
             <div class="ca-row-main">
                 <strong>${escHtml(r.c.name || 'Client')}</strong>
-                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA ${r.months > 1 ? `÷ ${r.months} mois · mois ${r.idx + 1}/${r.months}` : '(1 mois)'}</span>
+                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA · ${r.days !== undefined ? (r.days === r.totalDays ? 'période entière' : `${r.days} j sur ${r.totalDays} j ce mois`) : (r.months > 1 ? `÷ ${r.months} mois · mois ${r.idx + 1}/${r.months}` : '(1 mois)')}</span>
             </div>
             <span class="ca-part">${f(r.part)}</span>
         </div>`).join('') : '<div class="notif-empty">Aucun montant pour ce mois. Renseigne le montant payé dans la fiche du client.</div>';
