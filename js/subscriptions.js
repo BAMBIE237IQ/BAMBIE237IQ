@@ -24,6 +24,12 @@ function subServices() {
     }
     return S.subServices;
 }
+// Ordre des services choisi par l'utilisateur (champ « order » : la base ne garde pas l'ordre des clés)
+function subServiceIds() {
+    const svcs = subServices(), ids = Object.keys(svcs);
+    return ids.sort((a, b) => (svcs[a].order ?? 1e3 + ids.indexOf(a)) - (svcs[b].order ?? 1e3 + ids.indexOf(b)));
+}
+function setSubServiceOrder(ids) { const svcs = subServices(); ids.forEach((id, i) => { if (svcs[id]) svcs[id].order = i; }); }
 function subServiceName(id) { const sv = subServices()[id]; return sv ? sv.name : (id || ''); }
 // Nom affiché d'un compte : le nom personnalisé s'il existe, sinon "Service · Compte N"
 function subAccountLabel(service, acc) {
@@ -38,9 +44,10 @@ function renderSubTabs() {
     const box = document.getElementById('subTabs');
     if (!box) return;
     const svcs = subServices();
-    if (!svcs[subFilter]) subFilter = Object.keys(svcs)[0];
-    box.innerHTML = Object.keys(svcs).map(id => `<button class="nav-tab sub-tab-btn${id === subFilter ? ' active' : ''}" data-svc="${escAttr(id)}" onclick="setSubFilter(this.dataset.svc)">${escHtml(svcs[id].name)} <span class="sub-tab-count">${subClientsOf(id).filter(c => !c.suspended).length}</span></button>`).join('')
+    if (!svcs[subFilter]) subFilter = subServiceIds()[0];
+    box.innerHTML = subServiceIds().map(id => `<button class="nav-tab sub-tab-btn${id === subFilter ? ' active' : ''}" data-svc="${escAttr(id)}" onclick="setSubFilter(this.dataset.svc)">${escHtml(svcs[id].name)} <span class="sub-tab-count">${subClientsOf(id).filter(c => !c.suspended).length}</span></button>`).join('')
         + `<button class="nav-tab sub-tab-add" onclick="addSubService()"><span class="material-icons-outlined">add</span> Service</button>`;
+    initSubTabDrag(box);
 }
 
 function setSubFilter(f) {
@@ -57,7 +64,7 @@ function addSubService() {
     const base = id; let i = 2;
     while (svcs[id]) id = base + i++;
     const hasProfiles = serviceNeedsProfiles(id, name);
-    svcs[id] = { name, accounts: [1], hasProfiles };
+    svcs[id] = { name, accounts: [1], hasProfiles, order: subServiceIds().length };
     subFilter = id;
     save(); renderSubscriptions();
     toast(`Service ${name} ajouté ✓`);
@@ -71,7 +78,7 @@ function removeSubService(id) {
     delete S.subServices[id];
     for (const k of Object.keys(S.subAccountNames || {})) if (k.startsWith(id + '_')) delete S.subAccountNames[k];
     for (const k of Object.keys(S.subAccountCosts || {})) if (k.startsWith(id + '_')) delete S.subAccountCosts[k];
-    subFilter = Object.keys(S.subServices)[0];
+    subFilter = subServiceIds()[0];
     save(); renderSubscriptions();
     toast('Service supprimé');
 }
@@ -328,7 +335,7 @@ function updateSubEndDate() {
 function fillSubServiceSelect() {
     const sel = document.getElementById('subService');
     const svcs = subServices();
-    sel.innerHTML = Object.keys(svcs).map(id => `<option value="${escAttr(id)}">${escHtml(svcs[id].name)}</option>`).join('');
+    sel.innerHTML = subServiceIds().map(id => `<option value="${escAttr(id)}">${escHtml(svcs[id].name)}</option>`).join('');
 }
 
 function openSubModal(id = null) {
@@ -413,6 +420,60 @@ function renameSubAccount(service, acc) {
         renderSubscriptions();
         toast("Compte renommé");
     }
+}
+
+// ==================== ORDRE DES SERVICES (onglets) ====================
+// Appui long (½ seconde) sur un onglet puis glisser à gauche / droite ; flèches gauche/droite au clavier.
+function moveSubService(id, delta) {
+    const ids = subServiceIds(), i = ids.indexOf(id), j = i + delta;
+    if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    setSubServiceOrder(ids); save(); renderSubTabs();
+    document.querySelector(`.sub-tab-btn[data-svc="${id}"]`)?.focus();
+}
+function initSubTabDrag(box) {
+    box.querySelectorAll('.sub-tab-btn').forEach(tab => {
+        tab.addEventListener('keydown', e => {
+            if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); moveSubService(tab.dataset.svc, e.key === 'ArrowLeft' ? -1 : 1); }
+        });
+        tab.addEventListener('pointerdown', e => {
+            if (e.button !== undefined && e.button !== 0) return;
+            const x0 = e.clientX, y0 = e.clientY;
+            let dragging = false, moved = false;
+            const preventScroll = ev => { if (dragging) ev.preventDefault(); };
+            const start = () => {
+                dragging = true;
+                tab.classList.add('tab-dragging'); box.classList.add('tabs-sorting');
+                if (navigator.vibrate) navigator.vibrate(15);
+            };
+            const timer = setTimeout(start, 450);
+            const onMove = ev => {
+                if (!dragging) { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 8) cleanup(); return; }
+                const others = [...box.querySelectorAll('.sub-tab-btn:not(.tab-dragging)')];
+                const before = others.find(o => { const r = o.getBoundingClientRect(); return ev.clientX < r.left + r.width / 2; });
+                const target = before || box.querySelector('.sub-tab-add');
+                if (target && tab.nextElementSibling !== target) { box.insertBefore(tab, target); moved = true; }
+            };
+            const cleanup = () => {
+                clearTimeout(timer);
+                document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onUp);
+                document.removeEventListener('touchmove', preventScroll);
+                if (dragging) { tab.classList.remove('tab-dragging'); box.classList.remove('tabs-sorting'); }
+            };
+            const onUp = () => {
+                const was = dragging; cleanup();
+                if (!was) return;
+                // un appui long ne doit pas aussi ouvrir l'onglet
+                tab.addEventListener('click', ev => { ev.stopImmediatePropagation(); ev.preventDefault(); }, { capture: true, once: true });
+                if (!moved) return;
+                setSubServiceOrder([...box.querySelectorAll('.sub-tab-btn')].map(b => b.dataset.svc));
+                save(); renderSubTabs(); toast('Ordre des services enregistré ✓');
+            };
+            document.addEventListener('touchmove', preventScroll, { passive: false });
+            // suivi sur toute la page : déplacer l'onglet dans la barre ferait perdre le doigt à l'onglet lui-même
+            document.addEventListener('pointermove', onMove); document.addEventListener('pointerup', onUp); document.addEventListener('pointercancel', onUp);
+        });
+    });
 }
 
 // ==================== ORDRE DES COMPTES (glisser-déposer) ====================
