@@ -240,3 +240,54 @@ function openSubSettings() {
     document.getElementById('subSettingsOverlay').classList.add('active');
 }
 function closeSubSettings() { document.getElementById('subSettingsOverlay').classList.remove('active'); }
+
+// ----- Réabonnements : qui a renouvelé, mois par mois -----
+// Une période payée suivie d'une nouvelle période commencée au plus 30 jours après sa fin = réabonnement.
+const RENEW_GRACE_DAYS = 30;
+function dayNum(s) { const [y, m, d] = String(s || '').split('-').map(Number); return y && m && d ? Math.round(new Date(y, m - 1, d) / 86400000) : null; }
+function subRenewEvents() {
+    const ended = [];   // { c, end, next }
+    for (const c of S.subscriptions || []) {
+        if (c.duration && /life|vie/i.test(c.duration)) continue;
+        const chain = subPeriods(c).filter(p => p.start && p.end).sort((a, b) => a.start.localeCompare(b.start));
+        chain.forEach((p, i) => {
+            const nx = chain[i + 1], e = dayNum(p.end);
+            const renewed = nx && dayNum(nx.start) <= e + RENEW_GRACE_DAYS ? nx : null;
+            ended.push({ c, p, end: e, endStr: p.end, renewed });
+        });
+    }
+    return ended;
+}
+function computeRenewals(y, m) {
+    const ev = subRenewEvents(), t = new Date(), today = Math.round(new Date(t.getFullYear(), t.getMonth(), t.getDate()) / 86400000);
+    const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+    const due = ev.filter(e => e.endStr.slice(0, 7) === key);
+    const renewed = due.filter(e => e.renewed);
+    const pending = due.filter(e => !e.renewed && !e.c.suspended && e.end + RENEW_GRACE_DAYS >= today && !(e.c.status && SUB_INACTIVE.test(e.c.status)));
+    const lost = due.filter(e => !e.renewed && !pending.includes(e));
+    // volume : nouvelles périodes (renouvellements) qui commencent ce mois-ci
+    const volume = ev.filter(e => e.renewed && e.renewed.start.slice(0, 7) === key);
+    const decided = renewed.length + lost.length;
+    return { due, renewed, pending, lost, volume, rate: decided ? Math.round(renewed.length / decided * 100) : null };
+}
+function renderCARenew() {
+    const el = document.getElementById('caRenew');
+    if (!el) return;
+    const cur = computeRenewals(caYear, caMonth), pd = new Date(caYear, caMonth - 1, 1), prev = computeRenewals(pd.getFullYear(), pd.getMonth());
+    const diff = cur.volume.length - prev.volume.length;
+    const bars = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(caYear, caMonth - i, 1); bars.push({ label: ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'][d.getMonth()], n: computeRenewals(d.getFullYear(), d.getMonth()).volume.length, on: i === 0 }); }
+    const max = Math.max(1, ...bars.map(b => b.n));
+    const names = l => l.map(e => escHtml(e.c.name || 'Client')).join(', ');
+    el.innerHTML = `
+        <div class="renew-head"><span class="material-icons-outlined">history</span> Réabonnements</div>
+        <div class="renew-kpis">
+            <div><span>Réabonnés ce mois</span><strong>${cur.volume.length}</strong><small class="${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}">${diff === 0 ? 'comme' : (diff > 0 ? '+' : '−') + Math.abs(diff)} vs ${MONTHS[pd.getMonth()].toLowerCase()} (${prev.volume.length})</small></div>
+            <div><span>Taux de réabonnement</span><strong>${cur.rate === null ? '—' : cur.rate + ' %'}</strong><small>${cur.renewed.length} sur ${cur.renewed.length + cur.lost.length} échéance${cur.renewed.length + cur.lost.length > 1 ? 's' : ''} du mois</small></div>
+        </div>
+        <div class="renew-bars">${bars.map(b => `<div class="renew-bar${b.on ? ' on' : ''}" title="${b.n} réabonnement${b.n > 1 ? 's' : ''}"><span style="height:${Math.round(b.n / max * 100)}%"></span><b>${b.n}</b><small>${b.label}</small></div>`).join('')}</div>
+        ${cur.renewed.length ? `<p class="renew-line ok"><span class="material-icons-outlined">check_circle</span> Réabonnés : ${names(cur.renewed)}</p>` : ''}
+        ${cur.pending.length ? `<p class="renew-line wait"><span class="material-icons-outlined">history</span> En attente : ${names(cur.pending)}</p>` : ''}
+        ${cur.lost.length ? `<p class="renew-line lost"><span class="material-icons-outlined">cancel</span> Pas renouvelé : ${names(cur.lost)}</p>` : ''}
+        ${!cur.due.length && !cur.volume.length ? '<p class="renew-line">Aucune échéance ce mois-ci.</p>' : ''}`;
+}

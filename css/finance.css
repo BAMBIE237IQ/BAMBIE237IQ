@@ -456,3 +456,21 @@ body.blur-amounts .compare-diff strong:hover {
 .sub-tab-btn { touch-action: pan-x; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .sub-tab-btn.tab-dragging { transform: scale(1.08); box-shadow: 0 10px 26px rgba(0, 0, 0, .5), 0 0 0 2px #ff3d4a; z-index: 2; position: relative; cursor: grabbing; }
 .tabs-sorting .sub-tab-btn:not(.tab-dragging) { transition: transform .2s ease; opacity: .75; }
+
+/* ===== Réabonnements (panneau CA) ===== */
+.ca-renew { border: 1px solid var(--border); border-radius: 18px; background: var(--bg-card); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.renew-head { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; }
+.renew-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.renew-kpis div { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 14px; background: var(--bg-elevated); }
+.renew-kpis span { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+.renew-kpis strong { font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
+.renew-kpis small { font-size: 12px; color: var(--text-secondary); }
+.renew-kpis small.up { color: var(--accent-green); } .renew-kpis small.down { color: var(--accent-red); }
+.renew-bars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; height: 96px; align-items: end; }
+.renew-bar { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.renew-bar span { width: 70%; min-height: 3px; border-radius: 6px 6px 3px 3px; background: rgba(229, 28, 44, .45); }
+.renew-bar.on span { background: #ff3d4a; }
+.renew-bar b { font-size: 12px; } .renew-bar small { font-size: 11px; color: var(--text-secondary); }
+.renew-line { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: var(--text-secondary); margin: 0; }
+.renew-line .material-icons-outlined { font-size: 16px; }
+.renew-line.ok .material-icons-outlined { color: var(--accent-green); } .renew-line.wait .material-icons-outlined { color: #f5b70a; } .renew-line.lost .material-icons-outlined { color: var(--accent-red); }
