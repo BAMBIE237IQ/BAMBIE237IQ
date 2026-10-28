@@ -245,15 +245,22 @@ function closeSubSettings() { document.getElementById('subSettingsOverlay').clas
 // Une période payée suivie d'une nouvelle période commencée au plus 30 jours après sa fin = réabonnement.
 const RENEW_GRACE_DAYS = 30;
 function dayNum(s) { const [y, m, d] = String(s || '').split('-').map(Number); return y && m && d ? Math.round(new Date(y, m - 1, d) / 86400000) : null; }
+// Même client = même nom sur le même service (bouton Renouveler, ou client recréé avec le même nom)
+function subNormName(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
 function subRenewEvents() {
-    const ended = [];   // { c, end, next }
+    const chains = {};
     for (const c of S.subscriptions || []) {
         if (c.duration && /life|vie/i.test(c.duration)) continue;
-        const chain = subPeriods(c).filter(p => p.start && p.end).sort((a, b) => a.start.localeCompare(b.start));
-        chain.forEach((p, i) => {
-            const nx = chain[i + 1], e = dayNum(p.end);
-            const renewed = nx && dayNum(nx.start) <= e + RENEW_GRACE_DAYS ? nx : null;
-            ended.push({ c, p, end: e, endStr: p.end, renewed });
+        const k = c.service + '|' + subNormName(c.name);
+        for (const p of subPeriods(c)) if (p.start && p.end) (chains[k] = chains[k] || []).push({ c, p });
+    }
+    const ended = [];   // { c, end, renewed }
+    for (const list of Object.values(chains)) {
+        list.sort((x, y) => x.p.start.localeCompare(y.p.start));
+        list.forEach((it, i) => {
+            const nx = list[i + 1], e = dayNum(it.p.end);
+            const renewed = nx && nx.p.start > it.p.start && dayNum(nx.p.start) <= e + RENEW_GRACE_DAYS ? nx.p : null;
+            ended.push({ c: renewed ? nx.c : it.c, p: it.p, end: e, endStr: it.p.end, renewed });
         });
     }
     return ended;
