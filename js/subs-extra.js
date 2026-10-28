@@ -246,7 +246,7 @@ function closeSubSettings() { document.getElementById('subSettingsOverlay').clas
 const RENEW_GRACE_DAYS = 30;
 function dayNum(s) { const [y, m, d] = String(s || '').split('-').map(Number); return y && m && d ? Math.round(new Date(y, m - 1, d) / 86400000) : null; }
 // Même client = même nom sur le même service (bouton Renouveler, ou client recréé avec le même nom)
-function subNormName(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+function subNormName(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
 function subRenewEvents() {
     const chains = {};
     for (const c of S.subscriptions || []) {
