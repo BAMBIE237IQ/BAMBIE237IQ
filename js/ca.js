@@ -129,5 +129,4 @@ function renderCAPanel() {
         </div>`).join('') : '<div class="notif-empty">Aucun montant pour ce mois. Renseigne le montant payé dans la fiche du client.</div>';
     renderCAChart();
     renderCADue();
-    if (typeof renderCARenew === 'function') renderCARenew();
 }
