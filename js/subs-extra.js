@@ -72,21 +72,36 @@ function copySubRelance() {
     if (c) copyText(subRelanceText(c));
 }
 
-// ----- Renouveler en 1 clic : même durée, même montant ; l'ancienne période part dans l'historique -----
+// ----- Renouveler : on choisit la durée (ex. 3 mois -> 1 mois), le montant et le début ; l'ancienne période part dans l'historique -----
 function renewSub() {
     const c = (S.subscriptions || []).find(x => x.id === editingSubId);
     if (!c) return;
-    const dv = subDurationValue(c.duration);
-    if (dv === 'life') return toast('Abonnement à vie : rien à renouveler');
-    const n = parseInt(dv, 10) || 1, left = subDaysLeft(c.end);
-    const start = c.end && left !== null && left >= 0 ? c.end : localDateStr();
-    const end = addMonthsToDate(start, n);
-    if (!confirm(`Renouveler ${c.name} pour ${n} mois ?\nDu ${fmtDateFr(start)} au ${fmtDateFr(end)}${subAmount(c) ? ` · ${formatFCFA(subAmount(c))} FCFA` : ''}`)) return;
+    if (subDurationValue(c.duration) === 'life') return toast('Abonnement à vie : rien à renouveler');
+    const left = subDaysLeft(c.end);
+    document.getElementById('renewTitle').textContent = `Renouveler ${c.name}`;
+    document.getElementById('renewDuration').value = subDurationValue(c.duration);
+    document.getElementById('renewAmount').value = subAmount(c) || '';
+    document.getElementById('renewStart').value = c.end && left !== null && left >= 0 ? c.end : localDateStr();
+    updateRenewEnd();
+    document.getElementById('renewOverlay').classList.add('active');
+}
+function closeRenew() { document.getElementById('renewOverlay').classList.remove('active'); }
+function updateRenewEnd() {
+    const start = document.getElementById('renewStart').value, n = parseInt(document.getElementById('renewDuration').value, 10) || 1;
+    document.getElementById('renewEnd').textContent = start ? fmtDateFr(addMonthsToDate(start, n)) : '—';
+}
+function confirmRenew() {
+    const c = (S.subscriptions || []).find(x => x.id === editingSubId);
+    if (!c) return closeRenew();
+    const n = parseInt(document.getElementById('renewDuration').value, 10) || 1;
+    const start = document.getElementById('renewStart').value || localDateStr(), end = addMonthsToDate(start, n);
+    const amount = String(document.getElementById('renewAmount').value || '').replace(/[^\d]/g, '');
     const hist = subHistory(c).slice();
     hist.push({ start: c.start || '', end: c.end || '', duration: c.duration || '', code: c.code || '', paid: c.paid ?? '', renewedAt: new Date().toISOString() });
-    Object.assign(c, { history: hist, start, end, paid: '' });
-    save(); closeSubModal(); renderAll();
-    toast(`${c.name} renouvelé jusqu'au ${fmtDateFr(end)} ✓`);
+    Object.assign(c, { history: hist, start, end, duration: `${n} Mois`, code: amount || c.code || '', paid: '' });
+    if (c.suspended) { delete c.suspended; delete c.suspendedAt; }
+    save(); closeRenew(); closeSubModal(); renderAll();
+    toast(`${c.name} renouvelé ${n} mois, jusqu'au ${fmtDateFr(end)} ✓`);
 }
 
 // ----- Infos par compte : places libres (Spotify) et date de renouvellement chez le fournisseur -----
@@ -108,15 +123,6 @@ function accountMetaChips(service, acc) {
     if (accountHasSlots(service)) {
         const cap = subAccountMeta(service, acc).slots || 6, used = activeClientsOn(service, acc), free = Math.max(0, cap - used);
         h += `<button class="acc-chip ${free ? 'ok' : 'full'}" onclick="editAccountSlots('${service}', ${acc})" title="${used} place(s) occupée(s) sur ${cap} — toucher pour changer le nombre de places">${free ? `${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}` : 'Complet'} · ${used}/${cap}</button>`;
-    }
-    const r = subAccountMeta(service, acc).renew;
-    if (r) {
-        const d = subDaysLeft(r);
-        const cls = d === null ? '' : d < 0 ? ' late' : d <= 3 ? ' soon' : '';
-        const label = d === null ? `Renouv. ${fmtDateFr(r)}` : d < 0 ? `À repayer (${-d} j)` : d === 0 ? 'À repayer aujourd’hui' : `Renouv. ${subEndShort(r)}`;
-        h += `<button class="acc-chip renew${cls}" onclick="editAccountRenew('${service}', ${acc})" title="Date à laquelle tu dois repayer ce compte chez le fournisseur">${label}</button>`;
-    } else {
-        h += `<button class="acc-chip renew empty" onclick="editAccountRenew('${service}', ${acc})" title="Date à laquelle tu dois repayer ce compte chez le fournisseur">+ Date de renouv.</button>`;
     }
     return h;
 }
@@ -149,6 +155,9 @@ function editAccountRenew(service, acc) {
 }
 // Comptes à repayer dans les 3 jours (ou en retard) : affichés dans la cloche
 function getAccountRenewAlerts() {
+    return [];   // date de renouvellement des comptes retirée
+}
+function _oldAccountRenewAlerts() {
     const out = [], svcs = subServices();
     for (const id in svcs) for (const acc of svcs[id].accounts) {
         const r = subAccountMeta(id, acc).renew;

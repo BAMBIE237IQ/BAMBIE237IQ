@@ -789,6 +789,29 @@
         </div>
     </div>
 
+    <!-- ===== RENOUVELER (durée, montant, début personnalisables) ===== -->
+    <div class="qa-overlay" id="renewOverlay" onclick="if(event.target===this)closeRenew()">
+        <div class="qa-sheet renew-sheet" role="dialog" aria-modal="true" aria-labelledby="renewTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="renewTitle">Renouveler</h2>
+                <button class="icon-btn" onclick="closeRenew()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <label class="fin-label" for="renewDuration">Nouvelle durée</label>
+            <select id="renewDuration" class="fin-input" onchange="updateRenewEnd()">
+                <option value="1">1 mois</option><option value="2">2 mois</option><option value="3">3 mois</option>
+                <option value="4">4 mois</option><option value="5">5 mois</option><option value="6">6 mois</option>
+                <option value="9">9 mois</option><option value="12">12 mois (1 an)</option><option value="24">24 mois (2 ans)</option>
+            </select>
+            <label class="fin-label" for="renewAmount">Montant payé (FCFA)</label>
+            <input type="text" id="renewAmount" class="fin-input" inputmode="numeric" placeholder="Ex : 2500">
+            <label class="fin-label" for="renewStart">Début</label>
+            <input type="date" id="renewStart" class="fin-input" onchange="updateRenewEnd()">
+            <p class="renew-end">Fin : <strong id="renewEnd">—</strong></p>
+            <button class="btn primary qa-save" onclick="confirmRenew()"><span class="material-icons-outlined">refresh</span> Renouveler</button>
+        </div>
+    </div>
+
     <!-- ===== STATS DES ABONNEMENTS ===== -->
     <div class="qa-overlay" id="statsOverlay" onclick="if(event.target===this)closeStatsPanel()">
         <div class="qa-sheet ca-sheet st-sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle">

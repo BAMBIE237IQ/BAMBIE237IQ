@@ -73,7 +73,8 @@ export default async function handler(req, res) {
     // Comptes à repayer chez le fournisseur : 3 jours avant et le jour même
     const meta = (await (await fetch(`${FIREBASE_DB_URL}userData/subAccountMeta.json${FB_AUTH}`)).json()) || {};
     const today = todayCameroonUTC();
-    alerts.accounts = Object.entries(meta).filter(([, v]) => v && v.renew).map(([key, v]) => {
+    alerts.accounts = [];   // date de renouvellement des comptes retirée
+    void Object.entries(meta).filter(([, v]) => v && v.renew).map(([key, v]) => {
       const [y, m, d] = String(v.renew).split('-').map(Number);
       const diff = Math.round((Date.UTC(y, m - 1, d) - today) / 86400000);
       const svc = key.split('_')[0];

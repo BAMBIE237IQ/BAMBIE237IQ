@@ -507,3 +507,9 @@ body.blur-amounts .compare-diff strong:hover {
 .st-name { flex: 1; min-width: 0; display: flex; flex-direction: column; font-weight: 800; }
 .st-name small { font-size: 11.5px; color: var(--text-secondary); font-weight: 600; }
 @media (max-width: 768px) { .st-kpis { grid-template-columns: 1fr 1fr; } }
+
+/* Fenêtre « Renouveler » */
+.renew-sheet { max-width: 420px; gap: 8px; }
+.renew-sheet .fin-label { margin-top: 6px; }
+.renew-end { margin: 8px 0 4px; font-size: 14px; color: var(--text-secondary); }
+.renew-end strong { color: var(--text-primary); font-size: 16px; }
