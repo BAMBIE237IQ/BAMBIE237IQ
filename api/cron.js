@@ -7,7 +7,7 @@ const FIREBASE_DB_URL = "https://bambie237iq-default-rtdb.firebaseio.com/";
 // Accès serveur à la base sécurisée : secret de base de données dans Vercel (FIREBASE_DB_SECRET)
 const FB_AUTH = process.env.FIREBASE_DB_SECRET ? `?auth=${encodeURIComponent(process.env.FIREBASE_DB_SECRET)}` : '';
 // Clé publique VAPID (la même que dans js/notifications.js). La clé privée est dans Vercel : VAPID_PRIVATE_KEY.
-const VAPID_PUBLIC_KEY = "BGg0hVJMDZO57ph2XW7OQc1WSpkFFQtUeBkynJTwkVKXLMfsWOqUJyXEO6iBcObi0DbTW3Z3EU7CpF6DAeA-G_k";
+const VAPID_PUBLIC_KEY = "BADrdDsq0XOHsky2PafVKaweQwMNwbHpOxWHVu-MxeZYy-KxenIVlE35EgW7z6h2zOigZsHzgsefnZbauBR9zdU";
 const APP_URL = "https://bambie-237-iq.vercel.app";
 const INACTIVE = /annul|stop|inactif|termin|fini|rembours/i;
 const SERVICES = { netflix: 'Netflix', spotify: 'Spotify', prime: 'Prime Video', proton: 'ProtonVPN' };
@@ -93,7 +93,7 @@ export default async function handler(req, res) {
         sent++;
       } catch (e) {
         // Abonnement révoqué ou expiré côté téléphone : on le supprime
-        if (e.statusCode === 404 || e.statusCode === 410) await fetch(`${FIREBASE_DB_URL}pushSubscriptions/${key}.json${FB_AUTH}`, { method: 'DELETE' });
+        if (e.statusCode === 404 || e.statusCode === 410 || e.statusCode === 403) await fetch(`${FIREBASE_DB_URL}pushSubscriptions/${key}.json${FB_AUTH}`, { method: 'DELETE' });
         else console.error('Push error', e.statusCode, e.body);
       }
     }
