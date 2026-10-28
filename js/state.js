@@ -73,6 +73,7 @@ function init() {
             S.subServices = parsed.subServices || null;
             S.subAccountCosts = parsed.subAccountCosts || {};
             S.subAccountMeta = parsed.subAccountMeta || {};
+            S.caMode = parsed.caMode || 'days';
             S.calendarChecked = parsed.calendarChecked || {};
             S.calendarEvents = parsed.calendarEvents || {};
             S.fitness = parsed.fitness || { targetWeight: 82, height:1.81, records:{} };
@@ -123,6 +124,7 @@ function init() {
                 S.subServices = data.subServices || null;
                 S.subAccountCosts = data.subAccountCosts || {};
                 S.subAccountMeta = data.subAccountMeta || {};
+                S.caMode = data.caMode || 'days';
             S.calendarChecked = data.calendarChecked || {};
             S.calendarEvents = data.calendarEvents || {};
             S.fitness = data.fitness || { targetWeight: 82, height:1.81, records:{} };
@@ -160,7 +162,7 @@ function getPersistedState() {
         finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
         blurAmounts: S.blurAmounts,
         subscriptions: S.subscriptions,
-        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, subAccountMeta: S.subAccountMeta, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
+        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, subAccountMeta: S.subAccountMeta, caMode: S.caMode, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
     };
 }
 

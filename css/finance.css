@@ -513,3 +513,10 @@ body.blur-amounts .compare-diff strong:hover {
 .renew-sheet .fin-label { margin-top: 6px; }
 .renew-end { margin: 8px 0 4px; font-size: 14px; color: var(--text-secondary); }
 .renew-end strong { color: var(--text-primary); font-size: 16px; }
+
+/* Paramètres : façon de compter le CA */
+.ca-modes { display: grid; gap: 8px; margin-bottom: 8px; }
+.ca-mode { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); cursor: pointer; }
+.ca-mode strong { font-size: 15px; }
+.ca-mode span { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
+.ca-mode.active { border-color: #ff3d4a; box-shadow: 0 0 0 1px #ff3d4a inset; background: rgba(229, 28, 44, .08); }

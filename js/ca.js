@@ -39,6 +39,12 @@ function subDaySpan(p) {
     return days > 0 ? { start, end, days } : null;
 }
 
+// Façon de compter le CA (Paramètres) :
+//  'cash' = à l'encaissement : tout le montant dans le mois où l'abonnement commence, rien le mois suivant ;
+//  'days' = au prorata des jours couverts dans chaque mois.
+function caMode() { return S.caMode === 'cash' ? 'cash' : 'days'; }
+function setCAMode(m) { S.caMode = m === 'cash' ? 'cash' : 'days'; save(); toast(m === 'cash' ? 'CA compté à l’encaissement ✓' : 'CA compté au prorata des jours ✓'); if (document.getElementById('subSettingsOverlay').classList.contains('active')) openSubSettings(); if (document.getElementById('caOverlay').classList.contains('active')) renderCAPanel(); }
+
 function computeSubCA(y, m) {
     const rows = [], byService = {};
     let total = 0;
@@ -48,6 +54,13 @@ function computeSubCA(y, m) {
         for (const p of subPeriods(c)) {
             const amount = subAmount(p);
             if (!amount) continue;
+            if (caMode() === 'cash') {
+                // à l'encaissement : tout dans le mois de début
+                if (!p.start || p.start.slice(0, 7) !== `${y}-${String(m + 1).padStart(2, '0')}`) continue;
+                total += amount; byService[c.service] = (byService[c.service] || 0) + amount;
+                rows.push({ c, p, amount, cash: true, part: amount });
+                continue;
+            }
             const span = subDaySpan(p);
             if (span) {
                 // jours de la période [début, fin[ qui tombent dans le mois demandé
@@ -123,10 +136,12 @@ function renderCAPanel() {
         <div class="ca-row">
             <div class="ca-row-main">
                 <strong>${escHtml(r.c.name || 'Client')}</strong>
-                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA · ${r.days !== undefined ? (r.days === r.totalDays ? 'période entière' : `${r.days} j sur ${r.totalDays} j ce mois`) : (r.months > 1 ? `÷ ${r.months} mois · mois ${r.idx + 1}/${r.months}` : '(1 mois)')}</span>
+                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA · ${r.cash ? 'encaissé ce mois' : r.days !== undefined ? (r.days === r.totalDays ? 'période entière' : `${r.days} j sur ${r.totalDays} j ce mois`) : (r.months > 1 ? `÷ ${r.months} mois · mois ${r.idx + 1}/${r.months}` : '(1 mois)')}</span>
             </div>
             <span class="ca-part">${f(r.part)}</span>
         </div>`).join('') : '<div class="notif-empty">Aucun montant pour ce mois. Renseigne le montant payé dans la fiche du client.</div>';
+    const foot = document.getElementById('caFoot');
+    if (foot) foot.textContent = caMode() === 'cash' ? 'CA à l’encaissement : chaque paiement compte en entier dans le mois où l’abonnement commence. (Paramètres pour changer)' : 'CA au prorata des jours : chaque paiement est réparti selon les jours couverts dans chaque mois. (Paramètres pour changer)';
     renderCAChart();
     renderCADue();
 }

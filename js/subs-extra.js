@@ -238,7 +238,13 @@ function openSubSettings() {
         <span class="rank-main"><strong>${escHtml(x.c.name)}</strong><span>${escHtml(subAlertTitle(x.c))}${extra ? ' · ' + extra : ''}</span></span>
         <span class="rank-val">${formatFCFA(x.total)}</span>
     </button>`;
+    const mode = caMode();
     document.getElementById('subSettingsBody').innerHTML = `
+        <h3 class="set-title">Façon de compter le chiffre d'affaires</h3>
+        <div class="ca-modes">
+            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>À l'encaissement</strong><span>Tout le montant compte dans le mois où le client arrive, même le 29 ou le 30. Rien ne part sur le mois suivant.</span></button>
+            <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong>Au prorata des jours</strong><span>Le montant est réparti selon les jours couverts dans chaque mois (ex. du 10 sept. au 10 oct. : une part en septembre, le reste en octobre).</span></button>
+        </div>
         <h3 class="set-title">Meilleurs clients</h3>
         <p class="set-hint">Classés par total encaissé, renouvellements compris.</p>
         <div class="rank-list">${top.length ? top.map((x, i) => row(x, i, `${x.renew} renouvellement${x.renew > 1 ? 's' : ''}`)).join('') : '<div class="notif-empty">Aucun paiement enregistré pour l’instant.</div>'}</div>
