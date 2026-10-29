@@ -241,9 +241,10 @@ function openSubSettings() {
     const mode = caMode();
     document.getElementById('subSettingsBody').innerHTML = `
         <h3 class="set-title">Façon de compter le chiffre d'affaires</h3>
+        <p class="set-hint">Toujours : le montant est divisé par le nombre de mois (ex. 18 000 pour 9 mois = 2 000 par mois). Ensuite :</p>
         <div class="ca-modes">
-            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>À l'encaissement</strong><span>Tout le montant compte dans le mois où le client arrive, même le 29 ou le 30. Rien ne part sur le mois suivant.</span></button>
-            <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong>Au prorata des jours</strong><span>Le montant est réparti selon les jours couverts dans chaque mois (ex. du 10 sept. au 10 oct. : une part en septembre, le reste en octobre).</span></button>
+            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>Au paiement</strong><span>Chaque part mensuelle compte en entier dans le mois où elle commence (le 29 ou le 30 compte pour ce mois-là).</span></button>
+            <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong>Au prorata jour à jour</strong><span>Chaque part mensuelle est répartie selon les jours de chaque mois (du 10 sept. au 10 oct. : 21 jours en septembre, 9 en octobre).</span></button>
         </div>
         <h3 class="set-title">Meilleurs clients</h3>
         <p class="set-hint">Classés par total encaissé, renouvellements compris.</p>

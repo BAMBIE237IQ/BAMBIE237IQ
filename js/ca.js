@@ -40,10 +40,21 @@ function subDaySpan(p) {
 }
 
 // Façon de compter le CA (Paramètres) :
-//  'cash' = à l'encaissement : tout le montant dans le mois où l'abonnement commence, rien le mois suivant ;
-//  'days' = au prorata des jours couverts dans chaque mois.
+//  toujours : montant ÷ nombre de mois (une part par mois d'abonnement), puis
+//  'cash' = au paiement : chaque part compte dans le mois où elle commence ;
+//  'days' = prorata jour à jour : chaque part est répartie selon les jours de chaque mois.
 function caMode() { return S.caMode === 'cash' ? 'cash' : 'days'; }
-function setCAMode(m) { S.caMode = m === 'cash' ? 'cash' : 'days'; save(); toast(m === 'cash' ? 'CA compté à l’encaissement ✓' : 'CA compté au prorata des jours ✓'); if (document.getElementById('subSettingsOverlay').classList.contains('active')) openSubSettings(); if (document.getElementById('caOverlay').classList.contains('active')) renderCAPanel(); }
+function setCAMode(m) { S.caMode = m === 'cash' ? 'cash' : 'days'; save(); toast(m === 'cash' ? 'CA compté au paiement ✓' : 'CA compté au prorata jour à jour ✓'); if (document.getElementById('subSettingsOverlay').classList.contains('active')) openSubSettings(); if (document.getElementById('caOverlay').classList.contains('active')) renderCAPanel(); }
+
+const dateOf = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+// Parts mensuelles d'une période payée : montant ÷ nombre de mois, une part par mois d'abonnement
+function subSlices(p, amount) {
+    const n = subMonths(p);
+    let start = p.start;
+    if (!start && p.end) start = addMonthsToDate(p.end, -n);
+    if (!start) return null;
+    return Array.from({ length: n }, (_, k) => ({ k, start: addMonthsToDate(start, k), end: addMonthsToDate(start, k + 1), part: amount / n }));
+}
 
 function computeSubCA(y, m) {
     const rows = [], byService = {};
@@ -54,33 +65,21 @@ function computeSubCA(y, m) {
         for (const p of subPeriods(c)) {
             const amount = subAmount(p);
             if (!amount) continue;
-            if (caMode() === 'cash') {
-                // à l'encaissement : tout dans le mois de début
-                if (!p.start || p.start.slice(0, 7) !== `${y}-${String(m + 1).padStart(2, '0')}`) continue;
-                total += amount; byService[c.service] = (byService[c.service] || 0) + amount;
-                rows.push({ c, p, amount, cash: true, part: amount });
-                continue;
+            // 1) toujours : le montant est divisé par le nombre de mois (une part par mois d'abonnement)
+            const slices = subSlices(p, amount);
+            if (!slices) continue;
+            // 2) selon le réglage : chaque part compte au paiement (mois où elle commence) ou au prorata des jours
+            const m0 = new Date(y, m, 1), m1 = new Date(y, m + 1, 1), key = `${y}-${String(m + 1).padStart(2, '0')}`;
+            let part = 0, days = 0, idx = -1;
+            for (const sl of slices) {
+                if (caMode() === 'cash') { if (sl.start.slice(0, 7) === key) { part += sl.part; idx = sl.k; } continue; }
+                const s0 = dateOf(sl.start), s1 = dateOf(sl.end), span = Math.round((s1 - s0) / 86400000);
+                const d = Math.round((Math.min(s1, m1) - Math.max(s0, m0)) / 86400000);
+                if (d > 0 && span > 0) { part += sl.part * d / span; days += d; if (idx < 0) idx = sl.k; }
             }
-            const span = subDaySpan(p);
-            if (span) {
-                // jours de la période [début, fin[ qui tombent dans le mois demandé
-                const m0 = new Date(y, m, 1), m1 = new Date(y, m + 1, 1);
-                const days = Math.round((Math.min(span.end, m1) - Math.max(span.start, m0)) / 86400000);
-                if (days <= 0) continue;
-                const part = amount * days / span.days;
-                total += part;
-                byService[c.service] = (byService[c.service] || 0) + part;
-                rows.push({ c, p, amount, days, totalDays: span.days, part });
-                continue;
-            }
-            const months = subMonths(p), first = subFirstMonth(p, months);
-            if (!first) continue;
-            const idx = (y - first.y) * 12 + (m - first.m); // position du mois demandé dans la période payée
-            if (idx < 0 || idx >= months) continue;
-            const part = amount / months;
-            total += part;
-            byService[c.service] = (byService[c.service] || 0) + part;
-            rows.push({ c, p, amount, months, idx, part });
+            if (part <= 0) continue;
+            total += part; byService[c.service] = (byService[c.service] || 0) + part;
+            rows.push({ c, p, amount, months: slices.length, idx, days, cash: caMode() === 'cash', part });
         }
     }
     rows.sort((a, b) => b.part - a.part);
@@ -136,12 +135,12 @@ function renderCAPanel() {
         <div class="ca-row">
             <div class="ca-row-main">
                 <strong>${escHtml(r.c.name || 'Client')}</strong>
-                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA · ${r.cash ? 'encaissé ce mois' : r.days !== undefined ? (r.days === r.totalDays ? 'période entière' : `${r.days} j sur ${r.totalDays} j ce mois`) : (r.months > 1 ? `÷ ${r.months} mois · mois ${r.idx + 1}/${r.months}` : '(1 mois)')}</span>
+                <span>${escHtml(subAlertTitle(r.c))} · ${f(r.amount)} FCFA${r.months > 1 ? ` ÷ ${r.months} mois` : ''} · ${r.cash ? (r.months > 1 ? `part ${r.idx + 1}/${r.months}` : 'payé ce mois') : `${r.days} j ce mois`}</span>
             </div>
             <span class="ca-part">${f(r.part)}</span>
         </div>`).join('') : '<div class="notif-empty">Aucun montant pour ce mois. Renseigne le montant payé dans la fiche du client.</div>';
     const foot = document.getElementById('caFoot');
-    if (foot) foot.textContent = caMode() === 'cash' ? 'CA à l’encaissement : chaque paiement compte en entier dans le mois où l’abonnement commence. (Paramètres pour changer)' : 'CA au prorata des jours : chaque paiement est réparti selon les jours couverts dans chaque mois. (Paramètres pour changer)';
+    if (foot) foot.textContent = caMode() === 'cash' ? 'Montant ÷ nombre de mois, puis chaque part mensuelle compte au paiement (dans le mois où elle commence). Paramètres pour changer.' : 'Montant ÷ nombre de mois, puis chaque part mensuelle est répartie au prorata des jours. Paramètres pour changer.';
     renderCAChart();
     renderCADue();
 }
