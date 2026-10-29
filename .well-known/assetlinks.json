@@ -1,8 +1,15 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.bambie237iq.handytracker",
-        "sha256_cert_fingerprints": ["58:6E:06:23:8E:7B:85:C7:CD:4E:2C:4C:79:1A:8F:AE:A5:67:A9:B6:24:73:D9:8C:4E:E6:13:EE:2D:A6:4C:5F"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.bambie237iq.handytracker",
+      "sha256_cert_fingerprints": [
+        "58:6E:06:23:8E:7B:85:C7:CD:4E:2C:4C:79:1A:8F:AE:A5:67:A9:B6:24:73:D9:8C:4E:E6:13:EE:2D:A6:4C:5F",
+        "0A:E5:1F:01:45:5A:10:63:35:AB:24:30:50:71:EC:87:61:4E:BC:97:D6:11:69:0E:5C:07:09:89:5A:74:71:72"
+      ]
+    }
+  }
+]
