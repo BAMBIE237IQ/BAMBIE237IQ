@@ -314,8 +314,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 .acc-chip.empty { border-style: dashed; font-weight: 700; }
 .ca-chart { position: relative; height: 200px; }
 .ca-due { padding: 10px 12px; border-radius: 12px; background: rgba(245, 181, 68, .1); border: 1px solid rgba(245, 181, 68, .35); color: #f5d38f; font-size: 13px; line-height: 1.5; }
-.set-title { font-size: 15px; font-weight: 800; margin-top: 4px; }
-.set-hint { font-size: 12px; color: var(--text-secondary); margin-top: -8px; }
+.set-title { font-size: 15px; font-weight: 800; line-height: 1.35; margin: 8px 0 0; }
+.set-hint { font-size: 12px; line-height: 1.45; color: var(--text-secondary); margin: -3px 0 4px; }
 .rank-list { display: flex; flex-direction: column; gap: 6px; }
 .rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--border); background: #141416; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; }
 .rank-row:hover { border-color: var(--border-light); }
