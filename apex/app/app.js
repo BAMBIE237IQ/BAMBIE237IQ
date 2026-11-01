@@ -54,14 +54,28 @@ const I = {
 const svg = (p, cls, stroke) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke || 'currentColor'}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" class="${cls || ''}" aria-hidden="true">${p}</svg>`;
 
+/* ---------- couleurs vivantes : elles suivent le theme clair / sombre ---------- */
+/* Chart.js et <canvas> n'interpretent pas var(--x) : on lit la valeur calculee. */
+const TRIP = n => getComputedStyle(document.documentElement).getPropertyValue('--c-' + n).trim();
+
+/** tc('em') -> 'rgb(16,185,129)' · tc('em', .4) -> 'rgba(16,185,129,0.4)' */
+function tc(n, a){
+  const v = TRIP(n).split(/[\s,]+/);
+  if (v.length < 3) return '#10B981';
+  return a == null ? 'rgb(' + v[0] + ',' + v[1] + ',' + v[2] + ')'
+                   : 'rgba(' + v[0] + ',' + v[1] + ',' + v[2] + ',' + a + ')';
+}
+/** couleur d'un pilier */
+const pcol = p => tc(p.tok);
+
 /* ======================= 2. CONSTANTES ======================= */
 const PILLARS = [
-  { id:'sante',      name:'Santé',      color:'#10B981' },
-  { id:'finances',   name:'Finances',   color:'#F59E0B' },
-  { id:'business',   name:'Business',   color:'#6366F1' },
-  { id:'creativite', name:'Créativité', color:'#818CF8' },
-  { id:'mental',     name:'Mental',     color:'#34D399' },
-  { id:'discipline', name:'Discipline', color:'#FBBF24' }
+  { id:'sante',      name:'Santé',      tok:'em' },
+  { id:'finances',   name:'Finances',   tok:'am' },
+  { id:'business',   name:'Business',   tok:'in' },
+  { id:'creativite', name:'Créativité', tok:'in-soft' },
+  { id:'mental',     name:'Mental',     tok:'em-soft' },
+  { id:'discipline', name:'Discipline', tok:'am-soft' }
 ];
 const pillarOf = id => PILLARS.find(p => p.id === id) || PILLARS[5];
 
@@ -296,10 +310,11 @@ let toastT = null;
 function toast(msg, tone){
   const el = $('#toast');
   $('#toast-msg').textContent = msg;
-  const color = tone === 'rose' ? '#FDA4AF' : tone === 'am' ? '#FBBF24' : '#10B981';
-  el.style.borderColor = tone === 'rose' ? 'rgba(244,63,94,.4)' : tone === 'am' ? 'rgba(245,158,11,.4)' : 'rgba(16,185,129,.35)';
+  const tk = tone === 'rose' ? 'rose' : tone === 'am' ? 'am' : 'em';
+  const color = tc(tk);
+  el.style.borderColor = tc(tk, .4);
   $('#toast-ic').innerHTML = svg(tone === 'rose' ? I.x : I.check, '', color);
-  $('#toast-ic').style.background = tone === 'rose' ? 'rgba(244,63,94,.16)' : tone === 'am' ? 'rgba(245,158,11,.16)' : 'rgba(16,185,129,.16)';
+  $('#toast-ic').style.background = tc(tk, .16);
   el.classList.add('on');
   clearTimeout(toastT);
   toastT = setTimeout(() => el.classList.remove('on'), 2800);
@@ -309,14 +324,14 @@ const cvs = $('#confetti'), ctx = cvs.getContext('2d');
 let parts = [], raf = null;
 function sizeCvs(){ const d = Math.min(devicePixelRatio || 1, 2); cvs.width = innerWidth * d; cvs.height = innerHeight * d; ctx.setTransform(d,0,0,d,0,0); }
 sizeCvs(); addEventListener('resize', sizeCvs);
-const CC = ['#10B981','#34D399','#F59E0B','#FBBF24','#6366F1','#F8FAFC'];
+let CCN = [];
 function confetti(n, ox, oy){
   if (REDUCE) return;
   const x = ox != null ? ox : innerWidth / 2, y = oy != null ? oy : innerHeight / 3;
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 8;
     parts.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 4, g:.18+Math.random()*.12, s:3+Math.random()*5,
-                 rot:Math.random()*6.3, vr:(Math.random()-.5)*.35, c:CC[(Math.random()*CC.length)|0], life:1 });
+                 rot:Math.random()*6.3, vr:(Math.random()-.5)*.35, c:CCN[(Math.random()*CCN.length)|0], life:1 });
   }
   if (parts.length > 480) parts = parts.slice(-480);
   if (!raf) raf = requestAnimationFrame(tick);
@@ -411,20 +426,22 @@ function paintTop(){
 /* ======================= 8. GRAPHIQUES ======================= */
 const charts = {};
 function killCharts(){ Object.keys(charts).forEach(k => { try { charts[k].destroy(); } catch(e){} delete charts[k]; }); }
-const GRID = 'rgba(148,163,184,.14)', TICK = '#64748B';
-const baseOpts = {
+function BO(){
+ const GRID = tc('muted', .14), TICK = tc('dim');
+ return {
   responsive:true, maintainAspectRatio:false,
   animation: REDUCE ? false : { duration:600, easing:'easeOutQuart' },
   plugins:{ legend:{ display:false }, tooltip:{
-    backgroundColor:'#0B0F18', borderColor:'rgba(148,163,184,.25)', borderWidth:1,
-    titleColor:'#F8FAFC', bodyColor:'#94A3B8', padding:10, displayColors:false,
+    backgroundColor:tc('panel'), borderColor:tc('muted', .25), borderWidth:1,
+    titleColor:tc('ink'), bodyColor:tc('muted'), padding:10, displayColors:false,
     titleFont:{ family:'Plus Jakarta Sans', weight:'700' }, bodyFont:{ family:'JetBrains Mono' } } },
   scales:{
     x:{ grid:{ color:GRID, drawTicks:false }, border:{ display:false }, ticks:{ color:TICK, font:{ family:'JetBrains Mono', size:10 } } },
     y:{ grid:{ color:GRID, drawTicks:false }, border:{ display:false }, ticks:{ color:TICK, font:{ family:'JetBrains Mono', size:10 } }, beginAtZero:true }
   }
-};
-const noScales = o => Object.assign({}, baseOpts, { scales:undefined }, o || {});
+ };
+}
+const noScales = o => Object.assign({}, BO(), { scales:undefined }, o || {});
 
 function makeChart(id, cfg){
   const el = document.getElementById(id);
@@ -437,10 +454,10 @@ function makeChart(id, cfg){
 function gaugeSvg(value, color){
   const r = 32, c = 2 * Math.PI * r, off = c * (1 - clamp(value, 0, 100) / 100);
   return `<svg viewBox="0 0 80 80" role="img" aria-label="${value} sur 100">
-    <circle cx="40" cy="40" r="${r}" fill="none" stroke="rgba(148,163,184,.14)" stroke-width="7"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${tc('muted', .14)}" stroke-width="7"/>
     <circle cx="40" cy="40" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
       stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 40 40)"/>
-    <text x="40" y="45" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700" fill="#F8FAFC">${value}</text>
+    <text x="40" y="45" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="17" font-weight="700" fill="${tc('ink')}">${value}</text>
   </svg>`;
 }
 
@@ -540,7 +557,7 @@ function viewQG(){
     <section class="card">
       <div class="card-head"><h2>Les 6 piliers</h2><span class="hint">score /100</span></div>
       <div class="gauges">
-        ${PILLARS.map(p => `<div class="gauge">${gaugeSvg(scores[p.id], p.color)}<p class="gk">${esc(p.name)}</p></div>`).join('')}
+        ${PILLARS.map(p => `<div class="gauge">${gaugeSvg(scores[p.id], pcol(p))}<p class="gk">${esc(p.name)}</p></div>`).join('')}
       </div>
       <p class="help" style="margin-top:1rem">Calculé sur 30 jours : habitudes du pilier (60 %), tâches terminées (40 %), plus un bonus si le module lié est actif.</p>
     </section>
@@ -564,8 +581,8 @@ function viewQG(){
       <div class="pomo" style="margin-bottom:.9rem">
         <div class="pomo-ring">
           <svg viewBox="0 0 58 58" width="58" height="58">
-            <circle cx="29" cy="29" r="25" fill="none" stroke="rgba(148,163,184,.16)" stroke-width="6"/>
-            <circle id="pomo-arc" cx="29" cy="29" r="25" fill="none" stroke="#818CF8" stroke-width="6" stroke-linecap="round"
+            <circle cx="29" cy="29" r="25" fill="none" stroke="${tc('muted', .16)}" stroke-width="6"/>
+            <circle id="pomo-arc" cx="29" cy="29" r="25" fill="none" stroke="${tc('in-soft')}" stroke-width="6" stroke-linecap="round"
                     stroke-dasharray="157" stroke-dashoffset="157"/>
           </svg>
         </div>
@@ -600,7 +617,7 @@ function viewQG(){
 }
 
 function emptyBlock(title, text, act, label){
-  return `<div class="empty">${svg(I.chart, '', '#64748B')}<p style="font-weight:700;color:var(--muted)">${esc(title)}</p><p>${esc(text)}</p>
+  return `<div class="empty">${svg(I.chart, '', tc('dim'))}<p style="font-weight:700;color:var(--muted)">${esc(title)}</p><p>${esc(text)}</p>
     ${act ? `<button type="button" class="btn btn-ghost sm" data-act="${act}" style="margin-top:.9rem">${esc(label)}</button>` : ''}</div>`;
 }
 
@@ -611,7 +628,7 @@ function habitGrid(){
   for (let i = 1; i <= n; i++) head += `<th>${i}</th>`;
   head += '</tr>';
   const rows = DB.habits.map(h => {
-    let tds = `<td class="hname" title="${esc(h.name)}"><span style="color:${pillarOf(h.pillar).color}">●</span> ${esc(h.name)}</td>`;
+    let tds = `<td class="hname" title="${esc(h.name)}"><span style="color:${pcol(pillarOf(h.pillar))}">●</span> ${esc(h.name)}</td>`;
     for (let i = 1; i <= n; i++){
       const d = `${y}-${String(m).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
       const on = h.log && h.log[d];
@@ -636,7 +653,7 @@ function habitList(){
       <button type="button" class="check" data-habit="${h.id}" data-day="${d}" aria-pressed="${!!on}" aria-label="Valider ${esc(h.name)}">${svg(I.check,'','currentColor')}</button>
       <div class="grow">
         <p class="ttl">${esc(h.name)}</p>
-        <p class="meta"><span class="chip" style="border-color:${p.color}55;color:${p.color}">${esc(p.name)}</span>
+        <p class="meta"><span class="chip" style="border-color:${tc(p.tok, .45)};color:${pcol(p)}">${esc(p.name)}</span>
           <span class="num">+${h.xp} XP</span><span class="num">${done30}/30 j</span></p>
       </div>
       <button type="button" class="mini" data-act="edit-habit" data-id="${h.id}" aria-label="Modifier">${svg(I.pencil)}</button>
@@ -661,7 +678,7 @@ function taskList(filter){
       <div class="grow">
         <p class="ttl">${esc(t.title)}</p>
         <p class="meta">
-          <span class="chip" style="border-color:${p.color}55;color:${p.color}">${esc(p.name)}</span>
+          <span class="chip" style="border-color:${tc(p.tok, .45)};color:${pcol(p)}">${esc(p.name)}</span>
           <span class="chip ${pr[1]}">${pr[0]}</span>
           ${t.due ? `<span class="num"${late ? ' style="color:#FDA4AF"' : ''}>${late ? 'en retard · ' : ''}${esc(prettyDate(t.due))}</span>` : ''}
         </p>
@@ -679,12 +696,12 @@ function afterQG(){
     type:'radar',
     data:{ labels:PILLARS.map(p => p.name), datasets:[{
       data:PILLARS.map(p => sc[p.id]),
-      backgroundColor:'rgba(99,102,241,.22)', borderColor:'#818CF8', borderWidth:2,
-      pointBackgroundColor:PILLARS.map(p => p.color), pointBorderColor:'#07090E', pointBorderWidth:1.5, pointRadius:4 }] },
+      backgroundColor:tc('in', .22), borderColor:tc('in-soft'), borderWidth:2,
+      pointBackgroundColor:PILLARS.map(pcol), pointBorderColor:tc('panel'), pointBorderWidth:1.5, pointRadius:4 }] },
     options: noScales({ scales:{ r:{
-      min:0, max:100, grid:{ color:GRID }, angleLines:{ color:GRID },
+      min:0, max:100, grid:{ color:tc('muted', .14) }, angleLines:{ color:tc('muted', .14) },
       ticks:{ display:false, stepSize:25 },
-      pointLabels:{ color:'#94A3B8', font:{ family:'Plus Jakarta Sans', size:11, weight:'600' } } } } })
+      pointLabels:{ color:tc('muted'), font:{ family:'Plus Jakarta Sans', size:11, weight:'600' } } } } })
   });
 
   /* xp 14 jours */
@@ -693,8 +710,8 @@ function afterQG(){
   makeChart('c-xp', {
     type:'bar',
     data:{ labels:days.map(d => d.slice(8)), datasets:[{ data:vals, borderRadius:5, borderSkipped:false,
-      backgroundColor:days.map(d => d === today() ? '#10B981' : 'rgba(99,102,241,.5)') }] },
-    options: baseOpts
+      backgroundColor:days.map(d => d === today() ? tc('em') : tc('in', .5)) }] },
+    options: BO()
   });
 
   /* régularité du mois */
@@ -707,9 +724,9 @@ function afterQG(){
   }
   makeChart('c-month', {
     type:'line',
-    data:{ labels, datasets:[{ data:pcts, borderColor:'#10B981', borderWidth:2, tension:.35, pointRadius:0,
-      fill:true, backgroundColor:'rgba(16,185,129,.12)' }] },
-    options: Object.assign({}, baseOpts, { scales: Object.assign({}, baseOpts.scales, { y:Object.assign({}, baseOpts.scales.y, { max:100, ticks:{ color:TICK, font:{family:'JetBrains Mono',size:10}, callback:v => v + '%' } }) }) })
+    data:{ labels, datasets:[{ data:pcts, borderColor:tc('em'), borderWidth:2, tension:.35, pointRadius:0,
+      fill:true, backgroundColor:tc('em', .12) }] },
+    options: Object.assign({}, BO(), { scales: Object.assign({}, BO().scales, { y:Object.assign({}, BO().scales.y, { max:100, ticks:{ color:tc('dim'), font:{family:'JetBrains Mono',size:10}, callback:v => v + '%' } }) }) })
   });
 
   paintPomo();
@@ -766,10 +783,10 @@ function viewCashflow(){
       <div class="card-head"><h2>Mouvements</h2><span class="hint">${M.tx.length}</span></div>
       ${M.tx.length ? M.tx.slice().sort((a,b) => b.date.localeCompare(a.date)).slice(0, 40).map(t => `
         <div class="row">
-          <span class="mini" style="color:${t.type === 'in' ? 'var(--em)' : '#FDA4AF'};border-color:${t.type === 'in' ? 'rgba(16,185,129,.4)' : 'rgba(244,63,94,.4)'}" aria-hidden="true">${svg(t.type === 'in' ? I.up : I.down)}</span>
+          <span class="mini" style="color:${t.type === 'in' ? 'var(--em)' : 'var(--rose-lite)'};border-color:${t.type === 'in' ? tc('em', .4) : tc('rose', .4)}" aria-hidden="true">${svg(t.type === 'in' ? I.up : I.down)}</span>
           <div class="grow"><p class="ttl">${esc(t.label)}</p>
             <p class="meta"><span class="chip">${esc(t.cat)}</span><span class="num">${esc(prettyDate(t.date))}</span></p></div>
-          <p class="num" style="font-weight:700;color:${t.type === 'in' ? 'var(--em)' : '#FDA4AF'}">${t.type === 'in' ? '+' : '−'}${fmt(t.amount)}</p>
+          <p class="num" style="font-weight:700;color:${t.type === 'in' ? 'var(--em)' : 'var(--rose-lite)'}">${t.type === 'in' ? '+' : '−'}${fmt(t.amount)}</p>
           <button type="button" class="mini danger" data-act="del-tx" data-id="${t.id}" aria-label="Supprimer">${svg(I.trash)}</button>
         </div>`).join('') : emptyBlock('Aucun mouvement', 'Enregistre ta première entrée ou sortie.', 'add-tx', 'Ajouter')}
     </section>
@@ -783,7 +800,7 @@ function viewCashflow(){
             <p class="meta"><span class="num">${fmt1(c.qty)} × ${fmt(c.now)}</span><span class="num">PRU ${fmt(c.buy)}</span></p></div>
           <div style="text-align:right">
             <p class="num" style="font-weight:700">${fmt(c.qty * c.now)}</p>
-            <p class="num" style="font-size:11.5px;color:${pl >= 0 ? 'var(--em)' : '#FDA4AF'}">${pl >= 0 ? '+' : ''}${fmt1(pct)}%</p>
+            <p class="num" style="font-size:11.5px;color:${pl >= 0 ? 'var(--em)' : 'var(--rose-lite)'}">${pl >= 0 ? '+' : ''}${fmt1(pct)}%</p>
           </div>
           <button type="button" class="mini" data-act="edit-crypto" data-id="${c.id}" aria-label="Modifier">${svg(I.pencil)}</button>
           <button type="button" class="mini danger" data-act="del-crypto" data-id="${c.id}" aria-label="Supprimer">${svg(I.trash)}</button>
@@ -802,9 +819,9 @@ function afterCashflow(){
   makeChart('c-cash', {
     type:'bar',
     data:{ labels:months.map(m => m.slice(5) + '/' + m.slice(2,4)), datasets:[
-      { label:'Entrées', data:ins, backgroundColor:'rgba(16,185,129,.75)', borderRadius:5, borderSkipped:false },
-      { label:'Sorties', data:outs, backgroundColor:'rgba(244,63,94,.6)', borderRadius:5, borderSkipped:false }] },
-    options: Object.assign({}, baseOpts, { plugins:{ legend:{ display:true, labels:{ color:'#94A3B8', boxWidth:10, boxHeight:10, font:{ family:'Plus Jakarta Sans', size:11 } } }, tooltip:baseOpts.plugins.tooltip } })
+      { label:'Entrées', data:ins, backgroundColor:tc('em', .75), borderRadius:5, borderSkipped:false },
+      { label:'Sorties', data:outs, backgroundColor:tc('rose', .6), borderRadius:5, borderSkipped:false }] },
+    options: Object.assign({}, BO(), { plugins:{ legend:{ display:true, labels:{ color:tc('muted'), boxWidth:10, boxHeight:10, font:{ family:'Plus Jakarta Sans', size:11 } } }, tooltip:BO().plugins.tooltip } })
   });
 
   const cats = {};
@@ -813,11 +830,11 @@ function afterCashflow(){
   makeChart('c-cat', {
     type:'doughnut',
     data:{ labels:keys.length ? keys : ['Aucune sortie'], datasets:[{ data:keys.length ? keys.map(k => cats[k]) : [1],
-      backgroundColor:['#10B981','#F59E0B','#6366F1','#818CF8','#34D399','#FBBF24','#F43F5E','#64748B'],
-      borderColor:'#0B0F18', borderWidth:2 }] },
+      backgroundColor:['em','am','in','in-soft','em-soft','am-soft','rose','dim'].map(n => tc(n)),
+      borderColor:tc('panel'), borderWidth:2 }] },
     options: noScales({ cutout:'62%', plugins:{ legend:{ display:true, position:'bottom',
-      labels:{ color:'#94A3B8', boxWidth:9, boxHeight:9, padding:12, font:{ family:'Plus Jakarta Sans', size:11 } } },
-      tooltip:baseOpts.plugins.tooltip } })
+      labels:{ color:tc('muted'), boxWidth:9, boxHeight:9, padding:12, font:{ family:'Plus Jakarta Sans', size:11 } } },
+      tooltip:BO().plugins.tooltip } })
   });
 }
 
@@ -835,7 +852,7 @@ function viewEpargne(){
     const amt = weekAmount(n); total += amt;
     const on = !!M.weeks[n];
     if (on){ saved += amt; doneN++; }
-    cells.push(`<button type="button" class="dot${on ? ' on' : ''}" style="width:100%;height:34px;border-radius:.5rem;font-size:10px;font-family:'JetBrains Mono',monospace;color:${on ? '#04140D' : 'var(--dim)'}"
+    cells.push(`<button type="button" class="dot${on ? ' on' : ''}" style="width:100%;height:34px;border-radius:.5rem;font-size:10px;font-family:'JetBrains Mono',monospace;color:${on ? 'var(--on-em)' : 'var(--dim)'}"
       data-act="week" data-n="${n}" aria-pressed="${on}" aria-label="Semaine ${n}, ${amt} ${dev}">${n}</button>`);
   }
   return `${head('Défi Épargne 52 Semaines', 'Une case par semaine. La courbe fait le reste.', [['epargne-plan','Régler le plan','btn-ghost']])}
@@ -865,9 +882,9 @@ function afterEpargne(){
   makeChart('c-epargne', {
     type:'line',
     data:{ labels:Array.from({length:52}, (_, i) => i + 1), datasets:[
-      { label:'Prévu', data:plan, borderColor:'rgba(148,163,184,.45)', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:.2 },
-      { label:'Réel',  data:reel, borderColor:'#10B981', borderWidth:2.5, pointRadius:0, tension:.2, fill:true, backgroundColor:'rgba(16,185,129,.12)' }] },
-    options: Object.assign({}, baseOpts, { plugins:{ legend:{ display:true, labels:{ color:'#94A3B8', boxWidth:10, boxHeight:10, font:{family:'Plus Jakarta Sans',size:11} } }, tooltip:baseOpts.plugins.tooltip } })
+      { label:'Prévu', data:plan, borderColor:tc('muted', .45), borderWidth:2, borderDash:[5,4], pointRadius:0, tension:.2 },
+      { label:'Réel',  data:reel, borderColor:tc('em'), borderWidth:2.5, pointRadius:0, tension:.2, fill:true, backgroundColor:tc('em', .12) }] },
+    options: Object.assign({}, BO(), { plugins:{ legend:{ display:true, labels:{ color:tc('muted'), boxWidth:10, boxHeight:10, font:{family:'Plus Jakarta Sans',size:11} } }, tooltip:BO().plugins.tooltip } })
   });
 }
 
@@ -919,9 +936,9 @@ function afterAthlete(){
   const ws = M.weights.slice().sort((a,b) => a.date.localeCompare(b.date));
   makeChart('c-weight', {
     type:'line',
-    data:{ labels:ws.map(w => prettyDate(w.date)), datasets:[{ data:ws.map(w => w.kg), borderColor:'#10B981', borderWidth:2.5,
-      tension:.3, pointRadius:3, pointBackgroundColor:'#10B981', fill:true, backgroundColor:'rgba(16,185,129,.1)' }] },
-    options: Object.assign({}, baseOpts, { scales:Object.assign({}, baseOpts.scales, { y:Object.assign({}, baseOpts.scales.y, { beginAtZero:false }) }) })
+    data:{ labels:ws.map(w => prettyDate(w.date)), datasets:[{ data:ws.map(w => w.kg), borderColor:tc('em'), borderWidth:2.5,
+      tension:.3, pointRadius:3, pointBackgroundColor:tc('em'), fill:true, backgroundColor:tc('em', .1) }] },
+    options: Object.assign({}, BO(), { scales:Object.assign({}, BO().scales, { y:Object.assign({}, BO().scales.y, { beginAtZero:false }) }) })
   });
   const labels = [], vols = [];
   for (let i = 7; i >= 0; i--){
@@ -930,8 +947,8 @@ function afterAthlete(){
     vols.push(M.sessions.filter(s => s.date >= start && s.date <= end).reduce((a,s) => a + (s.volume || 0), 0));
   }
   makeChart('c-vol', { type:'bar',
-    data:{ labels, datasets:[{ data:vols, backgroundColor:'rgba(99,102,241,.6)', borderRadius:5, borderSkipped:false }] },
-    options: baseOpts });
+    data:{ labels, datasets:[{ data:vols, backgroundColor:tc('in', .6), borderRadius:5, borderSkipped:false }] },
+    options: BO() });
 }
 
 /* -------------------- MODULE 4 · SIDE-HUSTLE -------------------- */
@@ -1007,17 +1024,17 @@ function afterHustle(){
   makeChart('c-rev', { type:'line',
     data:{ labels:months.map(m => m.slice(5) + '/' + m.slice(2,4)), datasets:[{
       data:months.map(m => M.revenues.filter(r => monthKey(r.date) === m).reduce((a,r) => a + r.amount, 0)),
-      borderColor:'#10B981', borderWidth:2.5, tension:.33, pointRadius:3, pointBackgroundColor:'#10B981',
-      fill:true, backgroundColor:'rgba(16,185,129,.12)' }] },
-    options: baseOpts });
+      borderColor:tc('em'), borderWidth:2.5, tension:.33, pointRadius:3, pointBackgroundColor:tc('em'),
+      fill:true, backgroundColor:tc('em', .12) }] },
+    options: BO() });
 
   const by = {}; M.revenues.forEach(r => { const p = M.projects.find(x => x.id === r.projectId); const k = p ? p.name : 'Autre'; by[k] = (by[k] || 0) + r.amount; });
   const keys = Object.keys(by);
   makeChart('c-proj', { type:'doughnut',
     data:{ labels:keys.length ? keys : ['Aucun revenu'], datasets:[{ data:keys.length ? keys.map(k => by[k]) : [1],
-      backgroundColor:['#6366F1','#10B981','#F59E0B','#818CF8','#34D399','#FBBF24','#64748B'], borderColor:'#0B0F18', borderWidth:2 }] },
+      backgroundColor:['in','em','am','in-soft','em-soft','am-soft','dim'].map(n => tc(n)), borderColor:tc('panel'), borderWidth:2 }] },
     options: noScales({ cutout:'62%', plugins:{ legend:{ display:true, position:'bottom',
-      labels:{ color:'#94A3B8', boxWidth:9, boxHeight:9, padding:12, font:{family:'Plus Jakarta Sans',size:11} } }, tooltip:baseOpts.plugins.tooltip } }) });
+      labels:{ color:tc('muted'), boxWidth:9, boxHeight:9, padding:12, font:{family:'Plus Jakarta Sans',size:11} } }, tooltip:BO().plugins.tooltip } }) });
 }
 
 /* -------------------- MODULE 5 · CRÉATEUR VIRAL -------------------- */
@@ -1064,8 +1081,8 @@ function afterViral(){
   makeChart('c-views', { type:'bar',
     data:{ labels:pub.length ? pub.map(i => i.title.slice(0,12)) : ['—'], datasets:[{
       data:pub.length ? pub.map(i => i.views || 0) : [0],
-      backgroundColor:'rgba(129,140,248,.65)', borderRadius:5, borderSkipped:false }] },
-    options: baseOpts });
+      backgroundColor:tc('in-soft', .65), borderRadius:5, borderSkipped:false }] },
+    options: BO() });
 }
 
 /* -------------------- MODULE 6 · SECOND CERVEAU -------------------- */
@@ -1131,7 +1148,7 @@ function viewSettings(){
   <div class="grid g2">
     <section class="card">
       <div class="card-head"><h2>Modules</h2><span class="hint">${MODULES.filter(m => DB.modules[m.id].unlocked).length}/6 activés</span></div>
-      <div class="row" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.07)">
+      <div class="row" style="border-color:${tc('am', .35)};background:${tc('am', .07)}">
         <div class="grow"><p class="ttl">Mode simulation</p>
           <p class="meta">Déverrouille les 6 modules pour tester, sans saisir de code.</p></div>
         <button type="button" class="btn ${sim ? 'btn-am' : 'btn-ghost'} sm" data-act="toggle-sim">${sim ? 'Activé' : 'Désactivé'}</button>
@@ -1208,9 +1225,9 @@ function paintPomo(){
   const total = pomoDur(POMO.phase);
   const arc = $('#pomo-arc');
   if (arc){
-    const C = 157;
-    arc.style.strokeDashoffset = (C * (POMO.left / total)).toFixed(1);
-    arc.setAttribute('stroke', POMO.phase === 'work' ? '#818CF8' : '#10B981');
+    const CIRC = 157;
+    arc.style.strokeDashoffset = (CIRC * (POMO.left / total)).toFixed(1);
+    arc.setAttribute('stroke', POMO.phase === 'work' ? tc('in-soft') : tc('em'));
   }
   const go = $('#pomo-go'); if (go) go.textContent = POMO.running ? 'Pause' : 'Démarrer';
 }
@@ -1549,8 +1566,15 @@ document.addEventListener('keydown', e => {
 DB = load();
 if (DB.profile.lastSeen !== today()){ DB.profile.lastSeen = today(); save(); }
 POMO.left = pomoDur('work');
+CCN = ['em', 'em-soft', 'am', 'am-soft', 'in', 'in-deep'].map(n => tc(n));
 buildRail();
 render();
+
+/* thème clair / sombre : on redessine, les graphiques reprennent les bonnes couleurs */
+document.addEventListener('apex:theme', () => {
+  CCN = ['em', 'em-soft', 'am', 'am-soft', 'in', 'in-deep'].map(n => tc(n));
+  render();
+});
 
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
   navigator.serviceWorker.register('sw.js').catch(() => {});

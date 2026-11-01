@@ -1,6 +1,7 @@
 /* APEX FLOW OS — service worker : l'app reste utilisable hors-ligne. */
-const CACHE = 'apexflow-v1';
-const SHELL = ['./', './index.html', './app.css', './app.js', './manifest.webmanifest'];
+const CACHE = 'apexflow-v2';
+const SHELL = ['./', './index.html', './app.css', './app.js', './manifest.webmanifest',
+               '../theme.css', '../theme.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

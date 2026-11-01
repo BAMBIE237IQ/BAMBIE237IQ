@@ -1,8 +1,12 @@
 # APEX FLOW OS — version Google Sheets
 
 Le fichier `APEX-FLOW-OS.gs` construit tout seul la version tableur du système,
-avec la même charte que la boutique et l'application : fond obsidienne `#07090E`,
-émeraude `#10B981` pour l'action, ambre `#F59E0B` pour l'XP.
+avec la même charte que la boutique et l'application, en **thème sombre** (fond
+obsidienne `#07090E`, émeraude `#10B981`, ambre `#F59E0B`) ou en **thème clair**
+(fond `#FFFFFF`, émeraude `#047857`, ambre `#B45309`).
+
+> La procédure complète, avec le script à copier en un clic, est aussi en ligne :
+> **<https://bambie-237-iq.vercel.app/apex/sheets/>**
 
 ## Installation (5 minutes, aucune compétence technique)
 
@@ -24,6 +28,7 @@ avec la même charte que la boutique et l'application : fond obsidienne `#07090E
 | **Installer le système complet** | Crée les onglets `QG`, `Habitudes` et `Tâches`. |
 | **Générer les 6 modules ici** | Ajoute les 6 onglets de modules dans le même fichier. |
 | **Exporter les 6 modules en fichiers séparés** | Crée 6 fichiers Google Sheets indépendants dans ton Drive — c'est ce qui permet de les vendre à l'unité. Le script affiche les 6 liens à la fin. |
+| **Apparence ▸ Thème sombre / Thème clair** | Repeint tout le fichier. Les habitudes, les cases cochées et les tâches sont mises de côté puis remises en place : rien n'est perdu. Le choix est mémorisé et réutilisé par les générations suivantes. |
 | **Remettre le mois à zéro** | Décoche toutes les cases d'`Habitudes` sans toucher aux noms, aux piliers ni à l'XP. |
 
 ## Ce qui est automatique
@@ -35,6 +40,8 @@ avec la même charte que la boutique et l'application : fond obsidienne `#07090E
   puis `IFS` donne le rang, de *Novice* à *Légende* (50 niveaux, 18 865 XP).
 - **Série de jours consécutifs** : une ligne masquée (42) tient le compteur jour après jour.
 - **Journée parfaite** : la ligne 4 affiche `P` quand toutes les habitudes du jour sont cochées.
+- **Thème** : une seule palette pilote tout (`PALETTES.sombre` et `PALETTES.clair` en
+  haut du fichier). Changer de thème passe par le menu, jamais par une modification du code.
 
 ## Bon à savoir
 

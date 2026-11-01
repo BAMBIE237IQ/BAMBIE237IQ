@@ -1,0 +1,114 @@
+/* =====================================================================
+   APEX FLOW OS — jetons de couleur partagés (boutique, Web App, Sheets)
+   Un seul endroit pour les deux thèmes.
+   Les jetons --c-* sont des triplets RVB : ils servent aussi bien à
+   Tailwind (rgb(var(--c-x) / <alpha-value>)) qu'à nos propres règles.
+   ===================================================================== */
+
+:root{
+  /* ---------- SOMBRE · Obsidienne (par défaut) ---------- */
+  --c-bg:7 9 14;
+  --c-bg2:11 15 24;
+  --c-surf:17 22 34;
+  --c-surf2:26 33 48;
+  --c-ink:248 250 252;
+  --c-muted:148 163 184;
+  --c-dim:100 116 139;
+  --c-hair:255 255 255;
+
+  --c-em:16 185 129;   --c-em-soft:52 211 153;  --c-em-deep:6 95 70;    --c-em-lite:110 231 183;
+  --c-am:245 158 11;   --c-am-soft:251 191 36;  --c-am-deep:146 64 14;  --c-am-lite:252 211 77;
+  --c-in:99 102 241;   --c-in-soft:129 140 248; --c-in-deep:55 48 163;  --c-in-lite:165 180 252;
+  --c-rose:244 63 94;  --c-rose-soft:251 113 133; --c-rose-deep:136 19 55; --c-rose-lite:253 164 175;
+
+  --c-on-em:4 20 13;   /* texte posé sur un fond émeraude */
+  --c-on-am:26 16 0;   /* texte posé sur un fond ambre */
+
+  /* ---------- valeurs dérivées (identiques dans les deux thèmes) ---------- */
+  --bg:rgb(var(--c-bg));
+  --bg2:rgb(var(--c-bg2));
+  --surf:rgb(var(--c-surf));
+  --surf2:rgb(var(--c-surf2));
+  --ink:rgb(var(--c-ink));
+  --muted:rgb(var(--c-muted));
+  --dim:rgb(var(--c-dim));
+  --em:rgb(var(--c-em));        --em-soft:rgb(var(--c-em-soft));
+  --em-deep:rgb(var(--c-em-deep)); --em-lite:rgb(var(--c-em-lite));
+  --am:rgb(var(--c-am));        --am-soft:rgb(var(--c-am-soft));
+  --am-deep:rgb(var(--c-am-deep)); --am-lite:rgb(var(--c-am-lite));
+  --in:rgb(var(--c-in));        --in-soft:rgb(var(--c-in-soft));
+  --in-deep:rgb(var(--c-in-deep)); --in-lite:rgb(var(--c-in-lite));
+  --rose:rgb(var(--c-rose));    --rose-lite:rgb(var(--c-rose-lite));
+  --on-em:rgb(var(--c-on-em));
+  --on-am:rgb(var(--c-on-am));
+
+  /* ---------- habillage, propre à chaque thème ---------- */
+  --line:rgb(var(--c-hair) / .14);
+  --line-2:rgb(var(--c-hair) / .26);
+  --inset:rgb(var(--c-bg2) / .60);
+  --card-g:linear-gradient(160deg,rgb(var(--c-surf2) / .60),rgb(var(--c-bg2) / .75));
+  --glass-g:linear-gradient(160deg,rgb(var(--c-surf2) / .72),rgb(var(--c-bg2) / .82));
+  --sheen:linear-gradient(140deg,rgb(var(--c-ink) / .14),transparent 42%,transparent 60%,rgb(var(--c-em) / .16));
+  --chip-bg:rgb(var(--c-surf) / .80);
+  --ov:rgb(4 6 10 / .62);
+  --panel:rgb(var(--c-bg2));
+  --card-sh:none;
+  --sh:0 18px 46px -26px rgb(0 0 0 / .85);
+  --rail-g:linear-gradient(180deg,rgb(var(--c-bg2)),rgb(var(--c-bg)));
+  --topbar-bg:rgb(var(--c-bg) / .86);
+  --field:rgb(var(--c-bg) / .75);
+  --aurora-op:.65;
+  --grid-op:.055;
+}
+
+:root[data-theme="light"]{
+  /* ---------- CLAIR · Papier ---------- */
+  --c-bg:246 248 252;
+  --c-bg2:255 255 255;
+  --c-surf:255 255 255;
+  --c-surf2:241 245 249;
+  --c-ink:11 18 32;
+  --c-muted:81 96 122;
+  --c-dim:107 119 139;
+  --c-hair:15 23 42;
+
+  --c-em:4 120 87;     --c-em-soft:5 150 105;   --c-em-deep:6 78 59;    --c-em-lite:6 95 70;
+  --c-am:180 83 9;     --c-am-soft:217 119 6;   --c-am-deep:120 53 15;  --c-am-lite:146 64 14;
+  --c-in:79 70 229;    --c-in-soft:99 102 241;  --c-in-deep:49 46 129;  --c-in-lite:67 56 202;
+  --c-rose:190 18 60;  --c-rose-soft:225 29 72; --c-rose-deep:136 19 55; --c-rose-lite:159 18 57;
+
+  --c-on-em:255 255 255;
+  --c-on-am:255 255 255;
+
+  --line:rgb(var(--c-hair) / .13);
+  --line-2:rgb(var(--c-hair) / .22);
+  --inset:rgb(var(--c-surf2) / .85);
+  --card-g:linear-gradient(160deg,rgb(255 255 255 / .95),rgb(255 255 255 / .80));
+  --glass-g:linear-gradient(160deg,rgb(255 255 255 / .90),rgb(255 255 255 / .76));
+  --sheen:linear-gradient(140deg,rgb(var(--c-hair) / .10),transparent 42%,transparent 60%,rgb(var(--c-em) / .14));
+  --chip-bg:rgb(255 255 255 / .92);
+  --ov:rgb(15 23 42 / .44);
+  --panel:rgb(255 255 255);
+  --card-sh:0 14px 40px -26px rgb(15 23 42 / .30);
+  --sh:0 18px 46px -28px rgb(15 23 42 / .35);
+  --rail-g:linear-gradient(180deg,#FFFFFF,#F2F5FA);
+  --topbar-bg:rgb(255 255 255 / .88);
+  --field:#FFFFFF;
+  --aurora-op:.5;
+  --grid-op:.07;
+}
+
+[hidden]{display:none !important}
+
+/* ---------- bouton de bascule clair / sombre ---------- */
+.theme-btn{
+  display:inline-grid; place-items:center; width:40px; height:40px; flex:0 0 auto;
+  border-radius:.7rem; border:1px solid var(--line); background:var(--chip-bg);
+  color:var(--muted); cursor:pointer; transition:color .2s ease, border-color .2s ease, background-color .2s ease;
+}
+.theme-btn:hover{color:var(--ink); border-color:var(--line-2)}
+.theme-btn svg{width:18px; height:18px}
+.theme-btn .ic-sun{display:none}
+.theme-btn .ic-moon{display:block}
+:root[data-theme="light"] .theme-btn .ic-sun{display:block}
+:root[data-theme="light"] .theme-btn .ic-moon{display:none}

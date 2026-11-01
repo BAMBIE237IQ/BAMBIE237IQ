@@ -14,38 +14,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('apexflow.theme');
+if(!t)t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+document.documentElement.dataset.theme=t;}catch(e){}})();</script>
+<link rel="stylesheet" href="theme.css">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        obsidian: '#07090E',
-        slate0:   '#0B0F18',
-        slate1:   '#111622',
-        slate2:   '#1A2130',
-        ink:      '#F8FAFC',
-        muted:    '#94A3B8',
-        emerald:  { DEFAULT: '#10B981', soft: '#34D399', deep: '#065F46' },
-        amber:    { DEFAULT: '#F59E0B', soft: '#FBBF24' },
-        indigo:   { DEFAULT: '#6366F1', soft: '#818CF8' }
-      },
-      fontFamily: {
-        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
-      },
-      borderRadius: { '4xl': '2rem' }
-    }
-  }
-}
-</script>
+<script src="tw-config.js"></script>
+<script src="theme.js" defer></script>
 
 <style>
   :root{
-    --bg:#07090E; --bg2:#111622; --ink:#F8FAFC; --muted:#94A3B8;
-    --em:#10B981; --am:#F59E0B; --in:#6366F1;
-    --line:rgba(148,163,184,.14);
     --z-nav:40; --z-drawer:90; --z-overlay:80; --z-toast:100; --z-confetti:110;
   }
   html{scroll-behavior:smooth}
@@ -54,30 +32,30 @@ tailwind.config = {
   body.locked{overflow:hidden}
 
   /* ---------- Ambient background ---------- */
-  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.65}
+  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:var(--aurora-op)}
   .aurora span{position:absolute; border-radius:50%; filter:blur(90px)}
-  .aurora .a1{width:46rem;height:46rem;top:-16rem;left:-10rem;background:rgba(16,185,129,.16)}
-  .aurora .a2{width:38rem;height:38rem;top:18%;right:-14rem;background:rgba(99,102,241,.14)}
-  .aurora .a3{width:30rem;height:30rem;bottom:-12rem;left:28%;background:rgba(245,158,11,.10)}
+  .aurora .a1{width:46rem;height:46rem;top:-16rem;left:-10rem;background:rgb(var(--c-em) / .16)}
+  .aurora .a2{width:38rem;height:38rem;top:18%;right:-14rem;background:rgb(var(--c-in) / .14)}
+  .aurora .a3{width:30rem;height:30rem;bottom:-12rem;left:28%;background:rgb(var(--c-am) / .10)}
   .grid-lines{position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:linear-gradient(to right,rgba(148,163,184,.055) 1px,transparent 1px),
-                     linear-gradient(to bottom,rgba(148,163,184,.055) 1px,transparent 1px);
+    background-image:linear-gradient(to right,rgb(var(--c-muted) / var(--grid-op)) 1px,transparent 1px),
+                     linear-gradient(to bottom,rgb(var(--c-muted) / var(--grid-op)) 1px,transparent 1px);
     background-size:72px 72px;
     mask-image:radial-gradient(ellipse at 50% 0%,#000 35%,transparent 78%);
     -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 35%,transparent 78%)}
 
   /* ---------- Surfaces ---------- */
-  .glass{background:linear-gradient(160deg,rgba(26,33,48,.72),rgba(11,15,24,.82)); backdrop-filter:blur(14px); border:1px solid var(--line)}
-  .card{position:relative; background:linear-gradient(160deg,rgba(26,33,48,.60),rgba(11,15,24,.75)); border:1px solid var(--line); border-radius:1.5rem; overflow:hidden}
+  .glass{background:var(--glass-g); backdrop-filter:blur(14px); border:1px solid var(--line)}
+  .card{position:relative; background:var(--card-g); border:1px solid var(--line); border-radius:1.5rem; overflow:hidden; box-shadow:var(--card-sh)}
   .card::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
-    background:linear-gradient(140deg,rgba(248,250,252,.14),transparent 42%,transparent 60%,rgba(16,185,129,.16));
+    background:var(--sheen);
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none}
   .card-hover{transition:transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s ease, box-shadow .25s ease}
-  .card-hover:hover{transform:translateY(-4px); border-color:rgba(16,185,129,.38); box-shadow:0 18px 50px -24px rgba(16,185,129,.35)}
+  .card-hover:hover{transform:translateY(-4px); border-color:rgb(var(--c-em) / .38); box-shadow:0 18px 50px -24px rgb(var(--c-em) / .35)}
 
   .chip{display:inline-flex; align-items:center; gap:.45rem; padding:.4rem .75rem; border-radius:999px;
-    border:1px solid var(--line); background:rgba(17,22,34,.8); font-size:.75rem; letter-spacing:.02em; color:var(--muted)}
+    border:1px solid var(--line); background:var(--chip-bg); font-size:.75rem; letter-spacing:.02em; color:var(--muted)}
 
   /* ---------- Buttons ---------- */
   .btn{display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:48px; padding:0 1.35rem;
@@ -85,12 +63,12 @@ tailwind.config = {
     transition:transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
     cursor:pointer; border:1px solid transparent; text-align:center}
   .btn:active{transform:scale(.975)}
-  .btn-primary{background:var(--em); color:#04140D; box-shadow:0 12px 34px -14px rgba(16,185,129,.8)}
-  .btn-primary:hover{background:#34D399; box-shadow:0 16px 40px -14px rgba(16,185,129,.95)}
-  .btn-ghost{background:rgba(26,33,48,.7); color:var(--ink); border-color:var(--line)}
-  .btn-ghost:hover{border-color:rgba(248,250,252,.3); background:rgba(26,33,48,.95)}
-  .btn-amber{background:var(--am); color:#1A1000; box-shadow:0 12px 34px -14px rgba(245,158,11,.8)}
-  .btn-amber:hover{background:#FBBF24}
+  .btn-primary{background:var(--em); color:var(--on-em); box-shadow:0 12px 34px -14px rgb(var(--c-em) / .8)}
+  .btn-primary:hover{background:rgb(var(--c-em-soft)); box-shadow:0 16px 40px -14px rgb(var(--c-em) / .95)}
+  .btn-ghost{background:var(--inset); color:var(--ink); border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--line-2); background:rgb(var(--c-surf2) / .95)}
+  .btn-amber{background:var(--am); color:var(--on-am); box-shadow:0 12px 34px -14px rgb(var(--c-am) / .8)}
+  .btn-amber:hover{background:rgb(var(--c-am-soft))}
   :where(a,button,input,summary,[tabindex]):focus-visible{outline:2px solid var(--em); outline-offset:3px; border-radius:.6rem}
 
   /* ---------- Bento ---------- */
@@ -100,70 +78,70 @@ tailwind.config = {
 
   /* ---------- Image placeholders ---------- */
   .ph{position:relative; width:100%; border-radius:1.1rem; overflow:hidden;
-    border:1px dashed rgba(148,163,184,.34); background:
-      radial-gradient(120% 90% at 20% 0%,rgba(16,185,129,.10),transparent 60%),
-      repeating-linear-gradient(135deg,rgba(148,163,184,.055) 0 10px,transparent 10px 20px),
-      #0B0F18;
+    border:1px dashed rgb(var(--c-muted) / .34); background:
+      radial-gradient(120% 90% at 20% 0%,rgb(var(--c-em) / .10),transparent 60%),
+      repeating-linear-gradient(135deg,rgb(var(--c-muted) / var(--grid-op)) 0 10px,transparent 10px 20px),
+      rgb(var(--c-bg2));
     display:flex; align-items:center; justify-content:center}
   .ph > img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
   .ph-16-9{aspect-ratio:16/9}
   .ph-4-3{aspect-ratio:4/3}
   .ph-1-1{aspect-ratio:1/1}
   .ph-3-4{aspect-ratio:3/4}
-  .ph-label{font-family:"JetBrains Mono",monospace; font-size:.68rem; color:#64748B; text-align:center; padding:1rem; line-height:1.7}
+  .ph-label{font-family:"JetBrains Mono",monospace; font-size:.68rem; color:rgb(var(--c-dim)); text-align:center; padding:1rem; line-height:1.7}
 
   /* ---------- Gauges / bars ---------- */
-  .track{height:10px; border-radius:999px; background:rgba(148,163,184,.14); overflow:hidden}
+  .track{height:10px; border-radius:999px; background:rgb(var(--c-muted) / .14); overflow:hidden}
   .fill{height:100%; border-radius:999px; transition:width .6s cubic-bezier(.2,.8,.2,1)}
-  .fill-em{background:linear-gradient(90deg,#065F46,#10B981 55%,#6EE7B7)}
-  .fill-am{background:linear-gradient(90deg,#92400E,#F59E0B 55%,#FCD34D)}
+  .fill-em{background:linear-gradient(90deg,rgb(var(--c-em-deep)),rgb(var(--c-em)) 55%,rgb(var(--c-em-lite)))}
+  .fill-am{background:linear-gradient(90deg,rgb(var(--c-am-deep)),rgb(var(--c-am)) 55%,rgb(var(--c-am-lite)))}
 
   /* ---------- Habit toggle (demo) ---------- */
   .habit{display:flex; align-items:center; gap:.85rem; width:100%; min-height:56px; padding:.7rem .9rem;
-    border-radius:1rem; border:1px solid var(--line); background:rgba(11,15,24,.6); cursor:pointer; text-align:left;
+    border-radius:1rem; border:1px solid var(--line); background:var(--inset); cursor:pointer; text-align:left;
     transition:border-color .2s ease, background-color .2s ease}
-  .habit:hover{border-color:rgba(248,250,252,.26)}
-  .habit .box{flex:0 0 auto; width:28px; height:28px; border-radius:.6rem; border:1.5px solid rgba(148,163,184,.45);
+  .habit:hover{border-color:rgb(var(--c-ink) / .26)}
+  .habit .box{flex:0 0 auto; width:28px; height:28px; border-radius:.6rem; border:1.5px solid rgb(var(--c-muted) / .45);
     display:grid; place-items:center; transition:all .2s ease}
-  .habit .box svg{width:16px;height:16px;opacity:0; transform:scale(.6); transition:all .2s ease; color:#04140D}
-  .habit[aria-pressed="true"]{border-color:rgba(16,185,129,.55); background:rgba(16,185,129,.09)}
+  .habit .box svg{width:16px;height:16px;opacity:0; transform:scale(.6); transition:all .2s ease; color:var(--on-em)}
+  .habit[aria-pressed="true"]{border-color:rgb(var(--c-em) / .55); background:rgb(var(--c-em) / .09)}
   .habit[aria-pressed="true"] .box{background:var(--em); border-color:var(--em)}
   .habit[aria-pressed="true"] .box svg{opacity:1; transform:scale(1)}
-  .habit[aria-pressed="true"] .h-name{color:#6EE7B7}
+  .habit[aria-pressed="true"] .h-name{color:var(--em-lite)}
 
   /* ---------- Switch (upsell / vip) ---------- */
   .switch{position:relative; flex:0 0 auto; width:50px; height:28px; border-radius:999px; border:1px solid var(--line);
-    background:rgba(148,163,184,.16); cursor:pointer; transition:background-color .2s ease, border-color .2s ease}
+    background:rgb(var(--c-muted) / .16); cursor:pointer; transition:background-color .2s ease, border-color .2s ease}
   .switch::after{content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
-    background:#94A3B8; transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .2s ease}
-  [aria-checked="true"].switch{background:rgba(16,185,129,.3); border-color:rgba(16,185,129,.55)}
+    background:rgb(var(--c-muted)); transition:transform .22s cubic-bezier(.2,.8,.2,1), background-color .2s ease}
+  [aria-checked="true"].switch{background:rgb(var(--c-em) / .3); border-color:rgb(var(--c-em) / .55)}
   [aria-checked="true"].switch::after{transform:translateX(22px); background:var(--em)}
 
   /* ---------- Pack selector ---------- */
   .pack{position:relative; width:100%; text-align:left; padding:1.25rem; border-radius:1.25rem; cursor:pointer;
-    border:1px solid var(--line); background:rgba(11,15,24,.6); transition:all .22s cubic-bezier(.2,.8,.2,1)}
-  .pack:hover{border-color:rgba(248,250,252,.26); transform:translateY(-2px)}
-  .pack[aria-pressed="true"]{border-color:var(--em); background:rgba(16,185,129,.08); box-shadow:0 0 0 1px var(--em), 0 18px 46px -26px rgba(16,185,129,.7)}
-  .pack .radio{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(148,163,184,.5); display:grid;place-items:center; flex:0 0 auto}
+    border:1px solid var(--line); background:var(--inset); transition:all .22s cubic-bezier(.2,.8,.2,1)}
+  .pack:hover{border-color:rgb(var(--c-ink) / .26); transform:translateY(-2px)}
+  .pack[aria-pressed="true"]{border-color:var(--em); background:rgb(var(--c-em) / .08); box-shadow:0 0 0 1px var(--em), 0 18px 46px -26px rgb(var(--c-em) / .7)}
+  .pack .radio{width:22px;height:22px;border-radius:50%;border:1.5px solid rgb(var(--c-muted) / .5); display:grid;place-items:center; flex:0 0 auto}
   .pack[aria-pressed="true"] .radio{border-color:var(--em)}
   .pack .radio i{width:10px;height:10px;border-radius:50%;background:var(--em); transform:scale(0); transition:transform .2s ease; display:block}
   .pack[aria-pressed="true"] .radio i{transform:scale(1)}
 
   /* ---------- Drawer ---------- */
-  #overlay{position:fixed; inset:0; z-index:var(--z-overlay); background:rgba(4,6,10,.62); backdrop-filter:blur(3px);
+  #overlay{position:fixed; inset:0; z-index:var(--z-overlay); background:var(--ov); backdrop-filter:blur(3px);
     opacity:0; pointer-events:none; transition:opacity .28s ease}
   #overlay.on{opacity:1; pointer-events:auto}
   #drawer{position:fixed; top:0; right:0; z-index:var(--z-drawer); height:100dvh; width:min(100vw,440px);
-    display:flex; flex-direction:column; background:#0B0F18; border-left:1px solid var(--line);
+    display:flex; flex-direction:column; background:var(--panel); border-left:1px solid var(--line);
     transform:translateX(100%); transition:transform .34s cubic-bezier(.22,.9,.2,1); box-shadow:-30px 0 70px -30px rgba(0,0,0,.9)}
   #drawer.on{transform:translateX(0)}
   .drawer-scroll{overflow-y:auto; overscroll-behavior:contain; flex:1; -webkit-overflow-scrolling:touch}
 
   /* ---------- Mastery pips ---------- */
   .pip{display:grid; place-items:center; height:38px; border-radius:.7rem; border:1px solid var(--line);
-    background:rgba(148,163,184,.08); color:#475569; transition:all .25s ease}
-  .pip.on{border-color:rgba(16,185,129,.5); background:rgba(16,185,129,.16); color:#6EE7B7}
-  .pip.bonus{border-color:rgba(245,158,11,.55); background:rgba(245,158,11,.16); color:#FCD34D}
+    background:rgb(var(--c-muted) / .08); color:rgb(var(--c-dim)); transition:all .25s ease}
+  .pip.on{border-color:rgb(var(--c-em) / .5); background:rgb(var(--c-em) / .16); color:var(--em-lite)}
+  .pip.bonus{border-color:rgb(var(--c-am) / .55); background:rgb(var(--c-am) / .16); color:var(--am-lite)}
 
   /* ---------- Toast ---------- */
   #toast{position:fixed; left:50%; bottom:1.25rem; z-index:var(--z-toast); transform:translate(-50%,140%);
@@ -182,15 +160,15 @@ tailwind.config = {
   /* ---------- Range slider ---------- */
   input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:40px; background:transparent; cursor:pointer}
   input[type=range]::-webkit-slider-runnable-track{height:8px; border-radius:999px;
-    background:linear-gradient(90deg,var(--am) var(--p,40%),rgba(148,163,184,.18) var(--p,40%))}
+    background:linear-gradient(90deg,var(--am) var(--p,40%),rgb(var(--c-muted) / .18) var(--p,40%))}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; margin-top:-10px; width:28px; height:28px; border-radius:50%;
-    background:#F8FAFC; border:5px solid var(--am); box-shadow:0 6px 18px -6px rgba(245,158,11,.9)}
-  input[type=range]::-moz-range-track{height:8px; border-radius:999px; background:rgba(148,163,184,.18)}
+    background:rgb(var(--c-ink)); border:5px solid var(--am); box-shadow:0 6px 18px -6px rgb(var(--c-am) / .9)}
+  input[type=range]::-moz-range-track{height:8px; border-radius:999px; background:rgb(var(--c-muted) / .18)}
   input[type=range]::-moz-range-progress{height:8px; border-radius:999px; background:var(--am)}
-  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#F8FAFC;border:5px solid var(--am)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:rgb(var(--c-ink));border:5px solid var(--am)}
 
   /* ---------- FAQ ---------- */
-  details.faq{border:1px solid var(--line); border-radius:1.1rem; background:rgba(17,22,34,.55); overflow:hidden}
+  details.faq{border:1px solid var(--line); border-radius:1.1rem; background:var(--inset); overflow:hidden}
   details.faq summary{cursor:pointer; list-style:none; padding:1.05rem 1.15rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; font-weight:600; min-height:56px}
   details.faq summary::-webkit-details-marker{display:none}
   details.faq summary .ic{transition:transform .25s ease; color:var(--muted); flex:0 0 auto}
@@ -198,11 +176,35 @@ tailwind.config = {
   details.faq .body{padding:0 1.15rem 1.15rem; color:var(--muted); line-height:1.75}
 
   .num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums}
-  .strike{text-decoration:line-through; text-decoration-color:rgba(248,250,252,.45)}
+  .strike{text-decoration:line-through; text-decoration-color:rgb(var(--c-ink) / .45)}
   .ticker{display:flex; gap:2.5rem; animation:slide 32s linear infinite; width:max-content}
   @keyframes slide{to{transform:translateX(-50%)}}
-  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--em); box-shadow:0 0 0 0 rgba(16,185,129,.6); animation:pulse 2.2s infinite}
-  @keyframes pulse{70%{box-shadow:0 0 0 10px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--em); box-shadow:0 0 0 0 rgb(var(--c-em) / .6); animation:pulse 2.2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 10px rgb(var(--c-em) / 0)}100%{box-shadow:0 0 0 0 rgb(var(--c-em) / 0)}}
+
+  /* ---------- Graphiques SVG : couleurs pilotées par le thème ---------- */
+  #radar-grid{stroke:rgb(var(--c-muted) / .22)}
+  #radar-shape{fill:rgb(var(--c-in) / .22); stroke:var(--in-soft)}
+  #radar-dots circle{fill:var(--in-soft); stroke:var(--panel)}
+  #radar-labels{fill:var(--muted)}
+  .axis{stroke:rgb(var(--c-muted) / .28)}
+  #chart-bars .bar{fill:rgb(var(--c-in) / .45)}
+  #chart-bars .bar.hot{fill:url(#g-today)}
+  #chart-bars .bval{fill:var(--dim)}
+  #chart-bars .bval.hot{fill:var(--em)}
+  #g-today .s1{stop-color:rgb(var(--c-em-deep))}
+  #g-today .s2{stop-color:rgb(var(--c-em))}
+  #g-today .s3{stop-color:rgb(var(--c-em-lite))}
+  #chart-labels{fill:var(--dim)}
+  #chart-labels .hot{fill:var(--em)}
+  .fill-in{background:linear-gradient(90deg,rgb(var(--c-in-deep)),rgb(var(--c-in)) 55%,rgb(var(--c-in-lite)))}
+
+  /* ---------- Thème clair : filets Tailwind un peu plus lisibles ---------- */
+  :root[data-theme="light"] .border-white\/5{border-color:rgb(var(--c-hair) / .11)}
+  :root[data-theme="light"] .bg-white\/5{background-color:rgb(var(--c-hair) / .04)}
+  :root[data-theme="light"] .strike{text-decoration-color:rgb(var(--c-hair) / .5)}
+  :root[data-theme="light"] input[type=range]::-webkit-slider-thumb{background:#fff}
+  :root[data-theme="light"] input[type=range]::-moz-range-thumb{background:#fff}
 
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
@@ -236,11 +238,16 @@ tailwind.config = {
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#modules">Modules</a></li>
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#prix">Prix</a></li>
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#faq">FAQ</a></li>
+      <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="sheets/">Google Sheets</a></li>
       <li><a class="px-3 py-2 rounded-lg text-emerald hover:bg-emerald/10 transition" href="app/">Web App</a></li>
     </ul>
 
     <div class="ml-auto flex items-center gap-2">
-      <span class="hidden md:inline-flex chip"><span class="pulse-dot" aria-hidden="true"></span><span class="num" id="nav-live">214</span> systèmes activés</span>
+      <span class="hidden xl:inline-flex chip"><span class="pulse-dot" aria-hidden="true"></span><span class="num" id="nav-live">214</span> systèmes activés</span>
+      <button type="button" class="theme-btn" aria-pressed="false" aria-label="Passer au thème clair" title="Passer au thème clair">
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+      </button>
       <button type="button" id="open-cart" class="btn btn-primary !px-4 !min-h-[44px] text-sm relative">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="w-[18px] h-[18px]" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M6 6L5 3H2"/></svg>
         <span class="hidden sm:inline">Mon système</span>
@@ -318,10 +325,10 @@ tailwind.config = {
       <div class="rounded-2xl border border-white/5 bg-obsidian/60 p-4">
         <p class="text-[11px] uppercase tracking-wider text-muted mb-2">Radar d'Équilibre de Vie</p>
         <svg viewBox="0 0 300 200" class="w-full h-auto" role="img" aria-label="Radar d'équilibre de vie : Santé 78, Finances 54, Business 71, Créativité 62, Mental 85, Discipline 90 sur 100.">
-          <g id="radar-grid" stroke="rgba(148,163,184,.18)" fill="none"></g>
-          <polygon id="radar-shape" fill="rgba(99,102,241,.22)" stroke="#818CF8" stroke-width="2"></polygon>
+          <g id="radar-grid" fill="none"></g>
+          <polygon id="radar-shape" stroke-width="2"></polygon>
           <g id="radar-dots"></g>
-          <g id="radar-labels" font-size="8.5" fill="#94A3B8" font-family="JetBrains Mono, monospace"></g>
+          <g id="radar-labels" font-size="8.5" font-family="JetBrains Mono, monospace"></g>
         </svg>
       </div>
 
@@ -441,7 +448,7 @@ tailwind.config = {
         </li>
         <li class="flex gap-3 items-start">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.4" stroke-linecap="round" class="w-5 h-5 mt-0.5 shrink-0" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-          <span><span class="font-semibold">Le fichier Google Sheets</span><span class="text-muted"> — généré avec le thème Obsidienne, cases à cocher sur 31 jours, barres SPARKLINE et calcul d'XP automatique.</span></span>
+          <span><span class="font-semibold">Le fichier Google Sheets</span><span class="text-muted"> — généré dans ton Drive en 2 minutes, cases à cocher sur tout le mois, barres SPARKLINE, calcul d'XP automatique et thème clair ou sombre. <a class="text-emerald underline underline-offset-2" href="sheets/">Voir la procédure</a>.</span></span>
         </li>
         <li class="flex gap-3 items-start">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.4" stroke-linecap="round" class="w-5 h-5 mt-0.5 shrink-0" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
@@ -562,9 +569,9 @@ tailwind.config = {
         </div>
         <svg viewBox="0 0 320 120" class="w-full h-auto" role="img" aria-labelledby="chart-desc">
           <desc id="chart-desc">Graphique à barres de l'XP gagné sur les 7 derniers jours ; la dernière barre se met à jour quand vous cochez une habitude.</desc>
-          <line x1="0" y1="100" x2="320" y2="100" stroke="rgba(148,163,184,.22)" stroke-width="1"/>
+          <line class="axis" x1="0" y1="100" x2="320" y2="100" stroke-width="1"/>
           <g id="chart-bars"></g>
-          <g id="chart-labels" font-size="9" fill="#64748B" font-family="JetBrains Mono, monospace" text-anchor="middle"></g>
+          <g id="chart-labels" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle"></g>
         </svg>
       </div>
 
@@ -616,7 +623,7 @@ tailwind.config = {
             <p class="num text-5xl font-bold text-indigo-soft" id="roi-goals">6</p>
             <p class="text-sm text-muted pb-2">projets sérieux menés au bout<br>(100 h de focus chacun)</p>
           </div>
-          <div class="track mt-4"><div class="fill" id="roi-bar" style="width:40%;background:linear-gradient(90deg,#3730A3,#6366F1 55%,#A5B4FC)"></div></div>
+          <div class="track mt-4"><div class="fill fill-in" id="roi-bar" style="width:40%"></div></div>
         </div>
         <button type="button" class="btn btn-amber sm:col-span-2 js-open-cart">Récupérer ce temps maintenant</button>
       </div>
@@ -634,7 +641,7 @@ tailwind.config = {
 
   <div class="bento mt-10">
     <!-- Core -->
-    <div class="card card-hover md:col-span-6 lg:col-span-6 p-6 sm:p-8 reveal" style="background:linear-gradient(150deg,rgba(16,185,129,.10),rgba(11,15,24,.85))">
+    <div class="card card-hover md:col-span-6 lg:col-span-6 p-6 sm:p-8 reveal" style="background:linear-gradient(150deg,rgb(var(--c-em) / .10),rgb(var(--c-bg2) / .85))">
       <div class="flex items-start justify-between gap-4">
         <div>
           <span class="chip !border-emerald/40 !bg-emerald/12 !text-emerald-soft">Noyau · inclus dans tout pack</span>
@@ -804,7 +811,7 @@ tailwind.config = {
   <div class="mt-10 space-y-3 reveal">
     <details class="faq">
       <summary>Je ne suis pas du tout technique. Je vais m'en sortir ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="ic w-5 h-5"><path d="M12 5v14M5 12h14"/></svg></summary>
-      <div class="body">Oui. Pour la Web App : tu ouvres un lien, tu l'ajoutes à ton écran d'accueil, c'est fini. Pour Google Sheets : tu cliques sur « Créer une copie » et le fichier arrive complet dans ton Drive, formules et cases à cocher déjà en place. Un guide de 7 minutes est inclus.</div>
+      <div class="body">Oui. Pour la Web App : tu ouvres un lien, tu l'ajoutes à ton écran d'accueil, c'est fini. Pour Google Sheets : tu copies un script, tu le colles dans Extensions ▸ Apps Script, et le fichier se construit tout seul dans ton Drive — formules, cases à cocher et thème compris. <a class="text-emerald underline underline-offset-2" href="sheets/">La procédure pas à pas est ici</a>.</div>
     </details>
     <details class="faq">
       <summary>Quelle différence avec un simple tableur gratuit ?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="ic w-5 h-5"><path d="M12 5v14M5 12h14"/></svg></summary>
@@ -828,7 +835,7 @@ tailwind.config = {
     </details>
   </div>
 
-  <div class="card p-6 sm:p-10 mt-12 text-center reveal" style="background:linear-gradient(150deg,rgba(16,185,129,.12),rgba(99,102,241,.08),rgba(11,15,24,.9))">
+  <div class="card p-6 sm:p-10 mt-12 text-center reveal" style="background:linear-gradient(150deg,rgb(var(--c-em) / .12),rgb(var(--c-in) / .08),rgb(var(--c-bg2) / .9))">
     <h2 class="font-display font-bold text-3xl sm:text-4xl leading-tight">Le prochain 1<sup>er</sup> du mois,<br>tu recommences ou tu continues ?</h2>
     <p class="text-muted mt-4 max-w-lg mx-auto">Installe ton système en 7 minutes. Garde ta série toute l'année.</p>
     <button type="button" class="btn btn-primary mt-7 text-[15px] js-open-cart">
@@ -867,7 +874,7 @@ tailwind.config = {
 <aside id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-hidden="true" tabindex="-1">
   <!-- urgency bar -->
   <div class="shrink-0 px-4 py-2.5 flex items-center justify-center gap-2 text-[12px] font-semibold"
-       style="background:linear-gradient(90deg,rgba(245,158,11,.22),rgba(245,158,11,.10))">
+       style="background:linear-gradient(90deg,rgb(var(--c-am) / .22),rgb(var(--c-am) / .10))">
     <svg viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round" class="w-4 h-4 shrink-0" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
     <span class="text-amber-soft">Panier réservé — <span class="num" id="timer">15:00</span></span>
   </div>
@@ -1035,7 +1042,7 @@ tailwind.config = {
   const packList = $('#pack-list');
   packList.innerHTML = PACKS.map(p => `
     <button type="button" class="pack" aria-pressed="false" data-pack="${p.id}">
-      ${p.badge ? `<span class="absolute -top-2.5 right-4 chip !py-0.5 !px-2.5 !text-[10px] !border-amber/50 !bg-[#1A1000] !text-amber-soft font-bold">${p.badge}</span>` : ''}
+      ${p.badge ? `<span class="absolute -top-2.5 right-4 chip !py-0.5 !px-2.5 !text-[10px] !border-amber/50 !bg-amber/15 !text-amber font-bold">${p.badge}</span>` : ''}
       <span class="flex items-start gap-3.5">
         <span class="radio mt-0.5" aria-hidden="true"><i></i></span>
         <span class="flex-1 min-w-0">
@@ -1306,7 +1313,10 @@ tailwind.config = {
   sizeCanvas();
   addEventListener('resize', sizeCanvas);
 
-  const COLORS = ['#10B981','#34D399','#F59E0B','#FBBF24','#6366F1','#F8FAFC'];
+  const CSSV = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const palette = () => ['--em','--em-soft','--am','--am-soft','--in','--in-deep'].map(n => CSSV(n) || '#10B981');
+  let COLORS = palette();
+  document.addEventListener('apex:theme', () => { COLORS = palette(); });
   function confetti(count, ox, oy){
     if (reduce) return;
     const x = ox != null ? ox : (origin ? origin.x : innerWidth / 2);
@@ -1417,14 +1427,14 @@ tailwind.config = {
       const x = gap + i * (bw + gap);
       const today = i === 6;
       return `<rect x="${x.toFixed(1)}" y="${(100 - h).toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="5"
-        fill="${today ? 'url(#g-today)' : 'rgba(99,102,241,.45)'}"
+        class="${today ? 'bar hot' : 'bar'}"
         style="transition:${reduce ? 'none' : 'all .5s cubic-bezier(.2,.8,.2,1)'}"></rect>
-        ${v > 0 ? `<text x="${(x + bw/2).toFixed(1)}" y="${(100 - h - 5).toFixed(1)}" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace" fill="${today ? '#6EE7B7' : '#64748B'}">${v}</text>` : ''}`;
+        ${v > 0 ? `<text x="${(x + bw/2).toFixed(1)}" y="${(100 - h - 5).toFixed(1)}" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace" class="${today ? 'bval hot' : 'bval'}">${v}</text>` : ''}`;
     }).join('') + `<defs><linearGradient id="g-today" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#065F46"/><stop offset="60%" stop-color="#10B981"/><stop offset="100%" stop-color="#6EE7B7"/></linearGradient></defs>`;
+      <stop class="s1" offset="0%"/><stop class="s2" offset="60%"/><stop class="s3" offset="100%"/></linearGradient></defs>`;
     $('#chart-labels').innerHTML = DAYS.map((d,i) => {
       const x = gap + i * (bw + gap) + bw / 2;
-      return `<text x="${x.toFixed(1)}" y="114" fill="${i === 6 ? '#10B981' : '#64748B'}">${i === 6 ? 'AUJ' : d}</text>`;
+      return `<text x="${x.toFixed(1)}" y="114" class="${i === 6 ? 'hot' : ''}">${i === 6 ? 'AUJ' : d}</text>`;
     }).join('');
   }
 
@@ -1450,7 +1460,7 @@ tailwind.config = {
       vals.map((v,i) => pt(i, R * v / 100).map(n => n.toFixed(1)).join(',')).join(' '));
     $('#radar-dots').innerHTML = vals.map((v,i) => {
       const [x,y] = pt(i, R * v / 100);
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#818CF8" stroke="#07090E" stroke-width="1.5"/>`;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" stroke-width="1.5"/>`;
     }).join('');
     $('#radar-labels').innerHTML = labels.map((l,i) => {
       const [x,y] = pt(i, R + 16);

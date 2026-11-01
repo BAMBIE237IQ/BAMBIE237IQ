@@ -9,28 +9,69 @@
  *    • Installer le système complet  → QG + Habitudes + Tâches dans CE fichier
  *    • Générer les 6 modules ici     → 6 onglets supplémentaires
  *    • Exporter les modules séparés  → 6 fichiers Drive indépendants (vente à l'unité)
+ *    • Thème sombre / Thème clair    → repeint tout le fichier, tes données restent
  *    • Remettre le mois à zéro       → vide les cases à cocher du mois
  *
- *  Thème : Obsidienne #07090E / Émeraude #10B981 / Ambre #F59E0B
+ *  Deux thèmes :
+ *    • Sombre « Obsidienne »  #07090E / Émeraude #10B981 / Ambre #F59E0B
+ *    • Clair  « Papier »      #FFFFFF / Émeraude #047857 / Ambre #B45309
+ *  Le thème choisi est mémorisé dans le fichier et réutilisé à chaque génération.
  *  Les formules sont écrites en anglais (obligatoire dans Apps Script) ;
  *  Sheets les affiche en français : COUNTIF → NB.SI, SUMIF → SOMME.SI, etc.
  * =====================================================================
  */
 
-/* ------------------------------ THÈME ------------------------------ */
-var T = {
-  bg:     '#07090E',   // fond obsidienne
-  surf:   '#111622',   // carte
-  surf2:  '#1A2130',   // ligne / séparateur
-  ink:    '#F8FAFC',   // texte principal
-  muted:  '#94A3B8',   // texte secondaire
-  dim:    '#64748B',
-  em:     '#10B981',   // émeraude — action / validation
-  emDeep: '#065F46',
-  am:     '#F59E0B',   // ambre — XP, gamification
-  indigo: '#6366F1',   // indigo — statistiques
-  rose:   '#F43F5E'
+/* ------------------------------ THÈMES ------------------------------ */
+var CLE_THEME = 'APEX_THEME';
+
+var PALETTES = {
+  // ---- Sombre « Obsidienne » ----
+  sombre: {
+    nom:     'sombre',
+    bg:      '#07090E',   // fond obsidienne
+    surf:    '#111622',   // carte
+    surf2:   '#1A2130',   // ligne / séparateur
+    ink:     '#F8FAFC',   // texte principal
+    muted:   '#94A3B8',   // texte secondaire
+    dim:     '#64748B',
+    em:      '#10B981',   // émeraude — action / validation
+    emDeep:  '#065F46',
+    am:      '#F59E0B',   // ambre — XP, gamification
+    indigo:  '#6366F1',   // indigo — statistiques
+    rose:    '#F43F5E',
+    todayBg: '#15110A'    // colonne du jour en cours
+  },
+  // ---- Clair « Papier » ----
+  clair: {
+    nom:     'clair',
+    bg:      '#FFFFFF',
+    surf:    '#F4F7FB',
+    surf2:   '#DFE6EF',
+    ink:     '#0B1220',
+    muted:   '#51607A',
+    dim:     '#7A8699',
+    em:      '#047857',
+    emDeep:  '#065F46',
+    am:      '#B45309',
+    indigo:  '#4F46E5',
+    rose:    '#BE123C',
+    todayBg: '#FEF3C7'
+  }
 };
+
+/** Nom du thème mémorisé dans le fichier (sombre par défaut). */
+function themeNom_() {
+  try {
+    var p = PropertiesService.getDocumentProperties().getProperty(CLE_THEME);
+    return p === 'clair' ? 'clair' : 'sombre';
+  } catch (e) {
+    return 'sombre';   // onOpen tourne en autorisation limitée : pas d'accès aux propriétés
+  }
+}
+
+// palette active — relue à chaque exécution du script
+var T = PALETTES[themeNom_()];
+
 var FONT_TITLE = 'Space Grotesk';   // bascule sur Roboto si la police n'est pas dispo
 var FONT_BODY  = 'Roboto';
 var FONT_NUM   = 'Roboto Mono';
@@ -54,6 +95,10 @@ function onOpen() {
     .addItem('Générer les 6 modules ici', 'genererTousLesModulesIci')
     .addSeparator()
     .addItem('Exporter les 6 modules en fichiers séparés', 'exporterModulesSepares')
+    .addSeparator()
+    .addSubMenu(SpreadsheetApp.getUi().createMenu('Apparence')
+      .addItem('Thème sombre · Obsidienne', 'themeSombre')
+      .addItem('Thème clair · Papier', 'themeClair'))
     .addSeparator()
     .addItem('Remettre le mois à zéro', 'reinitialiserMois')
     .addToUi();
@@ -279,7 +324,7 @@ function construireHabitudes_(ss) {
   /* le jour en cours est souligné en ambre */
   var jour = new Date().getDate();
   if (jour <= nbJours) {
-    sh.getRange(5, 4 + jour, 36, 1).setBackground('#15110A');
+    sh.getRange(5, 4 + jour, 36, 1).setBackground(T.todayBg);
     sh.getRange(5, 4 + jour).setFontColor(T.am).setFontWeight('bold');
   }
 
@@ -592,7 +637,85 @@ function exporterModulesSepares() {
   return liens;
 }
 
-/* ====================== 4. REMISE À ZÉRO DU MOIS ====================== */
+/* =====================================================================
+   4. THÈME CLAIR / THÈME SOMBRE
+   Repeint tout le fichier sans toucher à ce que tu as saisi :
+   les données sont mises de côté, la mise en forme est régénérée,
+   puis les données sont remises à leur place.
+   ===================================================================== */
+
+/** Zones saisies à la main — tout le reste est reconstruit par le script. */
+var ZONES_DATA = {
+  'Habitudes':            ['B6:AI40'],
+  'Tâches':               ['B6:F200'],
+  'M1 · Cashflow':        ['B8:F500', 'H8:K40'],
+  'M2 · Épargne 52':      ['B6', 'D8:D59'],
+  'M3 · Athlète':         ['C6', 'B8:C300', 'E8:G300'],
+  'M4 · Side-Hustle':     ['B8:D60', 'H8:J300'],
+  'M5 · Créateur Viral':  ['B8:G300'],
+  'M6 · Second Cerveau':  ['B8:D200', 'G8:I200']
+};
+
+function themeSombre() { appliquerTheme_('sombre'); }
+function themeClair()  { appliquerTheme_('clair'); }
+
+function appliquerTheme_(nom) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 1. on mémorise le choix dans le fichier
+  try { PropertiesService.getDocumentProperties().setProperty(CLE_THEME, nom); } catch (e) {}
+  T = PALETTES[nom];
+
+  var libelle = (nom === 'clair') ? 'clair · Papier' : 'sombre · Obsidienne';
+
+  // 2. rien d'installé : le thème servira à la prochaine génération
+  var qg = ss.getSheetByName('QG');
+  var hab = ss.getSheetByName('Habitudes');
+  var modulesPresents = MODULES.filter(function (m) { return !!ss.getSheetByName(m.onglet); });
+  if (!qg && !hab && modulesPresents.length === 0) {
+    alerte_('Thème ' + libelle,
+      'Le thème est enregistré. Lance « Installer le système complet » : tout sera généré avec ce thème.');
+    return;
+  }
+
+  // 3. on met de côté ce que tu as saisi
+  var sauvegarde = {};
+  ss.getSheets().forEach(function (sh) {
+    var zones = ZONES_DATA[sh.getName()];
+    if (!zones) return;
+    sauvegarde[sh.getName()] = zones.map(function (a1) {
+      try { return { a1: a1, valeurs: sh.getRange(a1).getValues() }; }
+      catch (e) { return null; }
+    }).filter(function (x) { return !!x; });
+  });
+
+  // 4. on régénère la mise en forme
+  if (qg)  construireQG_(ss);
+  if (hab) construireHabitudes_(ss);
+  if (ss.getSheetByName('Tâches')) construireTaches_(ss);
+  modulesPresents.forEach(function (m) {
+    construireModule_(ss, m, ss.getSheetByName(m.onglet).getIndex() - 1);
+  });
+
+  // 5. on remet les données en place
+  Object.keys(sauvegarde).forEach(function (nomFeuille) {
+    var sh = ss.getSheetByName(nomFeuille);
+    if (!sh) return;
+    sauvegarde[nomFeuille].forEach(function (z) {
+      try { sh.getRange(z.a1).setValues(z.valeurs); } catch (e) {}
+    });
+  });
+
+  SpreadsheetApp.flush();
+  var premiere = ss.getSheetByName('QG') || ss.getSheetByName('Habitudes') || ss.getSheets()[0];
+  try { ss.setActiveSheet(premiere); } catch (e) {}
+
+  alerte_('Thème ' + libelle,
+    'Tout le fichier est repeint. Tes habitudes, tes cases cochées et tes tâches sont intactes.\n\n' +
+    'Tu peux changer d\'avis autant de fois que tu veux : menu ⚡ APEX FLOW ▸ Apparence.');
+}
+
+/* ====================== 5. REMISE À ZÉRO DU MOIS ====================== */
 function reinitialiserMois() {
   var ui = SpreadsheetApp.getUi();
   var rep = ui.alert('Remettre le mois à zéro ?',
