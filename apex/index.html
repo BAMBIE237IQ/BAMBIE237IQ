@@ -236,6 +236,7 @@ tailwind.config = {
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#modules">Modules</a></li>
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#prix">Prix</a></li>
       <li><a class="px-3 py-2 rounded-lg hover:text-ink hover:bg-white/5 transition" href="#faq">FAQ</a></li>
+      <li><a class="px-3 py-2 rounded-lg text-emerald hover:bg-emerald/10 transition" href="app/">Web App</a></li>
     </ul>
 
     <div class="ml-auto flex items-center gap-2">
@@ -282,9 +283,9 @@ tailwind.config = {
           Débloquer mon Système
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="w-[18px] h-[18px]" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
-        <a href="#demo" class="btn btn-ghost text-[15px]">
+        <a href="app/" class="btn btn-ghost text-[15px]">
           <svg viewBox="0 0 24 24" fill="currentColor" class="w-[18px] h-[18px] text-emerald" aria-hidden="true"><path d="M8 5l12 7-12 7z"/></svg>
-          Essayer la démo (sans payer)
+          Ouvrir la Web App (démo libre)
         </a>
       </div>
 
@@ -451,7 +452,13 @@ tailwind.config = {
           <span><span class="font-semibold">Les modules que tu choisis</span><span class="text-muted"> — chacun est un espace complet, pas un onglet vide.</span></span>
         </li>
       </ul>
-      <button type="button" class="btn btn-ghost mt-7 self-start js-open-cart">Composer mon système</button>
+      <div class="mt-7 flex flex-wrap gap-3">
+        <button type="button" class="btn btn-ghost js-open-cart">Composer mon système</button>
+        <a href="app/" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="w-[18px] h-[18px] text-emerald" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          Tester la Web App maintenant
+        </a>
+      </div>
     </div>
   </div>
 </section>

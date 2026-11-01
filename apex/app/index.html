@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>APEX FLOW OS — Mon système</title>
+<meta name="description" content="Application APEX FLOW OS : habitudes, tâches, XP, séries, Radar de Vie et 6 modules experts. Tout reste sur votre appareil.">
+<meta name="theme-color" content="#07090E">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307090E'/%3E%3Cpath d='M16 6l8 20h-5l-3-8-3 8H8z' fill='%2310B981'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<a href="#view" class="skip">Aller au contenu</a>
+
+<!-- ============================ APP SHELL ============================ -->
+<div class="shell">
+
+  <!-- ---------- SIDEBAR / TABS ---------- -->
+  <nav class="rail" aria-label="Modules">
+    <div class="rail-brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l7 18h-4.4L12 13.6 9.4 21H5z" fill="#10B981"/></svg>
+      </span>
+      <span class="rail-brand-txt">APEX FLOW<b> OS</b></span>
+    </div>
+
+    <ul class="rail-list" id="rail-list" role="tablist"></ul>
+
+    <div class="rail-foot">
+      <button type="button" class="rail-item" data-tab="reglages" role="tab" aria-selected="false">
+        <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
+        <span class="rt">Réglages</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ---------- MAIN ---------- -->
+  <div class="main">
+
+    <!-- Top bar : level + streak -->
+    <header class="topbar">
+      <button type="button" class="icon-btn only-mobile" id="menu-btn" aria-label="Ouvrir les modules" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+
+      <div class="lvl">
+        <div class="lvl-head">
+          <span class="lvl-badge num" id="lvl-num">1</span>
+          <div class="lvl-txt">
+            <p class="lvl-rank" id="lvl-rank">Novice</p>
+            <p class="lvl-sub num" id="lvl-sub">0 / 25 XP</p>
+          </div>
+        </div>
+        <div class="track lvl-track"><div class="fill fill-am" id="lvl-bar" style="width:0%"></div></div>
+      </div>
+
+      <div class="topstats">
+        <div class="tstat" title="Jours consécutifs">
+          <svg viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>
+          <span class="num" id="top-streak">0</span>
+        </div>
+        <div class="tstat" title="XP total">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" aria-hidden="true"><path d="M12 3l8 5v8l-8 5-8-5V8z"/></svg>
+          <span class="num" id="top-xp">0</span>
+        </div>
+        <button type="button" class="icon-btn" id="freeze-btn" title="Joker de Gel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg>
+          <span class="num badge" id="freeze-badge">1</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Views -->
+    <main class="view" id="view" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- ============================ MODAL ============================ -->
+<div class="modal-wrap" id="modal-wrap" hidden>
+  <div class="modal-bg" data-modal-close></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <header class="modal-head">
+      <h2 id="modal-title">Titre</h2>
+      <button type="button" class="icon-btn" data-modal-close aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="modal-body" id="modal-body"></div>
+    <footer class="modal-foot" id="modal-foot"></footer>
+  </div>
+</div>
+
+<!-- ============================ TOAST ============================ -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-ic" id="toast-ic" aria-hidden="true"></span>
+  <p id="toast-msg"></p>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
