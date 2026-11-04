@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "userData": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "pushSubscriptions": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "videoDescriptions": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    }
+  }
+}

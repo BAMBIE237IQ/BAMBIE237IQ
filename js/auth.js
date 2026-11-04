@@ -2,6 +2,7 @@
 // Une fois connecté, l'app relance la synchro avec ton identité. Quand les règles Firebase
 // seront verrouillées sur ton compte, seuls tes appareils connectés pourront lire / écrire.
 let currentUser = null;
+const OWNER_EMAIL = 'handystephane566@gmail.com';   // seul compte autorisé à utiliser l'app
 
 function initAuth() {
     if (typeof firebase === 'undefined' || !firebase.auth) return;
@@ -9,6 +10,13 @@ function initAuth() {
     firebase.auth().getRedirectResult().catch(e => authError(e));
     firebase.auth().onAuthStateChanged(user => {
         const wasSignedIn = !!currentUser;
+        // Accès réservé à un seul compte Google
+        if (user && (user.email || '').toLowerCase() !== OWNER_EMAIL) {
+            firebase.auth().signOut();
+            toast("Accès réservé au propriétaire de cette app");
+            currentUser = null; updateAuthUI();
+            return;
+        }
         currentUser = user;
         updateAuthUI();
         if (user && !wasSignedIn && typeof startSync === 'function') { startSync(); attachDescSync(); }
