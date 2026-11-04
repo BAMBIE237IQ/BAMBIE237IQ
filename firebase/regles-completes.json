@@ -1,0 +1,87 @@
+{
+  "rules": {
+    "userData": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "pushSubscriptions": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "videoDescriptions": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "reseau": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
+    "saas": {
+      "admins": {
+        ".read": "auth != null && data.child(auth.uid).exists()",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "config": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('saas/admins').child(auth.uid).exists()"
+      },
+      "sellers": {
+        ".read": "auth != null && root.child('saas/admins').child(auth.uid).exists()",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (root.child('saas/admins').child(auth.uid).exists() || (auth.uid === $uid && ((!data.exists() && newData.child('status').val() === 'trial' && newData.child('paidUntil').val() <= now + (root.child('saas/config/trialDays').exists() ? root.child('saas/config/trialDays').val() : 21) * 86400000 + 86400000) || (data.exists() && newData.child('status').val() === data.child('status').val() && newData.child('paidUntil').val() === data.child('paidUntil').val() && newData.child('adminNote').val() === data.child('adminNote').val() && newData.child('nickname').val() === data.child('nickname').val() && newData.child('lifetime').val() === data.child('lifetime').val()))))"
+        }
+      },
+      "data": {
+        ".read": "auth != null && root.child('saas/admins').child(auth.uid).exists()",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid && root.child('saas/sellers').child($uid).child('status').val() !== 'suspended' && root.child('saas/sellers').child($uid).child('paidUntil').val() > now",
+          ".write": "auth != null && ((auth.uid === $uid && root.child('saas/sellers').child($uid).child('status').val() !== 'suspended' && root.child('saas/sellers').child($uid).child('paidUntil').val() > now) || (!newData.exists() && root.child('saas/admins').child(auth.uid).exists()))"
+        }
+      },
+      "devices": {
+        "$id": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || root.child('saas/admins').child(auth.uid).exists())"
+        }
+      },
+      "prints": {
+        "$fp": {
+          ".read": "auth != null",
+          ".write": "auth != null && ((!data.exists() && newData.child('uid').val() === auth.uid) || root.child('saas/admins').child(auth.uid).exists())"
+        }
+      },
+      "payments": {
+        ".read": "auth != null && root.child('saas/admins').child(auth.uid).exists()",
+        ".write": "auth != null && root.child('saas/admins').child(auth.uid).exists()"
+      },
+      "push": {
+        ".read": "auth != null && root.child('saas/admins').child(auth.uid).exists()",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      },
+      "pushTests": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      },
+      "presence": {
+        ".read": "auth != null && root.child('saas/admins').child(auth.uid).exists()",
+        "$uid": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('saas/admins').child(auth.uid).exists())"
+        }
+      }
+    },
+    "flux": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
