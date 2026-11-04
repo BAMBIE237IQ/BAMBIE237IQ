@@ -131,9 +131,29 @@ function removeSubAccount(service, acc) {
     toast('Compte supprimé');
 }
 
+// Recherche : un client de n'importe quel service (nom, profil, téléphone, note)
+let subSearchText = '';
+function setSubSearch(v) {
+    subSearchText = String(v || '').trim();
+    const clear = document.querySelector('.sub-search-clear'); if (clear) clear.hidden = !subSearchText;
+    renderSubscriptions();
+}
+function subSearchResults(q) {
+    const n = s => String(s || '').toLowerCase();
+    return (S.subscriptions || []).filter(c => [c.name, c.profile, c.contact, c.note, c.code].some(v => n(v).includes(q)))
+        .sort((a, b) => n(a.name).localeCompare(n(b.name)));
+}
+function renderSubSearch(c, q) {
+    const list = subSearchResults(q.toLowerCase());
+    c.innerHTML = `<div class="sub-search-head">${list.length} résultat${list.length > 1 ? 's' : ''} pour « ${escHtml(q)} »</div>` + (list.length ? `<div class="sub-table-wrapper"><table class="sub-table"><thead><tr>
+        <th>Client</th><th>Service</th><th>Compte</th><th>Profil</th><th>Statut</th><th>Fin</th><th>Jours restants</th><th>Facturation</th></tr></thead><tbody>` +
+        list.map(x => `<tr onclick="openSubModal('${escAttr(x.id)}')"><td style="font-weight:600;">${escHtml(x.name)}</td><td>${escHtml(subServiceName(x.service))}</td><td>${escHtml(x.account ? subAccountLabel(x.service, x.account) : '')}</td><td>${escHtml(x.profile || '—')}</td><td>${escHtml(x.status || '')}</td><td>${x.end || '-'}</td><td>${subDaysChip(x) || '—'}</td><td>${escHtml(x.code || '-')}</td></tr>`).join('') +
+        `</tbody></table></div>` : '<div class="empty">Aucun client trouvé.</div>');
+}
 function renderSubscriptions() {
     const c = document.getElementById('subContent');
     renderSubTabs();
+    if (subSearchText) return renderSubSearch(c, subSearchText);
     const conf = subServices()[subFilter];
     let html = '<div class="sub-grid">';
 

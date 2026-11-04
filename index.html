@@ -374,6 +374,11 @@
             </div>
         </div>
 
+        <div class="sub-search">
+            <i class="material-icons-outlined">search</i>
+            <input type="search" id="subSearch" placeholder="Rechercher un client (nom, profil, téléphone, note)…" autocomplete="off" oninput="setSubSearch(this.value)">
+            <button type="button" class="sub-search-clear" onclick="setSubSearch('')" aria-label="Effacer la recherche" hidden><span class="material-icons-outlined">close</span></button>
+        </div>
         <div class="period-selector" style="justify-content:center; margin-bottom: 24px;">
             <div class="nav-tabs sub-tabs" id="subTabs"></div>
         </div>
