@@ -290,11 +290,18 @@ function openQuickAdd() {
     document.getElementById('qaKeys').innerHTML = keys.map(k => k === 'back'
         ? `<button onclick="qaKey('back')" aria-label="Effacer"><span class="material-icons-outlined">backspace</span></button>`
         : `<button onclick="qaKey('${k}')">${k}</button>`).join('');
-    const t = new Date();
-    document.getElementById('qaDateLabel').textContent = `Aujourd’hui · ${DAYS_FULL[t.getDay()].toLowerCase()} ${t.getDate()} ${MONTHS[t.getMonth()].toLowerCase()}`;
+    document.getElementById('qaDate').value = localDateStr(new Date());
+    document.getElementById('qaJust').value = '';
+    updateQaDateLabel();
     document.getElementById('qaTitle').textContent = S.currentView === 'finance2' ? 'Nouvelle transaction · Finance' : 'Nouvelle transaction · Dashboard';
     setQaType('expense');
     document.getElementById('qaOverlay').classList.add('active');
+}
+function updateQaDateLabel() {
+    const v = document.getElementById('qaDate').value, el = document.getElementById('qaDateLabel');
+    if (!v) { el.textContent = 'Choisis une date'; return; }
+    const [y, m, d] = v.split('-').map(Number), dt = new Date(y, m - 1, d), today = localDateStr(new Date());
+    el.textContent = `${v === today ? 'Aujourd’hui · ' : ''}${DAYS_FULL[dt.getDay()].toLowerCase()} ${d} ${MONTHS[m - 1].toLowerCase()} ${y}`;
 }
 function closeQuickAdd() { document.getElementById('qaOverlay').classList.remove('active'); }
 
@@ -324,13 +331,16 @@ function saveQuickAdd() {
     const label = document.getElementById('qaLabel').value.trim();
     if (!amount) { toast('⚠ Entre un montant'); return; }
     if (!label) { toast('⚠ Choisis ou écris un libellé'); return; }
-    const d = new Date(), mk = monthKey(d.getFullYear(), d.getMonth());
+    const dv = document.getElementById('qaDate').value;
+    if (!dv) { toast('⚠ Choisis une date'); return; }
+    const [dy, dm, dd] = dv.split('-').map(Number), d = new Date(dy, dm - 1, dd), mk = monthKey(d.getFullYear(), d.getMonth());
+    const justification = document.getElementById('qaJust').value.trim();
     pushUndo();
     const ledger = qaLedger();
     if (!ledger[mk]) ledger[mk] = [];
     ledger[mk].push({
         id: 't' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4),
-        type: qaState.type, amount, label, justification: '', day: d.getDate(), date: localDateStr(d)
+        type: qaState.type, amount, label, justification, day: d.getDate(), date: localDateStr(d)
     });
     save();
     closeQuickAdd();

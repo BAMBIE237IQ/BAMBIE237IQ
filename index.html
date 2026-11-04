@@ -299,6 +299,7 @@
             </div>
 
             <!-- Summary: Weekly / Monthly / Annual -->
+            <button type="button" class="fin-collapse" id="finCollapseBtn" onclick="toggleFinSummary()"><span class="material-icons-outlined">expand_less</span> <span id="finCollapseTxt">Réduire le détail des semaines</span></button>
             <div class="fin-summary-grid" id="finSummary"></div>
 
             <!-- Charts -->
@@ -358,6 +359,13 @@
                 </div>
 
                 <!-- Transaction List -->
+                <div class="fin-search">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="search" id="finSearch" placeholder="Rechercher : jour (12, lundi), libellé, justificatif…" autocomplete="off" oninput="filterFinList()">
+                    <input type="date" id="finSearchDate" aria-label="Aller à un jour précis" onchange="finGoToDate(this.value)">
+                    <button type="button" id="finSearchClear" onclick="clearFinSearch()" aria-label="Effacer" hidden><span class="material-icons-outlined">close</span></button>
+                </div>
+                <div class="fin-search-info" id="finSearchInfo" hidden></div>
                 <div class="fin-main" id="finTransactions"></div>
             </div>
         </div>
@@ -673,6 +681,7 @@
     <script src="js/ca.js"></script>
     <script src="js/subs-extra.js"></script>
     <script src="js/stats.js"></script>
+    <script src="js/fin-mobile.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/anim.js"></script>
     <script src="js/brands.js"></script>
@@ -847,10 +856,12 @@
                 <button role="tab" id="qaType-income" onclick="setQaType('income')">Entrée</button>
             </div>
             <div class="qa-amount" aria-live="polite"><span id="qaAmount">0</span><small>FCFA</small></div>
-            <div class="qa-date" id="qaDateLabel"></div>
+            <label class="qa-date-field"><span class="material-icons-outlined">event</span><input type="date" id="qaDate" aria-label="Date de la transaction" onchange="updateQaDateLabel()"><small id="qaDateLabel"></small></label>
             <div class="qa-chips" id="qaChips" aria-label="Libellé"></div>
             <label for="qaLabel" class="sr-only">Libellé</label>
             <input id="qaLabel" class="qa-input" placeholder="Libellé (ou choisis ci-dessus)" autocomplete="off">
+            <label for="qaJust" class="sr-only">Justificatif</label>
+            <input id="qaJust" class="qa-input" placeholder="Justificatif (facultatif)" autocomplete="off">
             <div class="qa-keys" id="qaKeys"></div>
             <button class="qa-save" id="qaSave" onclick="saveQuickAdd()">Enregistrer</button>
         </div>

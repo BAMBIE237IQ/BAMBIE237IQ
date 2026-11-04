@@ -527,3 +527,21 @@ body.blur-amounts .compare-diff strong:hover {
 .sub-search input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text-primary); font: inherit; }
 .sub-search-clear { border: none; background: transparent; color: var(--text-secondary); display: grid; place-items: center; cursor: pointer; }
 .sub-search-head { font-size: 13px; color: var(--text-secondary); margin: 4px 2px 10px; }
+
+/* ===== Finance / Dashboard : téléphone, recherche ===== */
+.fin-collapse { display: none; width: 100%; align-items: center; justify-content: center; gap: 6px; padding: 10px; margin: 6px 0; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-weight: 700; font-size: 13px; cursor: pointer; }
+.fin-collapse .material-icons-outlined { font-size: 18px; }
+@media (max-width: 768px) { .fin-collapse { display: flex; } #finSummary.collapsed { display: none; } }
+.fin-search { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 0 12px; height: 46px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border-2); }
+.fin-search > .material-icons-outlined { color: var(--text-secondary); }
+.fin-search input[type="search"] { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text-primary); font: inherit; }
+.fin-search input[type="date"] { width: 38px; flex: none; background: transparent; border: none; color: transparent; opacity: .9; cursor: pointer; }
+.fin-search input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.7); cursor: pointer; }
+.fin-search button { border: none; background: transparent; color: var(--text-secondary); display: grid; place-items: center; cursor: pointer; }
+.fin-search-info { font-size: 12.5px; color: var(--text-secondary); margin: 0 2px 10px; }
+.fin-day-group[hidden], .fin-tx-item[hidden] { display: none !important; }
+/* ajout rapide : date et justificatif */
+.qa-date-field { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); position: relative; }
+.qa-date-field > .material-icons-outlined { color: var(--text-secondary); font-size: 20px; }
+.qa-date-field input[type="date"] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.qa-date-field small { font-size: 14px; font-weight: 700; color: var(--text-primary); }
