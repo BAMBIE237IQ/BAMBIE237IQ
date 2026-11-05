@@ -87,9 +87,9 @@ function computeSubCA(y, m) {
     let cost = 0; const costByService = {};
     const mk = monthKey(y, m), svcs = subServices();
     for (const id in svcs) for (const acc of svcs[id].accounts) {
-        const c = subAccountCost(id, acc);
-        if (!c || (c.since && c.since > mk)) continue;
-        cost += c.amount; costByService[id] = (costByService[id] || 0) + c.amount;
+        const amount = subCostAt(id, acc, mk);   // coût de ce mois-là, tel qu'il a été enregistré
+        if (!amount) continue;
+        cost += amount; costByService[id] = (costByService[id] || 0) + amount;
     }
     return { total, cost, profit: total - cost, costByService, byService, rows };
 }

@@ -84,11 +84,26 @@ function removeSubService(id) {
 }
 
 // ----- Coût d'achat mensuel d'un compte (saisi à la main) -----
-// Stocké dans S.subAccountCosts["service_compte"] = { amount, since: "AAAA-MM" } :
-// compté chaque mois à partir du mois où il a été saisi.
+// Stocké dans S.subAccountCosts["service_compte"] = { changes: { "AAAA-MM": montant, … }, amount, since } :
+// historique mensuel. Un coût saisi vaut à partir de son mois et jusqu'au changement suivant ; les mois
+// passés ne sont jamais modifiés. Après le 25 du mois, le mois en cours est figé : une modification
+// ne vaut qu'à partir du mois suivant. (Aucun écran pour ça : règle interne.)
+const COST_FREEZE_DAY = 25;
+function subCostChanges(c) {
+    if (!c) return {};
+    if (c.changes && typeof c.changes === 'object') return c.changes;
+    return c.amount > 0 ? { [c.since || monthKey(new Date().getFullYear(), new Date().getMonth())]: c.amount } : {};   // anciennes données
+}
+// Coût du compte pour un mois donné (clé « AAAA-MM ») : valeur du dernier changement enregistré jusque-là
+function subCostAt(service, acc, key) {
+    const ch = subCostChanges(S.subAccountCosts && S.subAccountCosts[`${service}_${acc}`]);
+    let best = null;
+    for (const k of Object.keys(ch)) if (k <= key && (best === null || k > best)) best = k;
+    return best === null ? 0 : Number(ch[best]) || 0;
+}
 function subAccountCost(service, acc) {
-    const c = S.subAccountCosts && S.subAccountCosts[`${service}_${acc}`];
-    return c && c.amount > 0 ? c : null;
+    const t = new Date(), amount = subCostAt(service, acc, monthKey(t.getFullYear(), t.getMonth()));
+    return amount > 0 ? { amount } : null;
 }
 function accountCostChip(service, acc) {
     const c = subAccountCost(service, acc);
@@ -101,8 +116,13 @@ function editAccountCost(service, acc) {
     const n = parseInt(v.replace(/[^\d]/g, ''), 10);
     if (!S.subAccountCosts) S.subAccountCosts = {};
     const key = `${service}_${acc}`, t = new Date();
-    if (!n) delete S.subAccountCosts[key];
-    else S.subAccountCosts[key] = { amount: n, since: c ? c.since : monthKey(t.getFullYear(), t.getMonth()) };
+    // le changement vaut à partir de ce mois (ou du suivant après le 25) ; les mois passés ne changent pas
+    const next = new Date(t.getFullYear(), t.getMonth() + 1, 1);
+    const from = t.getDate() > COST_FREEZE_DAY ? monthKey(next.getFullYear(), next.getMonth()) : monthKey(t.getFullYear(), t.getMonth());
+    const changes = Object.assign({}, subCostChanges(S.subAccountCosts[key]));
+    changes[from] = n || 0;
+    const keys = Object.keys(changes).sort();
+    S.subAccountCosts[key] = { changes, amount: changes[keys[keys.length - 1]] || 0, since: keys[0] };
     save(); renderSubscriptions();
     toast(n ? 'Coût du compte enregistré ✓' : 'Coût retiré');
 }
