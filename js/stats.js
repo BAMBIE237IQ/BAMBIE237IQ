@@ -63,7 +63,8 @@ function renderStatsPanel() {
     document.getElementById('statsMonthLabel').textContent = `${MONTHS[stM]} ${stY}`;
     const pd = new Date(stY, stM - 1, 1), py = pd.getFullYear(), pm = pd.getMonth();
     const r = computeRenewals(stY, stM), rp = computeRenewals(py, pm), s = stMonth(stY, stM), sp = stMonth(py, pm);
-    const hist = []; for (let i = 11; i >= 0; i--) { const d = new Date(stY, stM - i, 1); hist.push({ l: ST_SHORT[d.getMonth()], n: computeRenewals(d.getFullYear(), d.getMonth()).volume.length, on: !i }); }
+    const st = subStayers(stY, stM), stp = subStayers(py, pm);   // réabonnés = présents le mois passé ET ce mois-ci
+    const hist = []; for (let i = 11; i >= 0; i--) { const d = new Date(stY, stM - i, 1); hist.push({ l: ST_SHORT[d.getMonth()], n: subStayers(d.getFullYear(), d.getMonth()).length, on: !i }); }
     const hmax = Math.max(1, ...hist.map(h => h.n));
     const kpi = (label, val, sub, icon) => `<div class="st-kpi"><span><span class="material-icons-outlined">${icon}</span>${label}</span><strong>${val}</strong>${sub}</div>`;
     const ppl = stPeople(), pick = (a, f) => a.slice().sort(f)[0];
@@ -80,13 +81,13 @@ function renderStatsPanel() {
     box.innerHTML = `
         <h3 class="st-title">Réabonnements <small>par rapport à ${MONTHS[pm].toLowerCase()}</small></h3>
         <div class="st-kpis">
-            ${kpi('Réabonnés ce mois', r.volume.length, stTrend(r.volume.length, rp.volume.length), 'history')}
+            ${kpi('Réabonnés ce mois', st.length, stTrend(st.length, stp.length), 'history')}
             ${kpi('Taux de réabonnement', r.rate === null ? '—' : r.rate + ' %', `<small>${r.renewed.length} sur ${r.renewed.length + r.lost.length} échéance${r.renewed.length + r.lost.length > 1 ? 's' : ''}</small>`, 'trending_up')}
             ${kpi('En attente', r.pending.length, '<small>fini depuis moins de 30 j</small>', 'today')}
             ${kpi('Pas renouvelé', r.lost.length, stTrend(r.lost.length, rp.lost.length), 'cancel')}
         </div>
         <div class="st-hist">${hist.map(h => `<div class="st-bar${h.on ? ' on' : ''}"><b>${h.n}</b><span style="height:${Math.round(h.n / hmax * 100)}%"></span><small>${h.l}</small></div>`).join('')}</div>
-        ${r.volume.length ? `<p class="renew-line ok"><span class="material-icons-outlined">check_circle</span> Réabonnés : ${names(r.volume)}</p>` : ''}
+        ${st.length ? `<p class="renew-line ok"><span class="material-icons-outlined">check_circle</span> Réabonnés : ${escHtml(st.join(', '))}</p>` : ''}
         ${r.pending.length ? `<p class="renew-line wait"><span class="material-icons-outlined">history</span> En attente : ${names(r.pending)}</p>` : ''}
         ${r.lost.length ? `<p class="renew-line lost"><span class="material-icons-outlined">cancel</span> Pas renouvelé : ${names(r.lost)}</p>` : ''}
 
