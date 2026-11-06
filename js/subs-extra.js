@@ -293,6 +293,22 @@ function computeRenewals(y, m) {
     const decided = renewed.length + lost.length;
     return { due, renewed, pending, lost, volume, rate: decided ? Math.round(renewed.length / decided * 100) : null };
 }
+// Présents le mois passé ET ce mois-ci = réabonnement (chaque mois, tous les services). Les « à vie » sont exclus.
+function subStayers(y, m) {
+    const mk = (yy, mm) => `${yy}-${String(mm + 1).padStart(2, '0')}`;
+    const pd = new Date(y, m - 1, 1), prevKey = mk(pd.getFullYear(), pd.getMonth()), curKey = mk(y, m);
+    const at = key => {
+        const set = new Map();
+        for (const c of S.subscriptions || []) {
+            if (c.duration && /life|vie/i.test(c.duration)) continue;
+            for (const p of subPeriods(c)) if (p.start && p.end && p.start.slice(0, 7) <= key && p.end.slice(0, 7) >= key) set.set(c.service + '|' + subNormName(c.name), c.name);
+        }
+        return set;
+    };
+    const before = at(prevKey), now = at(curKey), out = [];
+    for (const [k, name] of now) if (before.has(k)) out.push(name);
+    return out;
+}
 function renderCARenew() {
     const el = document.getElementById('caRenew');
     if (!el) return;
@@ -310,6 +326,7 @@ function renderCARenew() {
         </div>
         <div class="renew-bars">${bars.map(b => `<div class="renew-bar${b.on ? ' on' : ''}" title="${b.n} réabonnement${b.n > 1 ? 's' : ''}"><span style="height:${Math.round(b.n / max * 100)}%"></span><b>${b.n}</b><small>${b.label}</small></div>`).join('')}</div>
         ${cur.renewed.length ? `<p class="renew-line ok"><span class="material-icons-outlined">check_circle</span> Réabonnés : ${names(cur.renewed)}</p>` : ''}
+        ${(() => { const st = subStayers(caYear, caMonth); return `<p class="renew-line ok"><span class="material-icons-outlined">repeat</span> Restés depuis ${MONTHS[pd.getMonth()].toLowerCase()} : ${st.length}${st.length ? ' · ' + escHtml(st.join(', ')) : ''}</p>`; })()}
         ${cur.pending.length ? `<p class="renew-line wait"><span class="material-icons-outlined">history</span> En attente : ${names(cur.pending)}</p>` : ''}
         ${cur.lost.length ? `<p class="renew-line lost"><span class="material-icons-outlined">cancel</span> Pas renouvelé : ${names(cur.lost)}</p>` : ''}
         ${!cur.due.length && !cur.volume.length ? '<p class="renew-line">Aucune échéance ce mois-ci.</p>' : ''}`;
