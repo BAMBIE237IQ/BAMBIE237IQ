@@ -826,6 +826,22 @@
         </div>
     </div>
 
+    <!-- ===== COÛT D'ACHAT D'UN COMPTE (montant + mois d'achat) ===== -->
+    <div class="qa-overlay" id="accCostOverlay" onclick="if(event.target===this)closeAccCost()">
+        <div class="qa-sheet renew-sheet" role="dialog" aria-modal="true" aria-labelledby="accCostTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="accCostTitle">Coût du compte</h2>
+                <button class="icon-btn" onclick="closeAccCost()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <label class="fin-label" for="accCostAmount">Coût d'achat par mois (FCFA)</label>
+            <input type="text" id="accCostAmount" class="fin-input" inputmode="numeric" placeholder="Ex : 6050 (vide = retirer)">
+            <label class="fin-label" for="accCostMonth">Mois d'achat (compté à partir de ce mois)</label>
+            <input type="month" id="accCostMonth" class="fin-input">
+            <button class="btn primary qa-save" onclick="confirmAccCost()"><span class="material-icons-outlined">check</span> Enregistrer</button>
+        </div>
+    </div>
+
     <!-- ===== STATS DES ABONNEMENTS ===== -->
     <div class="qa-overlay" id="statsOverlay" onclick="if(event.target===this)closeStatsPanel()">
         <div class="qa-sheet ca-sheet st-sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle">

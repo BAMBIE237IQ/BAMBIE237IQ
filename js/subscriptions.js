@@ -109,16 +109,27 @@ function accountCostChip(service, acc) {
     const c = subAccountCost(service, acc);
     return `<button class="acc-cost${c ? '' : ' empty'}" onclick="editAccountCost('${service}', ${acc})" title="Coût d'achat mensuel du compte">${c ? `Coût : ${formatFCFA(c.amount)} / mois` : '+ Coût d’achat'}</button>`;
 }
+// Mois proposé par défaut : ce mois-ci (le suivant après le 25) ; on peut choisir un autre mois d'achat au calendrier
+function defaultCostMonth() { const t = new Date(), nx = new Date(t.getFullYear(), t.getMonth() + 1, 1); return t.getDate() > COST_FREEZE_DAY ? monthKey(nx.getFullYear(), nx.getMonth()) : monthKey(t.getFullYear(), t.getMonth()); }
+let accCostTarget = null;
 function editAccountCost(service, acc) {
+    accCostTarget = { service, acc };
     const c = subAccountCost(service, acc);
-    const v = prompt(`Coût d'achat mensuel du compte « ${subAccountLabel(service, acc)} » (FCFA par mois).\nLaisse vide pour le retirer.`, c ? String(c.amount) : '');
-    if (v === null) return;
-    const n = parseInt(v.replace(/[^\d]/g, ''), 10);
+    document.getElementById('accCostTitle').textContent = `Coût de « ${subAccountLabel(service, acc)} »`;
+    document.getElementById('accCostAmount').value = c ? c.amount : '';
+    document.getElementById('accCostMonth').value = defaultCostMonth();
+    document.getElementById('accCostOverlay').classList.add('active');
+}
+function closeAccCost() { document.getElementById('accCostOverlay').classList.remove('active'); accCostTarget = null; }
+function confirmAccCost() {
+    if (!accCostTarget) return;
+    const { service, acc } = accCostTarget;
+    const n = parseInt(String(document.getElementById('accCostAmount').value).replace(/[^\d]/g, ''), 10);
+    const mv = document.getElementById('accCostMonth').value;
+    const from = /^\d{4}-\d{2}$/.test(mv) ? mv : defaultCostMonth();   // mois d'achat choisi
     if (!S.subAccountCosts) S.subAccountCosts = {};
-    const key = `${service}_${acc}`, t = new Date();
-    // le changement vaut à partir de ce mois (ou du suivant après le 25) ; les mois passés ne changent pas
-    const next = new Date(t.getFullYear(), t.getMonth() + 1, 1);
-    const from = t.getDate() > COST_FREEZE_DAY ? monthKey(next.getFullYear(), next.getMonth()) : monthKey(t.getFullYear(), t.getMonth());
+    const key = `${service}_${acc}`;
+    closeAccCost();
     const changes = Object.assign({}, subCostChanges(S.subAccountCosts[key]));
     changes[from] = n || 0;
     const keys = Object.keys(changes).sort();

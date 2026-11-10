@@ -54,7 +54,7 @@ new MutationObserver(applyFinSummary).observe(document.getElementById('finSummar
 
 // Échap (PC) : ferme la fenêtre ouverte, la plus récente d'abord
 const ESC_CLOSERS = { modalOverlay: 'closeModal', subModalOverlay: 'closeSubModal', moodModalOverlay: 'closeMoodModal', qaOverlay: 'closeQuickAdd', moreOverlay: 'closeMoreMenu', notifOverlay: 'closeNotifPanel',
-    securityOverlay: 'closeSecurity', subSettingsOverlay: 'closeSubSettings', caOverlay: 'closeCAPanel', statsOverlay: 'closeStatsPanel', renewOverlay: 'closeRenew' };
+    securityOverlay: 'closeSecurity', subSettingsOverlay: 'closeSubSettings', caOverlay: 'closeCAPanel', statsOverlay: 'closeStatsPanel', renewOverlay: 'closeRenew', accCostOverlay: 'closeAccCost' };
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const open = [...document.querySelectorAll('.modal-overlay.active, .qa-overlay.active')].filter(o => ESC_CLOSERS[o.id]);
