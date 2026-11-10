@@ -241,10 +241,9 @@ function openSubSettings() {
     const mode = caMode();
     document.getElementById('subSettingsBody').innerHTML = `
         <h3 class="set-title">Façon de compter le chiffre d'affaires</h3>
-        <p class="set-hint">Toujours : le montant est divisé par le nombre de mois (ex. 18 000 pour 9 mois = 2 000 par mois). Ensuite :</p>
+        <p class="set-hint">« Au paiement » est prioritaire : il ne divise rien. Pour les deux autres façons, le montant est divisé par le nombre de mois (ex. 18 000 pour 9 mois = 2 000 par mois).</p>
         <div class="ca-modes">
-            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>Au paiement</strong><span>Chaque part mensuelle compte en entier dans le mois où elle commence (le 29 ou le 30 compte pour ce mois-là).</span></button>
-            <button class="ca-mode${mode === 'entry' ? ' active' : ''}" onclick="setCAMode('entry')"><strong>Tout au mois d'entrée</strong><span>Peu importe la durée payée : tout le montant compte une seule fois, dans le mois où le client entre. Le mois suivant, ce paiement compte zéro (la date de fin reste affichée).</span></button>
+            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>Au paiement</strong><span>Tout le montant compte en entier dans le mois où le client paie ou entre. Il n’est pas divisé : 5 000 payés pour 2 mois comptent 5 000 ce mois-là, et zéro les mois suivants. La date de fin reste affichée.</span></button>
             <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong>Au prorata jour à jour</strong><span>Chaque part mensuelle est répartie selon les jours de chaque mois (du 10 sept. au 10 oct. : 21 jours en septembre, 9 en octobre).</span></button>
         </div>
         <h3 class="set-title">Meilleurs clients</h3>
