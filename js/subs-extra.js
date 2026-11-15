@@ -240,12 +240,12 @@ function openSubSettings() {
     </button>`;
     const mode = caMode();
     document.getElementById('subSettingsBody').innerHTML = `
-        <h3 class="set-title">Façon de compter le chiffre d'affaires</h3>
+        <h3 class="set-title">Calcul du chiffre d'affaires</h3>
         <p class="set-hint">Au paiement est prioritaire : il ne divise jamais le montant par le nombre de mois, et il remplace les deux autres règles pour les paiements qu’il couvre. Le prorata, lui, répartit chaque part sur les jours de chaque mois.</p>
         <div class="ca-modes">
-            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong>Au paiement</strong><span>Tout le montant compte en entier le mois où le client paie. Il n’est pas divisé : 5 000 payés pour 2 mois comptent 5 000 ce mois-là, et zéro les mois suivants. Ce mode est prioritaire sur la division par nombre de mois.</span></button>
-            <button class="ca-mode${mode === 'entry' ? ' active' : ''}" onclick="setCAMode('entry')"><strong>Tout au mois d’entrée</strong><span>Tout le montant compte une seule fois, le mois où le client entre. Il n’est pas divisé, et le mois suivant ce paiement compte zéro. La date de fin reste affichée.</span></button>
-            <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong>Au prorata jour à jour</strong><span>Chaque part mensuelle est répartie selon les jours de chaque mois (du 10 sept. au 10 oct. : 21 jours en septembre, 9 en octobre).</span></button>
+            <button class="ca-mode${mode === 'cash' ? ' active' : ''}" onclick="setCAMode('cash')"><strong><span class="material-icons-outlined ca-ic">payments</span> Au paiement</strong><span>Tout le montant compte en entier le mois où le client paie. Il n’est pas divisé : 5 000 payés pour 2 mois comptent 5 000 ce mois-là, et zéro les mois suivants. Ce mode est prioritaire sur la division par nombre de mois.</span></button>
+            <button class="ca-mode${mode === 'entry' ? ' active' : ''}" onclick="setCAMode('entry')"><strong><span class="material-icons-outlined ca-ic">account_balance_wallet</span> Tout au mois d’entrée</strong><span>Tout le montant compte une seule fois, le mois où le client entre. Il n’est pas divisé, et le mois suivant ce paiement compte zéro. La date de fin reste affichée.</span></button>
+            <button class="ca-mode${mode === 'days' ? ' active' : ''}" onclick="setCAMode('days')"><strong><span class="material-icons-outlined ca-ic">calendar_month</span> Au prorata jour à jour</strong><span>Chaque part mensuelle est répartie selon les jours de chaque mois (du 10 sept. au 10 oct. : 21 jours en septembre, 9 en octobre).</span></button>
         </div>
         <h3 class="set-title">Meilleurs clients</h3>
         <p class="set-hint">Classés par total encaissé, renouvellements compris.</p>
