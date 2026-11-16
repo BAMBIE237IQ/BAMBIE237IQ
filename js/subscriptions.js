@@ -118,6 +118,9 @@ function editAccountCost(service, acc) {
     document.getElementById('accCostTitle').textContent = `Coût de « ${subAccountLabel(service, acc)} »`;
     document.getElementById('accCostAmount').value = c ? c.amount : '';
     document.getElementById('accCostMonth').value = defaultCostMonth();
+    // jour de paiement actuel, s'il existe (reporté d'un mois à l'autre, même logique que le coût)
+    const meta = S.subAccountCosts && S.subAccountCosts[`${service}_${acc}`];
+    document.getElementById('accCostPayDay').value = meta && meta.payDay ? meta.payDay : '';
     document.getElementById('accCostOverlay').classList.add('active');
 }
 function closeAccCost() { document.getElementById('accCostOverlay').classList.remove('active'); accCostTarget = null; }
@@ -133,7 +136,9 @@ function confirmAccCost() {
     const changes = Object.assign({}, subCostChanges(S.subAccountCosts[key]));
     changes[from] = n || 0;
     const keys = Object.keys(changes).sort();
-    S.subAccountCosts[key] = { changes, amount: changes[keys[keys.length - 1]] || 0, since: keys[0] };
+    const pdv = parseInt(document.getElementById('accCostPayDay').value, 10);
+    const payDay = pdv >= 1 && pdv <= 31 ? pdv : 0;
+    S.subAccountCosts[key] = { changes, amount: changes[keys[keys.length - 1]] || 0, since: keys[0], payDay };
     save(); renderSubscriptions();
     toast(n ? 'Coût du compte enregistré ✓' : 'Coût retiré');
 }

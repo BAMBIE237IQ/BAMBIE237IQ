@@ -511,29 +511,33 @@ function renderFinance() {
 
 function renderFinDailyChart(y, m, days, txs) {
     if (charts.finDaily) charts.finDaily.destroy();
-    const labels = [], incData = [], expData = [], balData = [];
+    const labels = [], incData = [], expData = [], cum = [];
+    const t = new Date(), isCurrent = y === t.getFullYear() && m === t.getMonth(), today = t.getDate();
+    let run = 0;
     for (let d = 1; d <= days; d++) {
         labels.push(d);
-        const dayTxs = txs.filter(t => t.day === d);
+        const dayTxs = txs.filter(x => x.day === d);
         const inc = sumTx(dayTxs, 'income');
         const exp = sumTx(dayTxs, 'expense');
         incData.push(inc);
         expData.push(-exp);
-        balData.push(inc - exp);
+        run += inc - exp;
+        cum.push(isCurrent && d > today ? null : run);   // temps réel : s'arrête à aujourd'hui pour le mois en cours
     }
     const ctx = document.getElementById('finDailyChart').getContext('2d');
     charts.finDaily = new Chart(ctx, {
-        type: 'bar',
         data: {
             labels,
             datasets: [
-                { label: 'Entrées', data: incData, backgroundColor: 'rgba(52,211,153,.6)', borderRadius: 3, barPercentage: 0.6 },
-                { label: 'Sorties', data: expData, backgroundColor: 'rgba(248,113,113,.6)', borderRadius: 3, barPercentage: 0.6 }
+                { type: 'bar', label: 'Entrées', data: incData, backgroundColor: 'rgba(52,211,153,.6)', borderRadius: 3, barPercentage: 0.6, stack: 's', order: 2 },
+                { type: 'bar', label: 'Sorties', data: expData, backgroundColor: 'rgba(248,113,113,.6)', borderRadius: 3, barPercentage: 0.6, stack: 's', order: 2 },
+                { type: 'line', label: 'Solde cumulé', data: cum, borderColor: '#60a5fa', backgroundColor: '#60a5fa', borderWidth: 2.5, pointRadius: 2, tension: .3, spanGaps: false, order: 1 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true, pointStyle: 'circle' } } },
+            plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true, pointStyle: 'circle' } },
+                tooltip: { callbacks: { label: c => c.dataset.label + ' : ' + (c.parsed.y == null ? '—' : formatMoney(c.parsed.y)) } } },
             scales: {
                 x: { stacked: true, grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#8b949e', font: { size: 9 } } },
                 y: { stacked: true, grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#8b949e', font: { size: 9 }, callback: v => (v/1000)+'k' } }

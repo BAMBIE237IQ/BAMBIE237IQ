@@ -838,6 +838,8 @@
             <input type="text" id="accCostAmount" class="fin-input" inputmode="numeric" placeholder="Ex : 6050 (vide = retirer)">
             <label class="fin-label" for="accCostMonth">Mois d'achat (compté à partir de ce mois)</label>
             <input type="month" id="accCostMonth" class="fin-input">
+            <label class="fin-label" for="accCostPayDay">Jour de paiement chaque mois (facultatif, 1 à 31)</label>
+            <input type="number" id="accCostPayDay" class="fin-input" min="1" max="31" inputmode="numeric" placeholder="Ex : 25">
             <button class="btn primary qa-save" onclick="confirmAccCost()"><span class="material-icons-outlined">check</span> Enregistrer</button>
         </div>
     </div>
