@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0b0b">
+    <title>Fluent 90</title>
+    <meta name="description" content="90 days to speak English: phrase cards, listening, shadowing, speaking rounds and an AI partner.">
+    <link rel="manifest" href="/fluent/manifest.webmanifest">
+    <link rel="icon" type="image/png" href="/fluent/icon-192.png">
+    <link rel="apple-touch-icon" href="/fluent/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fluent 90">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="/fluent/app.css?v=1">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="#today" data-view="today"><span class="logo-icon">90</span><span class="logo-text">Fluent 90</span></a>
+        <nav class="tabs" aria-label="Main">
+            <button data-view="today" class="active"><i class="ph-duotone ph-house"></i>Today</button>
+            <button data-view="practice"><i class="ph-duotone ph-barbell"></i>Practice</button>
+            <button data-view="cards"><i class="ph-duotone ph-cards"></i>Cards</button>
+            <button data-view="progress"><i class="ph-duotone ph-chart-line-up"></i>Progress</button>
+            <button data-view="coach"><i class="ph-duotone ph-chats-circle"></i>AI partner</button>
+        </nav>
+        <div class="top-actions">
+            <button class="chip streak" id="streakChip" aria-label="Streak"></button>
+            <button class="chip level" id="levelChip" aria-label="Level"></button>
+            <button class="icon-btn sync" id="syncBtn" aria-label="Account and sync"></button>
+            <button class="icon-btn" id="settingsBtn" aria-label="Settings"><i class="ph-duotone ph-gear-six"></i></button>
+        </div>
+    </header>
+
+    <main class="main">
+        <section id="view-today" class="view"></section>
+        <section id="view-practice" class="view" hidden></section>
+        <section id="view-cards" class="view" hidden></section>
+        <section id="view-progress" class="view" hidden></section>
+        <section id="view-coach" class="view" hidden></section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main">
+        <button data-view="today" class="active"><i class="ph-duotone ph-house"></i><span>Today</span></button>
+        <button data-view="practice"><i class="ph-duotone ph-barbell"></i><span>Practice</span></button>
+        <button data-view="cards"><i class="ph-duotone ph-cards"></i><span>Cards</span></button>
+        <button data-view="progress"><i class="ph-duotone ph-chart-line-up"></i><span>Progress</span></button>
+        <button data-view="coach"><i class="ph-duotone ph-chats-circle"></i><span>AI</span></button>
+    </nav>
+
+    <div class="player" id="player" hidden>
+        <div class="player-sheet">
+            <header class="player-head">
+                <button class="icon-btn" id="playerClose" aria-label="Close"><i class="ph-duotone ph-x"></i></button>
+                <div class="player-titles"><b id="playerTitle"></b><small id="playerSub"></small></div>
+                <span class="player-timer" id="playerTimer">0:00</span>
+            </header>
+            <div class="player-body" id="playerBody"></div>
+        </div>
+    </div>
+
+    <div class="sheet-overlay" id="sheet" hidden><div class="sheet" id="sheetBody"></div></div>
+    <div class="toasts" id="toasts"></div>
+
+    <script src="/fluent/data.js?v=1"></script>
+    <script src="/fluent/core.js?v=1"></script>
+    <script src="/fluent/ui.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+# FLUENT 90: triggers the 3 daily push reminders (07:00, 13:00, 20:00 Cameroon time = 06:00, 12:00, 19:00 UTC).
+# A second run 40 minutes later covers GitHub delays; the server sends each reminder only once per day.
+name: Fluent 90 reminders
+on:
+  schedule:
+    - cron: '3 6 * * *'
+    - cron: '3 12 * * *'
+    - cron: '3 19 * * *'
+    - cron: '45 6 * * *'
+    - cron: '45 12 * * *'
+    - cron: '45 19 * * *'
+  workflow_dispatch:
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send reminders
+        run: curl -fsS --max-time 60 https://bambie-237-iq.vercel.app/api/fluent-remind
