@@ -45,6 +45,7 @@ export default async function handler(req, res) {
     const slot = (req.query && req.query.slot && ['morning', 'midday', 'evening'].includes(req.query.slot) && req.query.force === '1') ? req.query.slot : slotFor(hour);
     if (!slot) return res.status(200).send(`No reminder at ${hour}h`);
     const users = (await get('fluent90', 'shallow=true')) || {};
+    if (users.error) return res.status(200).send(`Database refused: ${users.error} (FIREBASE_DB_SECRET missing or wrong in Vercel)`);
     let sent = 0;
     const out = [];
     for (const uid of Object.keys(users)) {
