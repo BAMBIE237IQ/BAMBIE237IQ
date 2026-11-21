@@ -97,6 +97,7 @@
         </div>
         <button class="notif-btn notes-btn" id="notesBtn" onclick="openNotes()" aria-label="Notes de cette rubrique" title="Notes">
             <span class="material-icons-outlined">sticky_note_2</span>
+            <span class="notes-label">Notes</span>
             <span class="notif-count notes-count" id="notesCount" hidden>0</span>
         </button>
         <button class="notif-btn" onclick="openNotifPanel()" aria-label="Alertes abonnements" title="Alertes abonnements">
@@ -771,6 +772,7 @@
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
                 <button onclick="closeMoreMenu();switchView('descriptions')" data-view="descriptions"><span class="material-icons-outlined">movie</span>Descriptions vidéos</button>
+                <button class="more-app more-notes" onclick="closeMoreMenu();openNotes()"><span class="material-icons-outlined">sticky_note_2</span>Notes<small>Les notes de chaque rubrique</small></button>
                 <a class="more-app" href="/fluent/"><span class="material-icons-outlined">translate</span>Fluent90<small>Mon appli d'anglais</small><span class="material-icons-outlined more-app-go">open_in_new</span></a>
             </div>
         </div>

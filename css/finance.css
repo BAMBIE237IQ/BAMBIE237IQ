@@ -600,3 +600,10 @@ body.blur-amounts .compare-diff strong:hover {
 @media (max-width: 768px) { .sidebar .notes-btn { margin-left: auto; } .sidebar .notes-btn + .notif-btn { margin-left: 6px; } }
 .notes-sheet textarea { flex: none; min-height: 0; }
 .notes-composer textarea { height: 64px; max-height: 32vh; overflow-y: auto; }
+/* Bouton Notes bien visible : pastille jaune avec le mot « Notes » */
+.notif-btn.notes-btn { width: auto; padding: 0 14px 0 11px; gap: 6px; color: #f5b544; border-color: rgba(245, 181, 68, .55); background: rgba(245, 181, 68, .1); font: inherit; font-size: 14px; font-weight: 800; }
+.notif-btn.notes-btn:hover { color: #ffd27a; border-color: #f5b544; }
+.notes-btn .notes-label { line-height: 1; }
+.notif-count.notes-count { background: #f5b544; color: #1a1205; box-shadow: none; }
+.more-list .more-app.more-notes { width: 100%; border-color: rgba(245, 181, 68, .7); background: rgba(245, 181, 68, .08); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; text-align: left; color: var(--text-primary); }
+.more-list .more-notes .ph-duotone { color: #f5b544; }
