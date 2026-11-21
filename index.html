@@ -89,6 +89,11 @@
                 <span class="material-icons-outlined">movie</span>
                 Descriptions vidéos
             </button>
+            <a class="nav-tab app-link" href="/fluent/" title="Ouvrir Fluent90, l'application d'anglais">
+                <span class="material-icons-outlined">translate</span>
+                Fluent90
+                <span class="material-icons-outlined app-link-go">open_in_new</span>
+            </a>
         </div>
         <button class="notif-btn" onclick="openNotifPanel()" aria-label="Alertes abonnements" title="Alertes abonnements">
             <span class="material-icons-outlined">notifications</span>
@@ -378,6 +383,7 @@
                 <button class="btn ca-btn" onclick="openSubSettings()" title="Classement des clients, export"><span class="material-icons-outlined">settings</span> Paramètres</button>
                 <button class="btn ca-btn" onclick="openCAPanel()"><span class="material-icons-outlined">bar_chart</span> CA du mois</button>
                 <button class="btn ca-btn" onclick="openStatsPanel()"><span class="material-icons-outlined">analytics</span> Stats</button>
+                <button class="btn ca-btn" onclick="openProfileCodes()" title="Noms et codes des profils de chaque compte"><span class="material-icons-outlined">password</span> Codes des profils</button>
                 <button class="btn primary" onclick="openSubModal()"><span class="material-icons-outlined">add</span> Ajouter Client</button>
             </div>
         </div>
@@ -680,6 +686,7 @@
     <script src="js/notifications.js"></script>
     <script src="js/ca.js"></script>
     <script src="js/subs-extra.js"></script>
+    <script src="js/profile-codes.js"></script>
     <script src="js/stats.js"></script>
     <script src="js/fin-mobile.js"></script>
     <script src="js/auth.js"></script>
@@ -709,6 +716,20 @@
         </button>
     </nav>
 
+    <!-- ===== CODES DES PROFILS (Abonnements) ===== -->
+    <div class="qa-overlay" id="pcOverlay" onclick="if(event.target===this)closeProfileCodes()">
+        <div class="qa-sheet pc-sheet" role="dialog" aria-modal="true" aria-labelledby="pcTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="pcTitle">Codes des profils</h2>
+                <button class="icon-btn" onclick="closeProfileCodes()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="pc-top"><span id="pcSummary"></span><button class="pc-show" id="pcShowBtn" onclick="togglePcShow()"></button></div>
+            <p class="pc-hint">Chaque compte garde la liste de ses profils, avec leur nom et leur code. Tout est enregistré dès que tu quittes une case.</p>
+            <div id="pcBody" class="pc-body"></div>
+        </div>
+    </div>
+
     <!-- ===== MORE MENU (mobile) ===== -->
     <div class="qa-overlay" id="moreOverlay" onclick="if(event.target===this)closeMoreMenu()">
         <div class="qa-sheet more-sheet" role="dialog" aria-modal="true" aria-labelledby="moreTitle">
@@ -727,6 +748,7 @@
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
                 <button onclick="closeMoreMenu();switchView('descriptions')" data-view="descriptions"><span class="material-icons-outlined">movie</span>Descriptions vidéos</button>
+                <a class="more-app" href="/fluent/"><span class="material-icons-outlined">translate</span>Fluent90<small>Mon appli d'anglais</small><span class="material-icons-outlined more-app-go">open_in_new</span></a>
             </div>
         </div>
     </div>

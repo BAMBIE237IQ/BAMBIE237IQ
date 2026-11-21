@@ -549,3 +549,23 @@ body.blur-amounts .compare-diff strong:hover {
 /* Calcul du CA : icônes dans les trois modes */
 .ca-mode strong { display: flex; align-items: center; gap: 8px; }
 .ca-mode strong .ca-ic { font-size: 20px; color: #ff3d4a; line-height: 1; }
+
+/* Codes des profils */
+.pc-sheet { max-width: 620px; }
+.pc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 6px; color: var(--text-secondary); font-size: 13px; font-weight: 600; }
+.pc-show { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.pc-hint { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 10px; line-height: 1.45; }
+.pc-body { display: flex; flex-direction: column; gap: 10px; max-height: 64vh; overflow-y: auto; padding-bottom: 6px; }
+.pc-svc { border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card); padding: 4px 12px; }
+.pc-svc summary { cursor: pointer; font-weight: 800; font-size: 15px; padding: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pc-svc summary small { font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+.pc-acc { border-top: 1px solid var(--border); padding: 10px 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.pc-acc-head { display: flex; justify-content: space-between; font-size: 13.5px; }
+.pc-acc-head span { color: var(--text-secondary); font-size: 12px; }
+.pc-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 40px; gap: 8px; }
+.pc-row input { min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-main, #0b0b0b); color: var(--text-primary); font: inherit; font-size: 14px; }
+.pc-code { font-family: ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.pc-del { border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; }
+.pc-del:hover { color: #ff6b77; border-color: rgba(255,77,94,.5); }
+.pc-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; border: 1px dashed var(--border-light, #444); background: transparent; color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.pc-empty { font-size: 13px; color: var(--text-muted, #777); font-style: italic; }

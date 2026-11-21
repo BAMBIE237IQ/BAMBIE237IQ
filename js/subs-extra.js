@@ -104,7 +104,7 @@ function confirmRenew() {
     toast(`${c.name} renouvelé ${n} mois, jusqu'au ${fmtDateFr(end)} ✓`);
 }
 
-// ----- Infos par compte : places libres (Spotify) et date de renouvellement chez le fournisseur -----
+// ----- Infos par compte : places libres (Spotify, Netflix, Prime Video, Crunchyroll) et date de renouvellement chez le fournisseur -----
 function subAccountMeta(service, acc) { return (S.subAccountMeta || {})[`${service}_${acc}`] || {}; }
 function setSubAccountMeta(service, acc, patch) {
     if (!S.subAccountMeta) S.subAccountMeta = {};
@@ -112,7 +112,10 @@ function setSubAccountMeta(service, acc, patch) {
     for (const key of Object.keys(next)) if (next[key] === null || next[key] === '') delete next[key];
     if (Object.keys(next).length) S.subAccountMeta[k] = next; else delete S.subAccountMeta[k];
 }
-function accountHasSlots(service) { return /spotify/i.test(`${service} ${subServiceName(service)}`); }
+// Nombre max de clients par compte (places) : Spotify, Netflix, Prime Video, Crunchyroll. Valeur par défaut selon l'offre famille / multi-écrans.
+const SLOT_DEFAULTS = [[/spotify/i, 6], [/netflix/i, 5], [/prime/i, 3], [/crunchy/i, 4]];
+function slotDefault(service) { const t = `${service} ${subServiceName(service)}`; const hit = SLOT_DEFAULTS.find(([re]) => re.test(t)); return hit ? hit[1] : 0; }
+function accountHasSlots(service) { return slotDefault(service) > 0; }
 function activeClientsOn(service, acc) {
     return (S.subscriptions || []).filter(c => !c.suspended && c.service === service && Number(c.account) === Number(acc)
         && !(c.status && SUB_INACTIVE.test(c.status))
@@ -121,14 +124,14 @@ function activeClientsOn(service, acc) {
 function accountMetaChips(service, acc) {
     let h = '';
     if (accountHasSlots(service)) {
-        const cap = subAccountMeta(service, acc).slots || 6, used = activeClientsOn(service, acc), free = Math.max(0, cap - used);
+        const cap = subAccountMeta(service, acc).slots || slotDefault(service), used = activeClientsOn(service, acc), free = Math.max(0, cap - used);
         h += `<button class="acc-chip ${free ? 'ok' : 'full'}" onclick="editAccountSlots('${service}', ${acc})" title="${used} place(s) occupée(s) sur ${cap} — toucher pour changer le nombre de places">${free ? `${free} place${free > 1 ? 's' : ''} libre${free > 1 ? 's' : ''}` : 'Complet'} · ${used}/${cap}</button>`;
     }
     return h;
 }
 function editAccountSlots(service, acc) {
-    const cur = subAccountMeta(service, acc).slots || 6;
-    const v = prompt(`Nombre total de places sur « ${subAccountLabel(service, acc)} » :`, String(cur));
+    const cur = subAccountMeta(service, acc).slots || slotDefault(service);
+    const v = prompt(`Nombre maximum de clients sur « ${subAccountLabel(service, acc)} » :`, String(cur));
     if (v === null) return;
     const n = parseInt(v, 10);
     if (!(n > 0 && n < 100)) return toast('⚠ Entre un nombre de places valide');

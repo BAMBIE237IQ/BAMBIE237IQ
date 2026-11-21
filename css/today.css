@@ -286,3 +286,10 @@ body.blur-amounts .sum-card.blurable .sum-value, body.blur-amounts .sum-card.blu
     .sum-value { font-size: 20px; }
     .sum-sub { font-size: 12px; }
 }
+
+/* Lien vers Fluent90 (barre latérale PC et menu Plus mobile) */
+.nav-tab.app-link { text-decoration: none; margin-top: 6px; border: 1px dashed var(--border-light, #333); }
+.nav-tab.app-link .app-link-go { margin-left: auto; font-size: 15px; opacity: .6; }
+.more-list .more-app { min-height: 56px; padding: 0 16px; border-radius: 14px; border: 1px dashed var(--brand, #e51c2c); background: var(--accent-teal-bg, rgba(229,28,44,.08)); color: var(--text-primary); font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 14px; text-decoration: none; margin-top: 8px; }
+.more-list .more-app small { font-weight: 500; font-size: 12.5px; color: var(--text-secondary); }
+.more-list .more-app .more-app-go { margin-left: auto; font-size: 18px; color: var(--text-secondary); }
