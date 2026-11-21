@@ -3,6 +3,7 @@ init();
 initSyncIndicator();
 openViewFromHash();
 attachDescSync();
+if (typeof attachNotesSync === 'function') attachNotesSync();
 initAuth();
 
 // PWA : installable sur l'écran d'accueil (https ou localhost uniquement)

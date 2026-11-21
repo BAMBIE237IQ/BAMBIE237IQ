@@ -12,6 +12,10 @@
       ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
       ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
     },
+    "handyNotes": {
+      ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
+      ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"
+    },
     "reseau": {
       ".read": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true",
       ".write": "auth != null && auth.token.email == 'handystephane566@gmail.com' && auth.token.email_verified == true"

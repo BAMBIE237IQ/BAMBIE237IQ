@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/anim.css">
     <link rel="stylesheet" href="css/descriptions.css">
+    <link rel="stylesheet" href="css/notes.css">
 </head>
 <body>
     <!-- ===== DÉMARRAGE ANIMÉ ===== -->
@@ -85,6 +86,10 @@
                 <span class="material-icons-outlined">fitness_center</span>
                 Santé
             </button>
+            <button class="nav-tab" onclick="switchView('notes')">
+                <span class="material-icons-outlined">sticky_note_2</span>
+                Notes
+            </button>
             <button class="nav-tab" onclick="switchView('descriptions')">
                 <span class="material-icons-outlined">movie</span>
                 Descriptions vidéos
@@ -95,7 +100,7 @@
                 <span class="material-icons-outlined app-link-go">open_in_new</span>
             </a>
         </div>
-        <button class="notif-btn notes-btn" id="notesBtn" onclick="openNotes()" aria-label="Notes de cette rubrique" title="Notes">
+        <button class="notif-btn notes-btn" id="notesBtn" onclick="openNotes()" aria-label="Ouvrir mes notes" title="Ouvrir mes notes">
             <span class="material-icons-outlined">sticky_note_2</span>
             <span class="notes-label">Notes</span>
             <span class="notif-count notes-count" id="notesCount" hidden>0</span>
@@ -406,6 +411,15 @@
     </div>
 
     
+    <!-- ===== NOTES ===== -->
+    <div id="notesView" class="view">
+        <div class="section-header nb-header">
+            <h2 class="section-title"><span class="material-icons-outlined">sticky_note_2</span> Notes</h2>
+            <div class="section-actions"><button class="btn-primary" onclick="nbNewForSection()"><span class="material-icons-outlined">add</span> Nouvelle note</button></div>
+        </div>
+        <div id="notesContent"></div>
+    </div>
+
     <!-- ===== DESCRIPTIONS VIDÉOS ===== -->
     <div id="descriptionsView" class="view">
         <div class="section-header">
@@ -722,24 +736,6 @@
         </button>
     </nav>
 
-    <!-- ===== NOTES PAR RUBRIQUE ===== -->
-    <div class="qa-overlay" id="notesOverlay" onclick="if(event.target===this)closeNotes()">
-        <div class="qa-sheet notes-sheet" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
-            <div class="qa-head">
-                <span style="width:44px"></span>
-                <h2 id="notesTitle">Notes</h2>
-                <button class="icon-btn" onclick="closeNotes()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
-            </div>
-            <div class="notes-tabs" id="notesTabs"></div>
-            <div class="notes-composer" id="notesComposer">
-                <textarea id="noteNew" rows="2" placeholder="Écris une note…" oninput="autoGrowNote(this)" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))addNote()" aria-label="Nouvelle note"></textarea>
-                <button class="btn-primary" onclick="addNote()"><span class="material-icons-outlined">add</span> Ajouter</button>
-            </div>
-            <div class="notes-search"><span class="material-icons-outlined">search</span><input id="notesSearch" type="search" placeholder="Chercher dans les notes" oninput="renderNotes()" aria-label="Chercher dans les notes"></div>
-            <div class="notes-list" id="notesList"></div>
-        </div>
-    </div>
-
     <!-- ===== CODES DES PROFILS (Abonnements) ===== -->
     <div class="qa-overlay" id="pcOverlay" onclick="if(event.target===this)closeProfileCodes()">
         <div class="qa-sheet pc-sheet" role="dialog" aria-modal="true" aria-labelledby="pcTitle">
@@ -772,7 +768,7 @@
                 <button onclick="closeMoreMenu();switchView('calendar')" data-view="calendar"><span class="material-icons-outlined">format_list_bulleted</span>Journal de bord</button>
                 <button onclick="closeMoreMenu();switchView('fitness')" data-view="fitness"><span class="material-icons-outlined">fitness_center</span>Santé</button>
                 <button onclick="closeMoreMenu();switchView('descriptions')" data-view="descriptions"><span class="material-icons-outlined">movie</span>Descriptions vidéos</button>
-                <button class="more-app more-notes" onclick="closeMoreMenu();openNotes()"><span class="material-icons-outlined">sticky_note_2</span>Notes<small>Les notes de chaque rubrique</small></button>
+                <button class="more-app more-notes" onclick="closeMoreMenu();switchView('notes')" data-view="notes"><span class="material-icons-outlined">sticky_note_2</span>Notes<small>Carnets, listes, idées, dictée</small></button>
                 <a class="more-app" href="/fluent/"><span class="material-icons-outlined">translate</span>Fluent90<small>Mon appli d'anglais</small><span class="material-icons-outlined more-app-go">open_in_new</span></a>
             </div>
         </div>

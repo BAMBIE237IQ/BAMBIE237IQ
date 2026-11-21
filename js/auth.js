@@ -19,7 +19,7 @@ function initAuth() {
         }
         currentUser = user;
         updateAuthUI();
-        if (user && !wasSignedIn && typeof startSync === 'function') { startSync(); attachDescSync(); }
+        if (user && !wasSignedIn && typeof startSync === 'function') { startSync(); attachDescSync(); if (typeof attachNotesSync === 'function') attachNotesSync(); }
     });
 }
 
