@@ -39,6 +39,7 @@ function renderProfileCodes() {
                     <input class="pc-name" value="${escAttr(p.name || '')}" placeholder="Nom du profil" list="${dl}" onchange="pcEdit('${escAttr(id)}', ${acc}, ${i}, 'name', this.value)" aria-label="Nom du profil">
                     <input class="pc-code" value="${escAttr(p.code || '')}" placeholder="Code" type="${pcShow ? 'text' : 'password'}" inputmode="numeric" autocomplete="off" onchange="pcEdit('${escAttr(id)}', ${acc}, ${i}, 'code', this.value)" aria-label="Code du profil">
                     <button class="pc-del" onclick="pcRemove('${escAttr(id)}', ${acc}, ${i})" aria-label="Supprimer ce profil"><span class="material-icons-outlined">delete</span></button>
+                    <span class="pc-date">${p.codeChangedAt ? `Code modifié le ${pcDate(p.codeChangedAt)}` : 'Code pas encore daté'}</span>
                 </div>`).join('');
             return `<div class="pc-acc">
                 <div class="pc-acc-head"><strong>${escHtml(subAccountLabel(id, acc))}</strong><span>${list.length} profil${list.length > 1 ? 's' : ''}</span></div>
@@ -66,9 +67,17 @@ function pcAdd(service, acc) {
 function pcEdit(service, acc, i, field, value) {
     const list = pcList(service, acc).slice();
     if (!list[i]) return;
-    list[i] = { ...list[i], [field]: String(value).trim() };
+    const v = String(value).trim(), changed = field === 'code' && v !== (list[i].code || '');
+    list[i] = { ...list[i], [field]: v };
+    if (changed) list[i].codeChangedAt = new Date().toISOString();   // date de la dernière modification du code
     S.subProfileCodes[`${service}_${acc}`] = list;
-    if ((list[i].name || list[i].code)) { save(); toast('Profil enregistré ✓'); }
+    if ((list[i].name || list[i].code)) { save(); toast(changed ? 'Code enregistré ✓' : 'Profil enregistré ✓'); if (changed) renderProfileCodes(); }
+}
+// « 21/11/2026 à 14:05 »
+function pcDate(iso) {
+    const d = new Date(iso); if (isNaN(d)) return '';
+    const p = n => String(n).padStart(2, '0');
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} à ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 function pcRemove(service, acc, i) {
     const list = pcList(service, acc).slice(), p = list[i];

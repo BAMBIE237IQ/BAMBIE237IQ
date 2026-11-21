@@ -569,3 +569,4 @@ body.blur-amounts .compare-diff strong:hover {
 .pc-del:hover { color: #ff6b77; border-color: rgba(255,77,94,.5); }
 .pc-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; border: 1px dashed var(--border-light, #444); background: transparent; color: var(--text-secondary); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .pc-empty { font-size: 13px; color: var(--text-muted, #777); font-style: italic; }
+.pc-row .pc-date { grid-column: 1 / -1; margin-top: -2px; font-size: 11.5px; color: var(--text-secondary); padding-left: 2px; }
