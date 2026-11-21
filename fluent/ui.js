@@ -34,8 +34,43 @@ document.addEventListener('click', e => {
     if (nav) { e.preventDefault(); show(nav.dataset.view); }
 });
 
+// ================= INSTALL (download the app) =================
+const Install = {
+    evt: null,
+    standalone() { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } },
+    platform() { const ua = navigator.userAgent; return /iPhone|iPad|iPod/i.test(ua) ? 'ios' : /Android/i.test(ua) ? 'android' : 'desktop'; },
+    async run() {
+        if (this.evt) {
+            const e = this.evt; this.evt = null;
+            e.prompt();
+            const c = await e.userChoice.catch(() => null);
+            if (c && c.outcome === 'accepted') toast(`${ic('ph-check')} Installing Fluent 90…`, 'good');
+            renderView();
+            return;
+        }
+        showInstallHelp();
+    }
+};
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); Install.evt = e; renderTop(); });
+window.addEventListener('appinstalled', () => { Install.evt = null; toast(`${ic('ph-check')} Fluent 90 is installed. Open it from your home screen.`, 'good'); renderView(); });
+function showInstallHelp() {
+    const p = Install.platform(), body = $('#sheetBody');
+    const steps = {
+        android: ['Open this page in <b>Chrome</b>.', 'Tap the menu <b>⋮</b> (top right).', 'Tap <b>Install app</b> (or <b>Add to Home screen</b>).', 'Open Fluent 90 from your home screen.'],
+        ios: ['Open this page in <b>Safari</b>.', 'Tap the <b>Share</b> button (square with an arrow).', 'Tap <b>Add to Home Screen</b>, then <b>Add</b>.', 'Open Fluent 90 from your home screen (needed for reminders on iPhone).'],
+        desktop: ['Open this page in <b>Chrome</b> or <b>Edge</b>.', 'Click the install icon at the right of the address bar (a screen with an arrow), or menu <b>⋮</b> → <b>Install Fluent 90</b>.', 'The app opens in its own window and gets a desktop shortcut.']
+    }[p];
+    body.innerHTML = `<div class="sheet-head"><h2>${ic('ph-download-simple')} Install Fluent 90</h2><button class="icon-btn" data-x>${ic('ph-x')}</button></div>
+        <p class="muted">Free, no store needed. It opens like a normal app, full screen, and starts faster.</p>
+        <ol class="install-steps">${steps.map(x => `<li>${x}</li>`).join('')}</ol>
+        <p class="muted small mt">Link to open on your other device: <b>bambie-237-iq.vercel.app/fluent/</b></p>`;
+    $('#sheet').hidden = false;
+    $('[data-x]', body).addEventListener('click', () => { $('#sheet').hidden = true; });
+}
+
 // ================= TOP BAR =================
 function renderTop() {
+    $('#installBtn').hidden = Install.standalone();
     const st = streak(), c = cefr();
     $('#streakChip').innerHTML = `${ic('ph-fire', st ? 'hot' : '')}<b>${st}</b>`;
     $('#streakChip').title = `Streak: ${st} day${st === 1 ? '' : 's'} in a row`;
@@ -89,9 +124,36 @@ function renderToday() {
             <p class="muted small">Best streak: <b>${bestStreak()}</b> · Missed days: <b>${missedDays()}</b></p>
         </section>
     </div>
+    ${coachCardHTML()}
+    ${!Install.standalone() ? `<section class="card note">${ic('ph-download-simple')} <div><b>Install Fluent 90 on your phone.</b> One tap from your home screen, full screen, faster. <button class="btn small primary" data-act="install">Install</button></div></section>` : ''}
     ${!AI.hasKey() ? `<section class="card note">${ic('ph-sparkle')} <div><b>Unlock your AI partner.</b> Add your free Gemini key: role-plays, corrections and a new episode every day from day 31. <button class="btn small" data-act="settings">Add key</button></div></section>` : ''}
     ${!Sync.user ? `<section class="card note">${ic('ph-device-mobile')} <div><b>Phone + PC?</b> Sign in with Google to sync your progress and get reminders at 07:00 · 13:00 · 20:00. <button class="btn small" data-act="signin">Sign in</button></div></section>` : ''}`;
     $$('[data-task]', el).forEach(b => b.addEventListener('click', () => { const task = p.tasks.find(x => x.id === b.dataset.task); openTask(task, { daily: true }); }));
+    bindCoachCard(el);
+}
+// ----- weekly coach brief (the AI studies your data once a week and sets your focus) -----
+function coachCardHTML() {
+    if (!AI.hasKey() || !S.startDate) return '';
+    const r = S.coach.report, wk = weekKey(), old = S.coach.week !== wk;
+    const wkLabel = /^w\d+$/.test(wk) ? 'week ' + wk.slice(1) : 'this week';
+    if (!r) return `<section class="card coach-card"><div class="card-head"><h3>${ic('ph-brain')} Coach brief</h3><span class="tag">${wkLabel}</span></div>
+        <p class="muted small">${weeklyPending ? `${ic('ph-hourglass')} Your coach is studying your data…` : 'Once a week, your coach studies everything you did (level, speed, mistakes, missed days) and sets ONE focus for the next 7 days.'}</p>
+        <div class="row"><button class="btn small primary" data-coach ${weeklyPending ? 'disabled' : ''}>${ic('ph-sparkle')} Get my diagnosis</button></div></section>`;
+    return `<section class="card coach-card glow"><div class="card-head"><h3>${ic('ph-brain')} Coach brief</h3><span class="tag ${old ? '' : 'ok'}">${old ? 'last week' : wkLabel}</span></div>
+        <p class="small">${esc(r.diagnosis)}</p>
+        <div class="focus">${ic('ph-crosshair')}<div><small class="muted">Focus this week</small><br><b>${esc(r.focus)}</b><br><span class="muted small">${esc(r.focus_why || '')}</span></div></div>
+        <ol class="prios">${(r.priorities || []).map(x => `<li><b>${esc(x.what)}</b><small>${esc(x.action)}</small><small>${ic('ph-chart-bar')} ${esc(x.evidence)}</small></li>`).join('')}</ol>
+        <div class="row">${(r.drill || []).length ? `<button class="btn small primary" data-fixit>${ic('ph-wrench')} Drill my focus (5 min)</button>` : ''}<button class="btn small" data-coach ${weeklyPending ? 'disabled' : ''}>${ic('ph-arrows-clockwise')} ${old ? 'New diagnosis' : 'Refresh'}</button></div></section>`;
+}
+function bindCoachCard(el) {
+    const b = $('[data-coach]', el);
+    if (b) b.addEventListener('click', () => {
+        b.disabled = true; b.innerHTML = `${ic('ph-hourglass')} Studying your data…`;
+        ensureWeekly(true).then(() => { toast(`${ic('ph-brain')} New coach brief ready`, 'good'); renderView(); })
+            .catch(e => { toast(esc(e.message), 'bad'); renderView(); });
+    });
+    const f = $('[data-fixit]', el);
+    if (f) f.addEventListener('click', () => openTask(Object.assign({ id: 'free-fixit', type: 'fixit' }, TASKS.fixit), { daily: false }));
 }
 function dropHTML(d, t) {
     const all = dropDone(t, d), nd = d.tasks.filter(x => taskDone(t, x.id)).length;
@@ -295,22 +357,24 @@ async function aiFeedbackBlock(container, { kind, text, extra = '' }) {
     box.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Your coach is reading what you said…</div>`;
     container.appendChild(box);
     try {
-        const j = await AI.ask({
-            system: `You are an English speaking coach. ${AI.coachRules} Output only JSON.`, json: true, temp: 0.5,
-            messages: [{ role: 'user', text: `The learner (level ${AI.levelText()}) did a "${kind}" speaking exercise. This is the speech-recognition transcript (it may contain recognition errors: ignore those, focus on real language mistakes).
-${extra}
-TRANSCRIPT: """${text}"""
-Return JSON: {"good":"one specific thing done well","fixes":[{"wrong":"their words","right":"natural version","why":"very short reason","type":"short category like past tense, articles, word choice"}] (max 3, most useful),"better":"a natural version of 2 or 3 of their sentences","tip":"one concrete tip for next time"${kind === 'retell' ? ',"missed":"the most important point of the story they forgot (or empty)"' : ''}}` }]
-        });
+        const j = await Brain.run('speak', { kind, text, extra });
         logMistakes(j.fixes, kind); save({ silent: true });
         box.innerHTML = `<div class="ai-head">${ic('ph-sparkle')} Coach</div>
-            ${j.good ? `<p class="good">${ic('ph-thumbs-up')} ${esc(j.good)}</p>` : ''}
-            ${(j.fixes || []).map(f => `<div class="fix"><s>${esc(f.wrong)}</s> → <b>${esc(f.right)}</b><small>${esc(f.why || '')}</small></div>`).join('')}
+            ${scoresHTML(j.scores)}
+            ${j.win ? `<p class="good">${ic('ph-thumbs-up')} ${esc(j.win)}</p>` : ''}
+            ${fixesHTML(j.fixes)}
             ${j.missed ? `<p class="muted small">${ic('ph-magnifying-glass')} You forgot: ${esc(j.missed)}</p>` : ''}
             ${j.better ? `<div class="better"><small>Say it like this</small><p>${esc(j.better)}</p><button class="btn small" data-say>${ic('ph-speaker-high')} Listen</button></div>` : ''}
             ${j.tip ? `<p class="tip">${ic('ph-lightbulb')} ${esc(j.tip)}</p>` : ''}`;
         const say = $('[data-say]', box); if (say) say.addEventListener('click', () => TTS.speak(j.better));
     } catch (e) { box.innerHTML = `<p class="muted small">${ic('ph-cloud-warning')} Coach unavailable: ${esc(e.message === 'nokey' ? 'no key' : e.message)}</p>`; }
+}
+function scoresHTML(sc) {
+    if (!sc) return '';
+    return `<div class="scores">${Object.entries(sc).map(([k, v]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('')}</div>`;
+}
+function fixesHTML(list) {
+    return (list || []).map(f => `<div class="fix"><s>${esc(f.wrong)}</s> → <b>${esc(f.right)}</b><small>${f.recurring || /^again/i.test(f.why || '') ? '<span class="tag hot">recurring</span> ' : ''}${esc(f.why || '')}</small></div>`).join('');
 }
 function mcq(container, q, seed, onAnswer) {
     const opts = shuffled(q.slice(1, 4).map((o, i) => ({ o, ok: i === 0 })), seed);
@@ -492,6 +556,102 @@ RUNNERS.reflex = (body, ctx) => {
     step();
 };
 
+// ----- Fix my mistakes: your own logged mistakes + the weekly drill, corrected from memory -----
+function fixItems(seed) {
+    const seen = new Set(), out = [];
+    const add = (wrong, right, why) => { const k = words(wrong).join(' '); if (!wrong || !right || seen.has(k) || words(right).join(' ') === k) return; seen.add(k); out.push({ wrong, right, why }); };
+    const focus = S.coach.focus;
+    // 1. the coach's weekly drill, 2. this week's focus type, 3. the most recent mistakes
+    ((S.coach.report && S.coach.report.drill) || []).forEach(d => add(d.wrong, d.right, 'Weekly drill' + (focus ? ` · ${focus}` : '')));
+    S.mistakes.slice().reverse().filter(m => m.type === focus).forEach(m => add(m.wrong, m.right, m.why));
+    shuffled(S.mistakes.slice(-30), seed).forEach(m => add(m.wrong, m.right, m.why));
+    return out.slice(0, 6);
+}
+RUNNERS.fixit = (body, ctx) => {
+    const items = fixItems(ctx.n * 13 + (ctx.daily ? 0 : Date.now() % 997));
+    if (items.length < 3) {
+        body.innerHTML = `<div class="empty">${ic('ph-wrench')}<h3>Not enough mistakes logged yet.</h3><p class="muted">Your coach logs them when it corrects your speaking, writing and role-plays. Come back after a few sessions.</p></div>`;
+        if (ctx.daily) ctx.finish({ title: 'Nothing to fix yet' });
+        return;
+    }
+    let i = 0, good = 0;
+    const step = () => {
+        if (i >= items.length) {
+            const pct = Math.round(good * 100 / items.length);
+            S.metrics.fixit = (S.metrics.fixit || []).concat({ d: today(), pct }).slice(-60);
+            return ctx.finish({ title: 'Mistakes fixed', html: `<p>Fixed at first try: <b>${good}/${items.length}</b>. ${pct >= 80 ? 'These mistakes are leaving you.' : 'Say each correct sentence 3 times out loud tonight.'}</p>` });
+        }
+        const it = items[i];
+        body.innerHTML = `<div class="progress-line"><div style="width:${i * 100 / items.length}%"></div></div>
+        <p class="eyebrow">Mistake ${i + 1}/${items.length} · ${esc(it.why || '')}</p>
+        <div class="situation"><s>${esc(it.wrong)}</s></div>
+        <p class="muted small">Write the correct sentence, or say it with the microphone.</p>
+        <div class="chat-input">${Mic.ok ? `<button class="icon-btn mic-btn" data-mic title="Speak">${ic('ph-microphone')}</button>` : ''}<input class="input" data-in placeholder="The correct sentence…" autocomplete="off"><button class="btn primary" data-go>Check</button></div>
+        <div data-res></div>`;
+        const inp = $('[data-in]', body), go = $('[data-go]', body);
+        const check = () => {
+            const said = inp.value.trim(); if (!said) return;
+            go.disabled = true; inp.disabled = true;
+            // Correct = close to the right sentence AND closer to it than to the wrong one
+            const toRight = matchScore(it.right, said).pct, toWrong = matchScore(it.wrong, said).pct;
+            const ok = toRight === 100 || (toRight >= 85 && toRight > toWrong);
+            if (ok) good++;
+            $('[data-res]', body).innerHTML = `<div class="model ${ok ? 'ok' : ''}"><small>${ok ? `${ic('ph-check-circle')} Correct` : 'Correct version'}</small><p>${esc(it.right)}</p><div class="row"><button class="btn small" data-say>${ic('ph-speaker-high')} Listen</button><button class="btn primary small" data-next>Next ${ic('ph-arrow-right')}</button></div></div>`;
+            $('[data-say]', body).addEventListener('click', () => TTS.speak(it.right, { whole: true }));
+            $('[data-next]', body).addEventListener('click', () => { i++; step(); });
+        };
+        go.addEventListener('click', check);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+        const mic = $('[data-mic]', body);
+        if (mic) mic.addEventListener('click', () => {
+            if (mic.classList.contains('rec')) return;
+            mic.classList.add('rec');
+            const c = Mic.listen({ onText: t => { inp.value = t; }, onEnd: r => { mic.classList.remove('rec'); if (r.text) { inp.value = r.text; check(); } } });
+            ctx.cleanup(() => c.stop());
+        });
+        inp.focus();
+    };
+    step();
+};
+
+// ----- Month 3: real-world mission (use English outside the app) -----
+function missionFor(n) { return D.missions[Math.floor(Math.max(0, n - 61) / 2) % D.missions.length]; }
+RUNNERS.mission = (body, ctx) => {
+    const m = ctx.opts.mission || missionFor(ctx.n);
+    const key = ctx.daily ? 'd' + ctx.n : 'free-' + today();
+    body.innerHTML = `<p class="eyebrow">Real-world mission · use English outside the app</p>
+        <h2 class="mission-t">${ic('ph-rocket-launch')} ${esc(m.t)}</h2>
+        <div class="situation">${esc(m.do)}</div>
+        ${AI.hasKey() ? `<button class="btn" data-prep>${ic('ph-sparkle')} Prepare me (script + key phrases)</button><div data-prepres></div>` : ''}
+        <p class="small mt"><b>Done? Prove it.</b> ${esc(m.proof)}</p>
+        <textarea class="input" rows="3" data-in placeholder="In English, at least 10 words."></textarea>
+        <div class="row between"><span class="muted small" data-wc>0 / 10 words</span><button class="btn primary" data-go disabled>${ic('ph-check')} Mission done</button></div>`;
+    const inp = $('[data-in]', body), go = $('[data-go]', body), wc = $('[data-wc]', body);
+    inp.addEventListener('input', () => { const c = countWords(inp.value); wc.textContent = `${c} / 10 words`; go.disabled = c < 10; });
+    const prep = $('[data-prep]', body);
+    if (prep) prep.addEventListener('click', async () => {
+        prep.disabled = true;
+        const res = $('[data-prepres]', body);
+        res.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Your coach is preparing your mission…</div>`;
+        try {
+            const j = await Brain.run('mission', { m });
+            res.innerHTML = `<div class="ai-box"><div class="ai-head">${ic('ph-sparkle')} Your plan</div>
+                <ol class="small">${(j.steps || []).map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+                <div class="better"><small>Ready to use (fill the [brackets])</small><p>${esc(j.script)}</p><button class="btn small" data-say>${ic('ph-speaker-high')} Listen</button></div>
+                ${(j.phrases || []).map((x, k) => `<div class="chunk-add"><span><b>${esc(x.en)}</b> · ${esc(x.fr || '')}</span><button class="btn small" data-add="${k}">${ic('ph-plus')} Card</button></div>`).join('')}
+                ${j.rescue ? `<p class="tip">${ic('ph-lifebuoy')} If you get stuck: ${esc(j.rescue)}</p>` : ''}</div>`;
+            $('[data-say]', res).addEventListener('click', () => TTS.speak(j.script));
+            $$('[data-add]', res).forEach(b => b.addEventListener('click', () => { const x = j.phrases[+b.dataset.add]; addCustomCard(x.en, x.fr, 'mission'); save({ silent: true }); b.disabled = true; b.textContent = 'Added ✓'; }));
+        } catch (e) { res.innerHTML = `<p class="warn small">${ic('ph-cloud-warning')} ${esc(e.message)}</p>`; prep.disabled = false; }
+    });
+    go.addEventListener('click', () => {
+        S.missions[key] = { t: m.t, proof: inp.value.trim().slice(0, 600), date: today() };
+        S.notebook.unshift({ id: 'n' + Date.now().toString(36), en: inp.value.trim().slice(0, 300), note: `Mission · ${m.t}`, date: today(), src: 'mission' });
+        save({ silent: true });
+        ctx.finish({ title: 'Mission accomplished', html: `<p>You used English in the real world today. That is what fluency is.</p>` });
+    });
+};
+
 // ----- Write it (with AI correction) -----
 RUNNERS.write = (body, ctx) => {
     const th = themeOf(ctx.n), st = storyFor(ctx.n);
@@ -515,13 +675,11 @@ RUNNERS.write = (body, ctx) => {
         }
         res.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Your coach is correcting…</div>`;
         try {
-            const j = await AI.ask({
-                system: `You are an English writing coach. ${AI.coachRules} Output only JSON.`, json: true, temp: 0.4,
-                messages: [{ role: 'user', text: `Task: "${prompt}"${retell ? `\nThe episode: """${st.x}"""` : ''}\nLearner level: ${AI.levelText()}\nTEXT: """${text}"""\nReturn JSON: {"score":0-10,"corrected":"their full text, corrected and natural, keep their ideas","fixes":[{"wrong":"...","right":"...","why":"very short reason","type":"short category"}] (max 3, the most important),"tip":"one concrete tip","chunk":{"en":"one useful natural phrase for this topic","fr":"French meaning"}}` }]
-            });
+            const j = await Brain.run('write', { task: prompt, text, story: retell ? st.x : '' });
             logMistakes(j.fixes, 'write');
             res.innerHTML = `<div class="ai-box"><div class="ai-head">${ic('ph-sparkle')} Coach · ${esc(j.score)}/10</div>
-                ${(j.fixes || []).map(f => `<div class="fix"><s>${esc(f.wrong)}</s> → <b>${esc(f.right)}</b><small>${esc(f.why || '')}</small></div>`).join('')}
+                ${j.win ? `<p class="good">${ic('ph-thumbs-up')} ${esc(j.win)}</p>` : ''}
+                ${fixesHTML(j.fixes)}
                 <div class="better"><small>Natural version</small><p>${esc(j.corrected)}</p><button class="btn small" data-say>${ic('ph-speaker-high')} Listen</button></div>
                 ${j.tip ? `<p class="tip">${ic('ph-lightbulb')} ${esc(j.tip)}</p>` : ''}
                 ${j.chunk && j.chunk.en ? `<div class="chunk-add"><span><b>${esc(j.chunk.en)}</b> · ${esc(j.chunk.fr || '')}</span><button class="btn small" data-add>${ic('ph-plus')} Add to my cards</button></div>` : ''}</div>`;
@@ -729,9 +887,6 @@ RUNNERS.roleplay = (body, ctx) => {
     add('ai', sc.open); if (voiceOn) TTS.speak(sc.open);
     $('[data-voice]', body).addEventListener('click', e => { voiceOn = !voiceOn; e.currentTarget.innerHTML = ic(voiceOn ? 'ph-speaker-high' : 'ph-speaker-slash'); if (!voiceOn) TTS.stop(); });
     $$('[data-rs]', body).forEach(b => b.addEventListener('click', () => { inp.value = (inp.value ? inp.value + ' ' : '') + b.dataset.rs; inp.focus(); }));
-    const system = `You are role-playing: ${sc.role}
-Learner level: ${AI.levelText()}. ${AI.coachRules}
-Rules: stay in character; reply in 1 to 3 short sentences adapted to the learner's level; end with one question to keep the talk going. Then check the learner's LAST message only: if it has a real mistake or sounds unnatural, give one fix (ignore small typos and missing punctuation). Output only JSON: {"reply":"...","fix":null or {"wrong":"their words","right":"natural version","why":"very short reason","type":"short category"}}`;
     const doSend = async () => {
         const text = inp.value.trim();
         if (!text || busy) return;
@@ -741,7 +896,7 @@ Rules: stay in character; reply in 1 to 3 short sentences adapted to the learner
         $('[data-count]', body).textContent = `${userTurns} / ${turns} answers`;
         const typing = document.createElement('div'); typing.className = 'bubble ai typing'; typing.innerHTML = '<p>…</p>'; chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
         try {
-            const j = await AI.ask({ system, json: true, temp: 0.8, messages: [{ role: 'user', text: '(Start the role-play now.)' }].concat(hist) });
+            const j = await Brain.run('rpTurn', { sc, turn: userTurns, turns, lastUser: text }, [{ role: 'user', text: '(Start the role-play now.)' }].concat(hist));
             typing.remove();
             const reply = String(j.reply || '…');
             hist.push({ role: 'model', text: reply });
@@ -777,11 +932,14 @@ Rules: stay in character; reply in 1 to 3 short sentences adapted to the learner
         body.appendChild(box);
         const transcript = hist.map(m => (m.role === 'model' ? 'PARTNER: ' : 'LEARNER: ') + m.text).join('\n');
         try {
-            const j = await AI.ask({ system: `You are an English speaking coach. ${AI.coachRules} Output only JSON.`, json: true, temp: 0.5, messages: [{ role: 'user', text: `Role-play "${sc.t}". Learner level ${AI.levelText()}.\n${transcript}\nReturn JSON: {"wins":["2 specific things the learner did well"],"notes":[{"en":"natural phrase the learner needed or should reuse","fr":"French meaning"}] (exactly 3),"mistakes":[{"wrong":"...","right":"...","why":"...","type":"..."}] (max 3 recurring or important),"next":"one sentence: what to work on next time"}` }] });
+            const learnerText = hist.filter(m => m.role === 'user').map(m => m.text).join(' / ');
+            const j = await Brain.run('rpSummary', { sc, transcript, learnerText });
             logMistakes(j.mistakes, 'roleplay-summary');
             box.innerHTML = `<div class="ai-head">${ic('ph-sparkle')} Talk · Notice · Improve</div>
+                <p class="small">${j.goal_reached ? `${ic('ph-seal-check')} <b>Goal reached.</b>` : `${ic('ph-target')} <b>Goal not reached yet.</b>`} ${esc(sc.goal)}</p>
+                ${scoresHTML(j.scores)}
                 ${(j.wins || []).map(w => `<p class="good">${ic('ph-thumbs-up')} ${esc(w)}</p>`).join('')}
-                ${(j.mistakes || []).map(f => `<div class="fix"><s>${esc(f.wrong)}</s> → <b>${esc(f.right)}</b><small>${esc(f.why || '')}</small></div>`).join('')}
+                ${fixesHTML(j.mistakes)}
                 <p class="small mt"><b>3 phrases for your notebook:</b></p>
                 ${(j.notes || []).map((x, k) => `<div class="chunk-add"><span><b>${esc(x.en)}</b> · ${esc(x.fr || '')}</span><button class="btn small" data-add="${k}">${ic('ph-plus')} Card</button></div>`).join('')}
                 ${j.next ? `<p class="tip">${ic('ph-target')} ${esc(j.next)}</p>` : ''}`;
@@ -838,7 +996,8 @@ function renderPractice() {
     const tiles = [
         ['cards', 'Review due cards', 'Spaced repetition'], ['listen', 'Replay an episode', 'Any episode so far'], ['reflex', 'Reflex drill', '5 new situations'],
         ['write', 'Write & get corrected', "Today's prompt"], ['shadow', 'Shadowing', 'Copy the music'], ['speak432', '4 / 3 / 2', 'Random topic'],
-        ['teach', 'Teach it', 'Explain simply'], ['retell', 'Retell', "Today's episode"], ['checkpoint', 'Dictation test', 'Measure your ear'], ['bench', 'Record your voice', '1-minute benchmark']
+        ['teach', 'Teach it', 'Explain simply'], ['retell', 'Retell', "Today's episode"], ['checkpoint', 'Dictation test', 'Measure your ear'], ['bench', 'Record your voice', '1-minute benchmark'],
+        ['fixit', 'Fix my mistakes', 'Your own errors'], ['mission', 'Real-world mission', ph >= 3 ? 'Use English outside' : 'Preview · month 3']
     ];
     const maxEp = S.startDate ? Math.min(30, n) : 1;
     el.innerHTML = `<div class="page-head"><h2>Practice</h2><p class="muted">Extra rounds anytime. They add minutes and improve your level estimate, but your daily tasks are on the Today page.</p></div>
@@ -940,6 +1099,11 @@ function renderProgress() {
         <section class="card"><div class="card-head"><h3>${ic('ph-headphones')} Listening</h3><span class="muted small">first-try answers</span></div>${spark(ls.map(m => m.acc * 100), 100)}
             <p class="muted small">Last 10 episodes: <b>${ls.length ? Math.round(avg(ls.slice(-10).map(m => m.acc)) * 100) : '—'}%</b> right at first try.</p></section>
     </div>
+    <section class="card mt"><details class="brain"><summary>${ic('ph-brain')} What your coach knows about you</summary>
+        <p class="muted small">Every AI answer is built from this file, made from your real data. The AI must follow strict rules, answer in a fixed format, and pass a quality check (exact quotes, right length, right level). If it fails, it is sent back to fix its answer.</p>
+        <div class="dossier">${esc(dossier())}</div>
+        ${Brain.log.length ? `<div class="qlog">${Brain.log.slice(0, 8).map(l => `<span>${esc(l.at)} · ${esc(l.task)} · ${l.issues ? `${l.issues} problem${l.issues > 1 ? 's' : ''} left` : 'passed the check'}${l.repaired ? ' (after repair)' : ''}</span>`).join('')}</div>` : ''}
+    </details></section>
     <section class="card mt"><div class="card-head"><h3>${ic('ph-record')} Voice benchmarks</h3><span class="muted small">day 1 · 30 · 60 · 90</span></div>
         ${benches.length ? `<div class="benches">${benches.map(([k, b]) => `<div class="bench"><div><b>${b.day ? 'Day ' + b.day : 'Free'}</b><small>${esc(b.date)}${b.wpm ? ` · ${b.wpm} words/min` : ''}</small></div><button class="btn small" data-play="${esc(k)}">${ic('ph-play')} Play</button></div>`).join('')}</div>` : '<p class="muted small">Your first recording happens on day 1, in the evening session.</p>'}
         <audio data-player controls hidden></audio>
@@ -954,7 +1118,7 @@ function renderProgress() {
 // ================= COACH =================
 function keyNeededHTML() {
     return `<section class="card key-card">${ic('ph-sparkle')}<h3>Connect your AI partner (free)</h3>
-        <ol class="small"><li>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API keys</a> and sign in with Google.</li><li>Click <b>Create API key</b> and copy it.</li><li>Paste it here. It stays on this device only.</li></ol>
+        <ol class="small"><li>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API keys</a> and sign in with Google.</li><li>Click <b>Create API key</b> and copy it.</li><li>Paste it here. If you are signed in, it is saved in your private account so your phone and PC both get it.</li></ol>
         <div class="log-row"><input class="input" data-key type="password" placeholder="Paste your Gemini API key" autocomplete="off"><button class="btn primary" data-savekey>Connect</button></div><p class="small" data-keymsg></p></section>`;
 }
 function bindKeyForm(el, onOk) {
@@ -964,7 +1128,7 @@ function bindKeyForm(el, onOk) {
         if (k.length < 20) { msg.textContent = 'This does not look like a key.'; return; }
         b.disabled = true; msg.textContent = 'Checking your key…';
         AI.setKey(k);
-        try { const m = await AI.discover(); msg.innerHTML = `${ic('ph-check-circle')} Connected (${esc(m)}).`; toast('AI partner connected', 'good'); setTimeout(() => { onOk ? onOk() : renderView(); }, 600); }
+        try { const m = await AI.discover(); const synced = await Sync.saveKey(k); msg.innerHTML = `${ic('ph-check-circle')} Connected (${esc(m)}).${synced ? ' Saved in your account for your other devices.' : ''}`; toast('AI partner connected', 'good'); setTimeout(() => { onOk ? onOk() : renderView(); }, 600); }
         catch (e) { AI.setKey(''); msg.textContent = e.message; b.disabled = false; }
     });
 }
@@ -998,7 +1162,7 @@ async function openSettings() {
         <p class="muted small">iPhone: add the app to your home screen first.</p>
     </section>
     <section class="set"><h3>${ic('ph-sparkle')} AI partner (Gemini)</h3>
-        ${AI.hasKey() ? `<p class="small ok">${ic('ph-check-circle')} Connected${AI.models()[0] ? ` · ${esc(AI.models()[0])}` : ''}. Key stored on this device only.</p><button class="btn small" data-rmkey>Remove key</button>` : keyNeededHTML()}
+        ${AI.hasKey() ? `<p class="small ok">${ic('ph-check-circle')} Connected${AI.models()[0] ? ` · ${esc(AI.models()[0])}` : ''}.</p><p class="muted small">${u ? 'Saved in your private account: your other devices get it automatically when you sign in.' : 'Saved on this device. Sign in with Google to get it on your other devices automatically.'}</p><button class="btn small" data-rmkey>Remove key</button>` : keyNeededHTML()}
     </section>
     <section class="set"><h3>${ic('ph-speaker-high')} Voice</h3>
         <div class="seg" data-seg="accent">${[['mix', 'Mix US + UK'], ['us', 'US'], ['uk', 'UK']].map(([v, l]) => `<button data-v="${v}" class="${S.settings.accent === v ? 'on' : ''}">${l}</button>`).join('')}</div>
@@ -1006,6 +1170,7 @@ async function openSettings() {
         <button class="btn small mt" data-test>${ic('ph-play')} Test the voice</button>
         <p class="muted small">Best voices: Chrome on Android (Google) or Edge on PC (Natural voices).</p>
     </section>
+    ${Install.standalone() ? '' : `<section class="set"><h3>${ic('ph-download-simple')} Install the app</h3><p class="muted small">Put Fluent 90 on your home screen: full screen, faster, and needed for reminders on iPhone.</p><button class="btn primary" data-install>${ic('ph-download-simple')} Install Fluent 90</button></section>`}
     <section class="set"><h3>${ic('ph-flag')} Program</h3>
         <p class="small">${S.startDate ? `Started on ${esc(niceDate(S.startDate))} · day ${dayNum()}` : 'Not started yet.'}</p>
         <button class="btn small danger" data-reset>Reset everything</button>
@@ -1018,7 +1183,11 @@ async function openSettings() {
     on('[data-out]', () => { if (confirm('Sign out on this device? Your progress stays saved in the cloud.')) Sync.signOut().then(() => openSettings()); });
     on('[data-pon]', () => Push.enable().then(() => { toast('Reminders on', 'good'); openSettings(); }).catch(e => toast(esc(e.message), 'bad')));
     on('[data-poff]', () => Push.disable().then(() => { toast('Reminders off'); openSettings(); }));
-    on('[data-rmkey]', () => { AI.setKey(''); openSettings(); });
+    on('[data-rmkey]', async () => {
+        if (!confirm(Sync.ref ? 'Remove the Gemini key from all your devices?' : 'Remove the Gemini key from this device?')) return;
+        AI.setKey(''); await Sync.saveKey(null); openSettings();
+    });
+    on('[data-install]', () => { Install.run(); });
     on('[data-test]', () => TTS.speak("Hi! I'm your English partner. Let's practise together today.", { whole: true }));
     on('[data-reset]', () => {
         const t = prompt('This deletes your whole progress on all devices. Type RESET to confirm.');
@@ -1035,12 +1204,14 @@ document.addEventListener('click', e => {
     const a = e.target.closest('[data-act]');
     if (!a) return;
     if (a.dataset.act === 'settings') openSettings();
+    if (a.dataset.act === 'install') Install.run();
     if (a.dataset.act === 'signin') Sync.signIn().catch(err => toast('Sign-in failed: ' + (err.code || err.message), 'bad'));
 });
 
 // ================= BOOT =================
 function boot() {
     $('#settingsBtn').addEventListener('click', openSettings);
+    $('#installBtn').addEventListener('click', () => Install.run());
     $('#syncBtn').addEventListener('click', openSettings);
     $('#streakChip').addEventListener('click', () => show('progress'));
     $('#levelChip').addEventListener('click', () => show('progress'));
@@ -1056,5 +1227,7 @@ function boot() {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/fluent/sw.js', { scope: '/fluent/' }).catch(() => {});
     // Prepare the AI episode in the background (days 31–90)
     const n = dayNum(); if (n >= 31 && AI.hasKey()) ensureAIDay(n).then(() => { if (!Player.ctx) renderView(); }).catch(() => {});
+    // New week: the coach studies your data and sets the focus (from day 3, when there is data)
+    if (n >= 3 && AI.hasKey() && S.coach.week !== weekKey()) setTimeout(() => ensureWeekly().then(() => { if (!Player.ctx) renderView(); }).catch(() => {}), 4000);
 }
 boot();

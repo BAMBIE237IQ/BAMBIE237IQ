@@ -19,7 +19,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="/fluent/app.css?v=1">
+    <link rel="stylesheet" href="/fluent/app.css?v=2">
 </head>
 <body>
     <header class="topbar">
@@ -32,6 +32,7 @@
             <button data-view="coach"><i class="ph-duotone ph-chats-circle"></i>AI partner</button>
         </nav>
         <div class="top-actions">
+            <button class="install-btn" id="installBtn" hidden aria-label="Install the app"><i class="ph-duotone ph-download-simple"></i><span>Install</span></button>
             <button class="chip streak" id="streakChip" aria-label="Streak"></button>
             <button class="chip level" id="levelChip" aria-label="Level"></button>
             <button class="icon-btn sync" id="syncBtn" aria-label="Account and sync"></button>
@@ -69,8 +70,9 @@
     <div class="sheet-overlay" id="sheet" hidden><div class="sheet" id="sheetBody"></div></div>
     <div class="toasts" id="toasts"></div>
 
-    <script src="/fluent/data.js?v=1"></script>
-    <script src="/fluent/core.js?v=1"></script>
-    <script src="/fluent/ui.js?v=1"></script>
+    <script src="/fluent/data.js?v=2"></script>
+    <script src="/fluent/core.js?v=2"></script>
+    <script src="/fluent/brain.js?v=2"></script>
+    <script src="/fluent/ui.js?v=2"></script>
 </body>
 </html>

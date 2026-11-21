@@ -270,3 +270,22 @@ F90.resources = {
   2: [['NPR: The Indicator (10-min business stories)', 'https://www.npr.org/podcasts/510325/the-indicator-from-planet-money'], ['TED-Ed (short animated lessons)', 'https://www.youtube.com/@TEDEd'], ['BBC Learning English: 6 Minute English', 'https://www.bbc.co.uk/learningenglish/english/features/6-minute-english']],
   3: [['NPR: How I Built This (founders’ stories)', 'https://www.npr.org/podcasts/510313/how-i-built-this'], ['Y Combinator (startup talks)', 'https://www.youtube.com/@ycombinator'], ['Hard Fork (tech news podcast)', 'https://www.nytimes.com/column/hard-fork']]
 };
+
+// Month 3: real-world missions (every other day, days 62–90). Use English outside the app.
+F90.missions = [
+{ t: 'Voice note to a friend', do: 'Send a 30-second voice note in English to a friend or a contact: tell them about your week.', proof: 'Who did you send it to, and what did you say?' },
+{ t: 'Post what you learned', do: 'Write a post of 60+ words in English (LinkedIn, X, WhatsApp status) about something you learned in tech or business this week. Post it.', proof: 'Paste the first sentence of your post.' },
+{ t: 'Comment like a pro', do: 'Watch a short English tech or business video on YouTube and leave a useful comment (2–3 sentences) in English.', proof: 'What was the video about, and what did you comment?' },
+{ t: 'Your 60-second pitch', do: 'Record a 1-minute video or voice pitch of your app or a product idea. Keep it private if you want. Listen once and note one thing to improve.', proof: 'What will you improve next time?' },
+{ t: 'Cold email', do: 'Write an email in English to a potential client or partner presenting what you do. Send it, or save it as a ready draft.', proof: 'Paste your subject line and first sentence.' },
+{ t: 'Join the conversation', do: 'Join an English-speaking online community (Reddit, Discord, a Facebook group about tech or startups) and ask one real question.', proof: 'Where did you post, and what did you ask?' },
+{ t: 'Talk to a stranger', do: 'Have a 5-minute voice chat with a native or fluent speaker (HelloTalk, Tandem, a Discord voice room or a friend abroad).', proof: 'Who did you talk to, and what was the topic?' },
+{ t: 'Explain your work', do: 'Send a 1-minute voice note explaining your job or your project to someone who knows nothing about it.', proof: 'Which part was the hardest to explain?' },
+{ t: 'No-subtitle talk', do: 'Watch 10 minutes of a tech talk (TED, YC, a conference) WITHOUT subtitles, then summarize it out loud for 1 minute.', proof: 'Write the 3 main ideas of the talk.' },
+{ t: 'App review', do: 'Write a real review in English (4+ sentences) of an app you use, on the Play Store or the App Store.', proof: 'Paste your review.' },
+{ t: 'Customer support chat', do: 'Contact the support of a service you use (chat or email) in English with a real question.', proof: 'What did you ask, and what did they answer?' },
+{ t: 'Read and report', do: 'Read one English article about money, AI or business. Write its 5 key ideas, then say them out loud without reading.', proof: 'Write the 5 key ideas.' },
+{ t: 'Teach someone', do: 'Teach 3 English phrases you learned to a friend or family member. Explain when to use them, in English first.', proof: 'Which 3 phrases did you teach?' },
+{ t: 'Tell me about yourself', do: 'Prepare and record your 2-minute answer to "Tell me about yourself" for a client or a job interview.', proof: 'Write your first two sentences.' },
+{ t: 'Voice-only conversation', do: 'Do a 10-minute role-play with your AI partner using ONLY your voice (microphone button), no typing.', proof: 'Which role-play did you do, and what was hard?' }
+];

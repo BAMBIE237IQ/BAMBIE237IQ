@@ -23,7 +23,7 @@ function freshState() {
     return { v: 1, updatedAt: 0, startDate: null, startLevel: null, placement: null, xp: 0,
         days: {}, cards: {}, custom: {}, notebook: [], mistakes: [],
         metrics: { listen: [], speak: [], reflex: [], dict: [] },
-        bench: {}, aiDays: {}, freeMin: 0, settings: { accent: 'mix', rate: 1 } };
+        bench: {}, aiDays: {}, coach: {}, missions: {}, freeMin: 0, settings: { accent: 'mix', rate: 1 } };
 }
 let S = loadState();
 function loadState() {
@@ -38,7 +38,7 @@ function normalizeState(o) {
     const base = freshState(), s = Object.assign(base, o || {});
     s.metrics = Object.assign(freshState().metrics, s.metrics || {});
     s.settings = Object.assign(freshState().settings, s.settings || {});
-    for (const k of ['days', 'cards', 'custom', 'bench', 'aiDays']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+    for (const k of ['days', 'cards', 'custom', 'bench', 'aiDays', 'coach', 'missions']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
     for (const k of ['notebook', 'mistakes']) if (!Array.isArray(s[k])) s[k] = [];
     return s;
 }
@@ -74,8 +74,12 @@ const TASKS = {
     roleplay: { title: 'Role-play with your AI partner', icon: 'ph-chats-circle', mins: 10, xp: 50 },
     teach: { title: 'Teach it', icon: 'ph-chalkboard-teacher', mins: 6, xp: 40 },
     retell: { title: 'Close everything & retell', icon: 'ph-arrows-clockwise', mins: 6, xp: 40 },
-    bench: { title: 'Voice benchmark (1 min)', icon: 'ph-record', mins: 2, xp: 60 }
+    bench: { title: 'Voice benchmark (1 min)', icon: 'ph-record', mins: 2, xp: 60 },
+    fixit: { title: 'Fix my mistakes', icon: 'ph-wrench', mins: 5, xp: 35 },
+    mission: { title: 'Real-world mission', icon: 'ph-rocket-launch', mins: 10, xp: 70 }
 };
+// Mistakes logged before a given day (so the plan of a day never changes during that day)
+function mistakesBefore(date) { return S.mistakes.filter(m => m.date < date).length; }
 function plan(n) {
     const ph = phaseOf(n);
     const mains = ['speak432', 'roleplay', 'teach', 'retell'];
@@ -84,7 +88,11 @@ function plan(n) {
     const mk = (id, type) => Object.assign({ id, type }, TASKS[type]);
     const drops = [
         { id: 'morning', title: 'Morning', time: '07:00', mode: 'Silent · headphones', icon: 'ph-sun-horizon', tasks: [mk('m1', 'cards'), mk('m2', 'listen')] },
-        { id: 'midday', title: 'Midday', time: '13:00', mode: 'Silent · type', icon: 'ph-sun', tasks: [mk('d1', n % 7 === 0 ? 'checkpoint' : 'reflex'), mk('d2', 'write')] },
+        // Adaptive: from day 31, every 3rd day the reflex drill becomes a drill on YOUR logged mistakes;
+        // in month 3, every other day the writing task becomes a real-world mission.
+        { id: 'midday', title: 'Midday', time: '13:00', mode: 'Silent · type', icon: 'ph-sun', tasks: [
+            mk('d1', n % 7 === 0 ? 'checkpoint' : (ph >= 2 && n % 3 === 0 && S.startDate && mistakesBefore(addDays(S.startDate, n - 1)) >= 5) ? 'fixit' : 'reflex'),
+            mk('d2', ph === 3 && n % 2 === 0 ? 'mission' : 'write')] },
         { id: 'evening', title: 'Evening', time: '20:00', mode: 'At home · voice', icon: 'ph-moon-stars', tasks: [mk('e1', 'shadow'), mk('e2', main)] }
     ];
     if ([1, 30, 60, 90].includes(n)) drops[2].tasks.push(mk('e3', 'bench'));
@@ -357,29 +365,48 @@ const AI = {
         localStorage.setItem(LS_MODELS, JSON.stringify(list.slice(0, 6)));
         return list[0];
     },
-    // messages: [{role:'user'|'model', text}] · json: ask for JSON output
-    async ask({ system, messages, json = false, temp = 0.7 }) {
+    // How much the model may "think" before answering (only for models that support it)
+    thinking(model, level) {
+        if (!level) return null;
+        if (/gemini-2\.5-flash/.test(model) && !/lite/.test(model)) return { thinkingBudget: { off: 0, low: 1024, high: 4096 }[level] };
+        if (/gemini-[3-9]/.test(model)) return { thinkingLevel: level === 'high' ? 'high' : 'low' };
+        return null;
+    },
+    // messages: [{role:'user'|'model', text}] · json: JSON output · schema: forced JSON shape · think: 'off'|'low'|'high'
+    async ask({ system, messages, json = false, temp = 0.7, schema = null, think = null }) {
         if (!this.hasKey()) throw new Error('nokey');
         let models = this.models();
         if (!models.length) { await this.discover(); models = this.models(); }
-        const body = {
+        const base = {
             systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-            contents: messages.map(m => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] })),
-            generationConfig: Object.assign({ temperature: temp }, json ? { responseMimeType: 'application/json' } : {})
+            contents: messages.map(m => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] }))
         };
+        const call = (model, gen) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.key() }, body: JSON.stringify(Object.assign({}, base, { generationConfig: gen }))
+        });
         let lastErr = null;
         for (const model of models) {
             try {
-                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.key() }, body: JSON.stringify(body)
-                });
+                const gen = Object.assign({ temperature: temp }, json ? { responseMimeType: 'application/json' } : {});
+                if (json && schema) gen.responseSchema = schema;
+                const tc = this.thinking(model, think); if (tc) gen.thinkingConfig = tc;
+                let r = await call(model, gen);
+                if (r.status === 400) {
+                    const t = await r.text();
+                    if (/API key/i.test(t)) throw new Error('Your Gemini key was refused.');
+                    // This model refuses the schema or the thinking setting: retry with plain JSON mode
+                    delete gen.responseSchema; delete gen.thinkingConfig;
+                    r = await call(model, gen);
+                }
                 if (r.status === 404 || r.status === 429 || r.status >= 500) { lastErr = new Error(r.status === 429 ? 'Gemini limit reached for now. Try again in a minute.' : `Gemini error ${r.status}`); continue; }
-                if (!r.ok) { const t = await r.text(); throw new Error(r.status === 400 && /API key/i.test(t) ? 'Your Gemini key was refused.' : `Gemini error ${r.status}`); }
+                if (!r.ok) throw new Error(`Gemini error ${r.status}`);
                 const j = await r.json();
-                const text = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || '').join('').trim();
+                const text = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).filter(p => !p.thought).map(p => p.text || '').join('').trim();
                 if (!text) { lastErr = new Error('Empty answer'); continue; }
                 if (!json) return text;
-                return JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+                const clean = text.replace(/^```(?:json)?\s*|\s*```$/g, '');
+                try { return JSON.parse(clean); }
+                catch (e) { const m = clean.match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]); throw new Error('Unreadable answer'); }
             } catch (e) { lastErr = e; if (/refused/.test(e.message)) break; }
         }
         throw lastErr || new Error('Gemini error');
@@ -388,43 +415,7 @@ const AI = {
     coachRules: 'Tone: direct but kind, like a good coach. Use simple, natural, everyday English (no rare or fancy words). The learner is a French speaker from Cameroon, into tech, apps and business, practising 90 days to speak fluently with clients, while travelling and with new friends.'
 };
 
-// Builds (once, cached and synced) the AI episode + 8 phrases for days 31–90
-const aiDayPending = {};
-async function ensureAIDay(n) {
-    if (phaseOf(n) < 2 || !AI.hasKey()) return null;
-    if (S.aiDays[n] && S.aiDays[n].story) return S.aiDays[n];
-    if (aiDayPending[n]) return aiDayPending[n];
-    const th = themeOf(n), ph = phaseOf(n);
-    const level = ph === 2 ? 'B1' : 'B1+/B2-';
-    const known = th.c.map(c => c[0]).join(' | ');
-    aiDayPending[n] = AI.ask({
-        system: 'You write graded English learning material. Output only valid JSON.',
-        json: true, temp: 0.9,
-        messages: [{ role: 'user', text:
-`Write day ${n} of 90 for a French-speaking learner from Cameroon (level ${level}, interests: tech, apps, AI, business, money, travel).
-Season 2 of the story "Sam's Big Pitch": Sam, a founder from Douala, runs PayLink (an app that sends bills paid by mobile money). After winning Priya's 60 UK shops, he grows the company abroad. Today's theme: "${th.t}".
-Return JSON:
-{"story":{"t":"short episode title","x":"episode, ${ph === 2 ? '150-180' : '180-220'} words, ${level}, natural spoken English with dialogue, uses 4 of today's phrases","q":[["question","correct answer","wrong answer","wrong answer"],["...","...","...","..."],["...","...","...","..."]]},
- "chunks":[{"en":"natural phrase","fr":"French meaning"}] (exactly 8 NEW useful phrases for the theme, not these: ${known})}` }]
-    }).then(j => {
-        if (!j || !j.story || !j.story.x || !Array.isArray(j.story.q)) throw new Error('bad format');
-        j.story.q = j.story.q.filter(q => Array.isArray(q) && q.length >= 3).slice(0, 3);
-        j.chunks = (Array.isArray(j.chunks) ? j.chunks : []).filter(c => c && c.en).slice(0, 8);
-        if (S.aiDays[n] && S.aiDays[n].story) return S.aiDays[n];   // the other device was faster
-        S.aiDays[n] = j; save();
-        return j;
-    }).finally(() => { delete aiDayPending[n]; });
-    return aiDayPending[n];
-}
-function logMistakes(list, src) {
-    (list || []).slice(0, 4).forEach(m => { if (m && m.wrong && m.right) S.mistakes.push({ wrong: String(m.wrong).slice(0, 200), right: String(m.right).slice(0, 200), why: String(m.why || '').slice(0, 200), type: String(m.type || 'other').toLowerCase().slice(0, 40), date: today(), src }); });
-    if (S.mistakes.length > 300) S.mistakes = S.mistakes.slice(-300);
-}
-function topMistakeTypes(days = 14) {
-    const from = addDays(today(), -days), cnt = {};
-    S.mistakes.filter(m => m.date >= from).forEach(m => { cnt[m.type] = (cnt[m.type] || 0) + 1; });
-    return Object.entries(cnt).sort((a, b) => b[1] - a[1]);
-}
+// The daily AI episode, the weekly diagnosis and mistake tracking live in brain.js
 
 // ---------- Firebase: Google sign-in + sync (data at fluent90/<uid>) ----------
 const FB_CONFIG = {
@@ -444,6 +435,12 @@ const Sync = {
             if (!u) { this.ref = null; this.status = 'local'; emit(); return; }
             this.ref = firebase.database().ref('fluent90/' + u.uid);
             this.status = 'syncing'; emit();
+            // Gemini key: saved once in the private account, every signed-in device gets it
+            this.ref.child('gemini').once('value').then(s => {
+                const k = s.val();
+                if (k && !AI.hasKey()) { AI.setKey(k); emit(); }
+                else if (!k && AI.hasKey()) this.saveKey(AI.key());
+            }).catch(() => {});
             this.ref.child('state').on('value', snap => {
                 this.ready = true;
                 const raw = snap.val();
@@ -467,6 +464,7 @@ const Sync = {
         });
     },
     signOut() { return firebase.auth().signOut(); },
+    saveKey(k) { if (!this.ref) return Promise.resolve(false); return (k ? this.ref.child('gemini').set(k) : this.ref.child('gemini').remove()).then(() => true).catch(() => false); },
     schedule() { if (!this.ref || !this.ready) return; clearTimeout(this.timer); this.timer = setTimeout(() => this.push(), 1200); },
     push() {
         if (!this.ref) return;
