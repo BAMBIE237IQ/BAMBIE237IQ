@@ -259,7 +259,15 @@ const TTS = {
     voices: [],
     load() { if (!this.ok) return; const set = () => { this.voices = speechSynthesis.getVoices() || []; }; set(); speechSynthesis.onvoiceschanged = set; },
     accentFor(n) { const a = S.settings.accent; if (a === 'us') return 'en-US'; if (a === 'uk') return 'en-GB'; return (n || dayNum() || 1) % 2 ? 'en-US' : 'en-GB'; },
+    // Voice chosen by the learner on this device (voices differ between phone and PC)
+    chosen() { try { const id = localStorage.getItem('f90-voice'); return id ? this.voices.find(v => v.voiceURI === id) || null : null; } catch (e) { return null; } },
+    choose(id) { try { if (id) localStorage.setItem('f90-voice', id); else localStorage.removeItem('f90-voice'); } catch (e) {} },
+    english() {
+        const score = v => (/natural|neural/i.test(v.name) ? 4 : 0) + (/google/i.test(v.name) ? 2 : 0) + (/online/i.test(v.name) ? 1 : 0);
+        return this.voices.filter(v => /^en/i.test(v.lang || '')).sort((a, b) => score(b) - score(a) || a.lang.localeCompare(b.lang));
+    },
     pick(lang) {
+        const c = this.chosen(); if (c) return c;
         const norm = v => (v.lang || '').replace('_', '-');
         const score = v => (/natural|neural/i.test(v.name) ? 4 : 0) + (/google/i.test(v.name) ? 2 : 0) + (/online/i.test(v.name) ? 1 : 0);
         let list = this.voices.filter(v => norm(v) === lang);
@@ -423,6 +431,30 @@ const FB_CONFIG = {
     databaseURL: 'https://bambie237iq-default-rtdb.firebaseio.com', projectId: 'bambie237iq',
     storageBucket: 'bambie237iq.firebasestorage.app', messagingSenderId: '730310282369', appId: '1:730310282369:web:fa4cc5068a718be30c5180'
 };
+// Merges two copies of the progress (phone + PC): union of everything done, newest wins for single values.
+function mergeStates(a, b) {
+    const [nw, od] = (a.updatedAt || 0) >= (b.updatedAt || 0) ? [a, b] : [b, a];
+    const m = normalizeState(JSON.parse(JSON.stringify(nw)));
+    const o = od;
+    if (!m.startDate || (o.startDate && o.startDate < m.startDate)) { m.startDate = o.startDate || m.startDate; }
+    if (!m.placement && o.placement) { m.placement = o.placement; }
+    if (m.startLevel == null && o.startLevel != null) m.startLevel = o.startLevel;
+    for (const [d, r] of Object.entries(o.days || {})) {
+        const x = m.days[d];
+        if (!x) { m.days[d] = r; continue; }
+        x.tasks = Object.assign({}, r.tasks || {}, x.tasks || {});
+        x.minutes = Math.max(x.minutes || 0, r.minutes || 0); x.xp = Math.max(x.xp || 0, r.xp || 0); x.bonus = x.bonus || r.bonus;
+    }
+    for (const [id, c] of Object.entries(o.cards || {})) { const x = m.cards[id]; if (!x || (c.reps || 0) + (c.lapses || 0) > (x.reps || 0) + (x.lapses || 0)) m.cards[id] = c; }
+    for (const k of ['custom', 'aiDays', 'bench', 'missions']) m[k] = Object.assign({}, o[k] || {}, m[k] || {});
+    const uni = (x, y, key) => { const seen = new Set(), out = []; [...(y || []), ...(x || [])].forEach(e => { const k = key(e); if (!seen.has(k)) { seen.add(k); out.push(e); } }); return out; };
+    m.mistakes = uni(m.mistakes, o.mistakes, e => e.date + e.wrong).sort((p, q) => (p.date || '').localeCompare(q.date || '')).slice(-300);
+    m.notebook = uni(m.notebook, o.notebook, e => e.id || e.en).sort((p, q) => (q.date || '').localeCompare(p.date || ''));
+    for (const k of Object.keys(Object.assign({}, o.metrics || {}, m.metrics))) m.metrics[k] = uni(m.metrics[k], (o.metrics || {})[k], e => JSON.stringify(e)).sort((p, q) => (p.d || '').localeCompare(q.d || ''));
+    if (!m.coach.report && o.coach && o.coach.report) m.coach = o.coach;
+    m.xp = Math.max(m.xp || 0, o.xp || 0); m.freeMin = Math.max(m.freeMin || 0, o.freeMin || 0);
+    return m;
+}
 const Sync = {
     user: null, status: 'local', ref: null, timer: null, ready: false,
     init() {
@@ -446,12 +478,16 @@ const Sync = {
                 const raw = snap.val();
                 let remote = null;
                 try { remote = raw ? JSON.parse(raw) : null; } catch (e) {}
-                if (remote && remote.updatedAt > S.updatedAt) {
-                    S = normalizeState(remote);
-                    try { localStorage.setItem(LS_STATE, JSON.stringify(S)); } catch (e) {}
-                    this.status = 'synced'; emit();
-                } else if (!remote || remote.updatedAt < S.updatedAt) { this.push(); }
-                else { this.status = 'synced'; emit(); }
+                if (!remote) { this.push(); return; }
+                if (remote.updatedAt === S.updatedAt) { this.status = 'synced'; emit(); return; }
+                // Merge both devices (nothing done on the phone or the PC is lost), then share the result
+                const merged = mergeStates(S, normalizeState(remote));
+                const changed = JSON.stringify(merged) !== JSON.stringify(normalizeState(remote));
+                S = merged;
+                try { localStorage.setItem(LS_STATE, JSON.stringify(S)); } catch (e) {}
+                if (changed) { S.updatedAt = Math.max(Date.now(), remote.updatedAt + 1); this.push(); }
+                else { S.updatedAt = remote.updatedAt; this.status = 'synced'; }
+                emit();
             }, err => { this.status = /permission/i.test(err && (err.code || err.message) || '') ? 'denied' : 'error'; emit(); });
         });
     },

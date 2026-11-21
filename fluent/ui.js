@@ -1167,6 +1167,8 @@ async function openSettings() {
     <section class="set"><h3>${ic('ph-speaker-high')} Voice</h3>
         <div class="seg" data-seg="accent">${[['mix', 'Mix US + UK'], ['us', 'US'], ['uk', 'UK']].map(([v, l]) => `<button data-v="${v}" class="${S.settings.accent === v ? 'on' : ''}">${l}</button>`).join('')}</div>
         <div class="seg mt" data-seg="rate">${[[0.85, 'Slower'], [1, 'Normal'], [1.1, 'Faster']].map(([v, l]) => `<button data-v="${v}" class="${S.settings.rate == v ? 'on' : ''}">${l}</button>`).join('')}</div>
+        <p class="small mt"><b>Choose your voice</b> <span class="muted">(on this device)</span></p>
+        <select class="input" data-voice><option value="">Automatic (best voice, accent above)</option>${TTS.english().map(v => `<option value="${esc(v.voiceURI)}" ${TTS.chosen() === v ? 'selected' : ''}>${esc(v.name)} · ${esc(v.lang)}${/google|natural|neural|online/i.test(v.name) ? ' ★' : ''}</option>`).join('')}</select>
         <button class="btn small mt" data-test>${ic('ph-play')} Test the voice</button>
         <p class="muted small">Best voices: Chrome on Android (Google) or Edge on PC (Natural voices).</p>
     </section>
@@ -1188,6 +1190,7 @@ async function openSettings() {
         AI.setKey(''); await Sync.saveKey(null); openSettings();
     });
     on('[data-install]', () => { Install.run(); });
+    const vs = $('[data-voice]', body); if (vs) vs.addEventListener('change', () => { TTS.choose(vs.value); TTS.speak("Hi! This is my voice. Do you like it?", { whole: true }); });
     on('[data-test]', () => TTS.speak("Hi! I'm your English partner. Let's practise together today.", { whole: true }));
     on('[data-reset]', () => {
         const t = prompt('This deletes your whole progress on all devices. Type RESET to confirm.');
