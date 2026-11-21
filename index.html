@@ -95,6 +95,10 @@
                 <span class="material-icons-outlined app-link-go">open_in_new</span>
             </a>
         </div>
+        <button class="notif-btn notes-btn" id="notesBtn" onclick="openNotes()" aria-label="Notes de cette rubrique" title="Notes">
+            <span class="material-icons-outlined">sticky_note_2</span>
+            <span class="notif-count notes-count" id="notesCount" hidden>0</span>
+        </button>
         <button class="notif-btn" onclick="openNotifPanel()" aria-label="Alertes abonnements" title="Alertes abonnements">
             <span class="material-icons-outlined">notifications</span>
             <span class="notif-count" hidden>0</span>
@@ -693,6 +697,7 @@
     <script src="js/anim.js"></script>
     <script src="js/brands.js"></script>
     <script src="js/descriptions.js"></script>
+    <script src="js/notes.js"></script>
     <script src="js/main.js"></script>
 
     <!-- ===== MOBILE BOTTOM NAV ===== -->
@@ -715,6 +720,24 @@
             <span>Plus</span>
         </button>
     </nav>
+
+    <!-- ===== NOTES PAR RUBRIQUE ===== -->
+    <div class="qa-overlay" id="notesOverlay" onclick="if(event.target===this)closeNotes()">
+        <div class="qa-sheet notes-sheet" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+            <div class="qa-head">
+                <span style="width:44px"></span>
+                <h2 id="notesTitle">Notes</h2>
+                <button class="icon-btn" onclick="closeNotes()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="notes-tabs" id="notesTabs"></div>
+            <div class="notes-composer" id="notesComposer">
+                <textarea id="noteNew" rows="2" placeholder="Écris une note…" oninput="autoGrowNote(this)" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))addNote()" aria-label="Nouvelle note"></textarea>
+                <button class="btn-primary" onclick="addNote()"><span class="material-icons-outlined">add</span> Ajouter</button>
+            </div>
+            <div class="notes-search"><span class="material-icons-outlined">search</span><input id="notesSearch" type="search" placeholder="Chercher dans les notes" oninput="renderNotes()" aria-label="Chercher dans les notes"></div>
+            <div class="notes-list" id="notesList"></div>
+        </div>
+    </div>
 
     <!-- ===== CODES DES PROFILS (Abonnements) ===== -->
     <div class="qa-overlay" id="pcOverlay" onclick="if(event.target===this)closeProfileCodes()">
