@@ -1167,7 +1167,9 @@ async function openSettings() {
     <section class="set"><h3>${ic('ph-speaker-high')} Voice</h3>
         <div class="seg" data-seg="accent">${[['mix', 'Mix US + UK'], ['us', 'US'], ['uk', 'UK']].map(([v, l]) => `<button data-v="${v}" class="${S.settings.accent === v ? 'on' : ''}">${l}</button>`).join('')}</div>
         <div class="seg mt" data-seg="rate">${[[0.85, 'Slower'], [1, 'Normal'], [1.1, 'Faster']].map(([v, l]) => `<button data-v="${v}" class="${S.settings.rate == v ? 'on' : ''}">${l}</button>`).join('')}</div>
-        <p class="small mt"><b>Choose your voice</b> <span class="muted">(on this device)</span></p>
+        <p class="small mt"><b>Google AI voices</b> <span class="muted">(real, natural, all different · uses your Gemini key)</span></p>
+        ${AI.hasKey() ? `<select class="input" data-gvoice><option value="">Off (use the device voice below)</option>${GVoice.list.map(([v, d]) => `<option value="${v}" ${S.settings.gvoice === v ? 'selected' : ''}>${v} · ${d}</option>`).join('')}</select>` : '<p class="muted small">Add your Gemini key first.</p>'}
+        <p class="small mt"><b>Device voice</b> <span class="muted">(on phones these often all sound the same)</span></p>
         <select class="input" data-voice><option value="">Automatic (best voice, accent above)</option>${TTS.english().map(v => `<option value="${esc(v.voiceURI)}" ${TTS.chosen() === v ? 'selected' : ''}>${esc(v.name)} · ${esc(v.lang)}${/google|natural|neural|online/i.test(v.name) ? ' ★' : ''}</option>`).join('')}</select>
         <button class="btn small mt" data-test>${ic('ph-play')} Test the voice</button>
         <p class="muted small">Best voices: Chrome on Android (Google) or Edge on PC (Natural voices).</p>
@@ -1190,6 +1192,7 @@ async function openSettings() {
         AI.setKey(''); await Sync.saveKey(null); openSettings();
     });
     on('[data-install]', () => { Install.run(); });
+    const gv = $('[data-gvoice]', body); if (gv) gv.addEventListener('change', () => { S.settings.gvoice = gv.value; save({ silent: true }); if (gv.value) { toast('Loading the voice…'); TTS.speak("Hi! I'm your English partner. Do you like my voice?", { whole: true }); } });
     const vs = $('[data-voice]', body); if (vs) vs.addEventListener('change', () => { TTS.choose(vs.value); TTS.speak("Hi! This is my voice. Do you like it?", { whole: true }); });
     on('[data-test]', () => TTS.speak("Hi! I'm your English partner. Let's practise together today.", { whole: true }));
     on('[data-reset]', () => {

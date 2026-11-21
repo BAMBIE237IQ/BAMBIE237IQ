@@ -276,6 +276,7 @@ const TTS = {
     },
     // Speaks sentence by sentence (long texts stop by themselves on some browsers otherwise)
     speak(text, opts = {}) {
+        if (GVoice.on() && !opts.device) return GVoice.speak(text, opts);
         if (!this.ok) { opts.onend && opts.onend(); return; }
         speechSynthesis.cancel();
         const parts = opts.whole ? [text] : sentences(text);
@@ -297,9 +298,71 @@ const TTS = {
         };
         next();
     },
-    stop() { if (this._stop) this._stop(); if (this.ok) speechSynthesis.cancel(); }
+    stop() { GVoice.stop(); if (this._stop) this._stop(); if (this.ok) speechSynthesis.cancel(); }
 };
 TTS.load();
+
+// ---------- Google AI voices (Gemini text-to-speech, with your own key) ----------
+// Phones often ignore the chosen device voice: these voices are real, different and natural.
+const GVoice = {
+    list: [['Kore', 'Firm, clear (F)'], ['Puck', 'Upbeat (M)'], ['Charon', 'Informative (M)'], ['Aoede', 'Breezy (F)'], ['Fenrir', 'Excitable (M)'], ['Leda', 'Youthful (F)'], ['Orus', 'Firm (M)'], ['Zephyr', 'Bright (F)'], ['Iapetus', 'Clear (M)'], ['Sulafat', 'Warm (F)'], ['Achird', 'Friendly (M)'], ['Gacrux', 'Mature (F)']],
+    cache: new Map(), audio: null, token: 0, model: null,
+    on() { return !!S.settings.gvoice && AI.hasKey(); },
+    async findModel() {
+        if (this.model) return this.model;
+        try {
+            const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': AI.key() } });
+            const j = await r.json();
+            const l = (j.models || []).map(m => m.name.replace('models/', '')).filter(n => /tts/.test(n) && /flash/.test(n)).sort((a, b) => b.localeCompare(a));
+            this.model = l[0] || 'gemini-2.5-flash-preview-tts';
+        } catch (e) { this.model = 'gemini-2.5-flash-preview-tts'; }
+        return this.model;
+    },
+    wav(b64) {
+        const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), h = new DataView(new ArrayBuffer(44));
+        const w = (o, t) => [...t].forEach((c, i) => h.setUint8(o + i, c.charCodeAt(0)));
+        w(0, 'RIFF'); h.setUint32(4, 36 + pcm.length, true); w(8, 'WAVE'); w(12, 'fmt '); h.setUint32(16, 16, true); h.setUint16(20, 1, true); h.setUint16(22, 1, true);
+        h.setUint32(24, 24000, true); h.setUint32(28, 48000, true); h.setUint16(32, 2, true); h.setUint16(34, 16, true); w(36, 'data'); h.setUint32(40, pcm.length, true);
+        return URL.createObjectURL(new Blob([h, pcm], { type: 'audio/wav' }));
+    },
+    get(text, voice) {
+        const k = voice + '|' + text;
+        if (!this.cache.has(k)) this.cache.set(k, (async () => {
+            const model = await this.findModel();
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': AI.key() },
+                body: JSON.stringify({ contents: [{ parts: [{ text: 'Say naturally, at a clear conversational pace: ' + text }] }], generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } } })
+            });
+            if (!r.ok) throw new Error(r.status === 429 ? 'Google voice limit reached for today' : 'Google voice error ' + r.status);
+            const j = await r.json();
+            const part = ((j.candidates || [])[0] || {}).content.parts.find(p => p.inlineData);
+            if (!part) throw new Error('No audio');
+            return this.wav(part.inlineData.data);
+        })().catch(e => { this.cache.delete(k); throw e; }));
+        return this.cache.get(k);
+    },
+    async speak(text, opts = {}) {
+        this.stop();
+        const my = ++this.token, voice = S.settings.gvoice;
+        const parts = opts.whole ? [text] : sentences(text);
+        // Long texts: groups of sentences, fetched one step ahead
+        const chunks = [];
+        if (opts.onsentence) parts.forEach(p => chunks.push([p])); else { let cur = []; parts.forEach(p => { cur.push(p); if (cur.join(' ').length > 400) { chunks.push(cur); cur = []; } }); if (cur.length) chunks.push(cur); }
+        let first = 0;
+        for (let i = 0; i < chunks.length; i++) {
+            if (my !== this.token) return;
+            let url;
+            try { url = await this.get(chunks[i].join(' '), voice); if (chunks[i + 1]) this.get(chunks[i + 1].join(' '), voice).catch(() => {}); }
+            catch (e) { if (typeof toast === 'function') toast(e.message + ': device voice used.', 'bad'); return TTS.speak(chunks.slice(i).flat().join(' '), Object.assign({}, opts, { device: true, onsentence: opts.onsentence ? k => opts.onsentence(first + k) : null })); }
+            if (my !== this.token) return;
+            opts.onsentence && opts.onsentence(first);
+            await new Promise(res => { const a = this.audio = new Audio(url); a.playbackRate = S.settings.rate || 1; a.onended = a.onerror = res; a.play().catch(res); });
+            first += chunks[i].length;
+        }
+        if (my === this.token) opts.onend && opts.onend();
+    },
+    stop() { this.token++; if (this.audio) { try { this.audio.pause(); } catch (e) {} this.audio = null; } }
+};
 
 // ---------- voice: speech recognition ----------
 const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
