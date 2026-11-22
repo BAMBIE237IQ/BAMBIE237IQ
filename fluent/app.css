@@ -462,3 +462,16 @@ details.brain summary { cursor: pointer; font-weight: 800; }
 .lvl-row .tag { min-width: 92px; text-align: center; }
 .lvl-row .icon-btn { width: 36px; height: 36px; font-size: 17px; flex-shrink: 0; }
 @media (max-width: 640px) { .lvl-row { flex-wrap: wrap; } .lvl-row > div { flex-basis: calc(100% - 100px); } }
+
+.drill-card { margin-bottom: 16px; }
+.drill-card .starters { margin: 10px 0; }
+.drills { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.drill-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #111; border: 1px solid var(--border); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.drill-row.due { border-color: rgba(255, 122, 61, .55); }
+.drill-row > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.drill-row small { color: var(--text-2); font-size: 12px; }
+.drill-row > span .ph-duotone { font-size: 22px; color: var(--brand-bright); }
+.pre { white-space: pre-line; }
+.conj { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.conj div { padding: 8px 10px; border-radius: 10px; background: #0d0d0d; border: 1px solid var(--border); display: flex; flex-direction: column; }
+.conj small { color: var(--text-2); font-size: 11px; }

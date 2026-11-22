@@ -23,7 +23,7 @@ function freshState() {
     return { v: 1, updatedAt: 0, startDate: null, startLevel: null, placement: null, xp: 0,
         days: {}, cards: {}, custom: {}, notebook: [], mistakes: [],
         metrics: { listen: [], speak: [], reflex: [], dict: [] },
-        bench: {}, aiDays: {}, coach: {}, missions: {}, freeMin: 0, settings: { accent: 'mix', rate: 1 } };
+        bench: {}, aiDays: {}, coach: {}, missions: {}, drills: {}, freeMin: 0, settings: { accent: 'mix', rate: 1 } };
 }
 let S = loadState();
 function loadState() {
@@ -38,7 +38,7 @@ function normalizeState(o) {
     const base = freshState(), s = Object.assign(base, o || {});
     s.metrics = Object.assign(freshState().metrics, s.metrics || {});
     s.settings = Object.assign(freshState().settings, s.settings || {});
-    for (const k of ['days', 'cards', 'custom', 'bench', 'aiDays', 'coach', 'missions']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
+    for (const k of ['days', 'cards', 'custom', 'bench', 'aiDays', 'coach', 'missions', 'drills']) if (!s[k] || typeof s[k] !== 'object') s[k] = {};
     for (const k of ['notebook', 'mistakes']) if (!Array.isArray(s[k])) s[k] = [];
     return s;
 }
@@ -75,9 +75,20 @@ const TASKS = {
     teach: { title: 'Teach it', icon: 'ph-chalkboard-teacher', mins: 6, xp: 40 },
     retell: { title: 'Close everything & retell', icon: 'ph-arrows-clockwise', mins: 6, xp: 40 },
     bench: { title: 'Voice benchmark (1 min)', icon: 'ph-record', mins: 2, xp: 60 },
+    drill: { title: 'Custom drill', icon: 'ph-target', mins: 8, xp: 40 },
     fixit: { title: 'Fix my mistakes', icon: 'ph-wrench', mins: 5, xp: 35 },
     mission: { title: 'Real-world mission', icon: 'ph-rocket-launch', mins: 10, xp: 70 }
 };
+// Custom drills asked by the learner, brought back with spaced repetition (1, 3, 7, 14, 30 days)
+const DRILL_GAPS = [1, 3, 7, 14, 30];
+function drillsDue(date = today()) { return Object.entries(S.drills).filter(([, d]) => d && d.due && d.due <= date).sort((a, b) => a[1].due.localeCompare(b[1].due)); }
+function drillDone(id, pct) {
+    const d = S.drills[id]; if (!d) return;
+    d.runs = (d.runs || []).concat({ date: today(), pct }).slice(-20);
+    d.step = pct >= 80 ? Math.min((d.step || 0) + 1, DRILL_GAPS.length - 1) : 0;
+    d.due = addDays(today(), pct >= 80 ? DRILL_GAPS[d.step] : 1);
+    if ((d.runs.filter(r => r.pct >= 80).length) >= 4) d.mastered = true;
+}
 // Mistakes logged before a given day (so the plan of a day never changes during that day)
 function mistakesBefore(date) { return S.mistakes.filter(m => m.date < date).length; }
 function plan(n) {
@@ -509,7 +520,7 @@ function mergeStates(a, b) {
         x.minutes = Math.max(x.minutes || 0, r.minutes || 0); x.xp = Math.max(x.xp || 0, r.xp || 0); x.bonus = x.bonus || r.bonus;
     }
     for (const [id, c] of Object.entries(o.cards || {})) { const x = m.cards[id]; if (!x || (c.reps || 0) + (c.lapses || 0) > (x.reps || 0) + (x.lapses || 0)) m.cards[id] = c; }
-    for (const k of ['custom', 'aiDays', 'bench', 'missions']) m[k] = Object.assign({}, o[k] || {}, m[k] || {});
+    for (const k of ['custom', 'aiDays', 'bench', 'missions', 'drills']) m[k] = Object.assign({}, o[k] || {}, m[k] || {});
     const uni = (x, y, key) => { const seen = new Set(), out = []; [...(y || []), ...(x || [])].forEach(e => { const k = key(e); if (!seen.has(k)) { seen.add(k); out.push(e); } }); return out; };
     m.mistakes = uni(m.mistakes, o.mistakes, e => e.date + e.wrong).sort((p, q) => (p.date || '').localeCompare(q.date || '')).slice(-300);
     m.notebook = uni(m.notebook, o.notebook, e => e.id || e.en).sort((p, q) => (q.date || '').localeCompare(p.date || ''));

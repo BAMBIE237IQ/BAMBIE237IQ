@@ -101,6 +101,7 @@ function dossier() {
         focus ? `- COACH FOCUS THIS WEEK: ${focus}${S.coach.focusWhy ? ` (${clip(S.coach.focusWhy, 140)})` : ''}. Push on it every time it appears.` : '',
         weak.length ? `- Phrases they keep forgetting: ${weak.map(x => `"${x}"`).join(', ')}` : '',
         fresh.length ? `- Phrases learned this week: ${fresh.map(x => `"${x}"`).join(', ')}` : '',
+        Object.values(S.drills || {}).length ? `- Difficulties the learner asked help with: ${Object.values(S.drills).slice(-4).map(d => `"${clip(d.topic, 60)}" (last score ${d.runs && d.runs.length ? d.runs[d.runs.length - 1].pct + '%' : 'not done yet'})`).join(', ')}. Bring these structures back in every exercise and conversation.` : '',
         notes.length ? `- Phrases they wrote in their notebook: ${notes.map(x => `"${x}"`).join(', ')}` : ''
     ];
     return lines.filter(Boolean).join('\n');
@@ -338,6 +339,60 @@ Partner rules:
                 return out;
             },
             clean: j => { j.drill = (j.drill || []).filter(d => d && d.wrong && d.right && words(d.wrong).join(' ') !== words(d.right).join(' ')).slice(0, 5); return j; }
+        };
+    },
+    // On-demand drill: the learner describes a difficulty (French or English), the coach builds a targeted workout
+    customDrill({ request }) {
+        const lvl = levelRules(contentLevel());
+        return {
+            temp: 0.5, think: 'high',
+            task: `ON-DEMAND DRILL. The learner describes, in French or English, something they find hard. Build a focused workout that fixes THAT problem and nothing else.
+STRICT PROCESS (do it in "analysis" first):
+1. Restate the request in one line. If it is vague ("I'm bad at English"), choose the most likely precise skill using the dossier (recurring mistakes, weakest skill).
+2. Diagnose the ROOT CAUSE for a French speaker (e.g. questions: French uses "est-ce que" or intonation, English needs an auxiliary do/does/did + base verb; conjugation: "I have 25 years", -s at he/she/it, irregular past).
+3. Plan a progression: recognise → produce with help → produce alone → use in a real situation.
+RULES FOR THE EXERCISES
+- Exactly 10 exercises, easy to hard, every one testing the target skill. ${lvl.rules}
+- Context from the learner's life: tech, apps, clients, money, travel, friends abroad. Never childish sentences.
+- Types: "choose" (3 options, one right, the wrong ones are the typical mistakes of a French speaker), "fill" (the prompt contains ___ exactly once; answer = only the missing words), "transform" (instruction + sentence to change, e.g. "Make a question: She works at Google."), "translate" (a French sentence to say in English), "speak" (a real situation where the learner says one sentence out loud, e.g. "Ask a client when they can pay.").
+- Use at least 3 different types; 2 "translate" and 2 "speak" minimum.
+- answers: every correct version, 1 to 4 items, with and without contractions when both are fine. No ambiguity: if two answers are possible, list both.
+- explain: one line in simple English that says WHY (the rule in 12 words max).
+- lesson: the rule explained in 3 to 5 very short lines, simple English, with 2 examples; "lesson_fr": the same rule in 2 short lines of French (the only French allowed).
+- If the topic is verb conjugation, also fill "table": the key forms (e.g. present simple of "work": I work / he works / Do you work? / He doesn't work), max 8 rows.`,
+            user: `LEARNER REQUEST: """${clip(request, 800)}"""`,
+            schema: Sch.o({
+                analysis: Sch.s('HIDDEN, max 120 words: restated request, root cause, progression'),
+                title: Sch.s('short name of the skill, max 6 words, English'),
+                topic: Sch.s('precise skill in one line'),
+                lesson: Sch.s('3-5 short lines, simple English, with 2 examples'),
+                lesson_fr: Sch.s('2 short lines in French'),
+                table: Sch.a(Sch.o({ form: Sch.s('e.g. Question'), example: Sch.s('example') }), '0 to 8 rows (conjugation only)', 0, 8),
+                exercises: Sch.a(Sch.o({
+                    type: Sch.e(['choose', 'fill', 'transform', 'translate', 'speak'], 'exercise type'),
+                    prompt: Sch.s('what the learner sees'),
+                    options: Sch.a(Sch.s('option'), '3 options for "choose", else empty', 0, 3),
+                    answers: Sch.a(Sch.s('accepted answer'), '1 to 4 accepted answers', 1, 4),
+                    explain: Sch.s('why, max 12 words')
+                }), 'exactly 10, easy to hard', 10, 10)
+            }),
+            check: j => {
+                const out = [], ex = Array.isArray(j.exercises) ? j.exercises : [];
+                if (ex.length < 8) out.push(`Exactly 10 exercises (now ${ex.length}).`);
+                const types = new Set(ex.map(e => e.type));
+                if (types.size < 3) out.push('Use at least 3 different exercise types.');
+                if (ex.filter(e => e.type === 'translate').length < 2) out.push('At least 2 "translate" exercises.');
+                if (ex.filter(e => e.type === 'speak').length < 2) out.push('At least 2 "speak" exercises.');
+                ex.forEach((e, i) => {
+                    if (!e.answers || !e.answers.length) out.push(`Exercise ${i + 1}: answers is empty.`);
+                    if (e.type === 'choose' && (!e.options || e.options.length < 3 || !e.options.some(o => (e.answers || []).some(a => words(a).join(' ') === words(o).join(' '))))) out.push(`Exercise ${i + 1}: "choose" needs 3 options and one of them must be in answers.`);
+                    if (e.type === 'fill' && (String(e.prompt).match(/___/g) || []).length !== 1) out.push(`Exercise ${i + 1}: "fill" prompt must contain ___ exactly once.`);
+                    if (e.type !== 'translate' && FRENCH.test((e.answers || []).join(' '))) out.push(`Exercise ${i + 1}: answers must be English.`);
+                });
+                return out;
+            },
+            hard: issues => issues.some(m => /Exactly 10 exercises \(now [0-5]\)/.test(m)),
+            clean: j => { j.exercises = (j.exercises || []).filter(e => e && e.prompt && e.answers && e.answers.length && (e.type !== 'choose' || (e.options || []).length >= 2)).slice(0, 10); j.table = (j.table || []).slice(0, 8); return j; }
         };
     },
     // Translator FR <-> EN with the same idea at 4 levels

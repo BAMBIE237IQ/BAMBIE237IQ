@@ -124,12 +124,14 @@ function renderToday() {
             <p class="muted small">Best streak: <b>${bestStreak()}</b> · Missed days: <b>${missedDays()}</b></p>
         </section>
     </div>
+    ${drillsDue().filter(([, d]) => !d.mastered).length ? `<section class="card note glow">${ic('ph-target')} <div><b>Bonus tonight: your custom drill${drillsDue().length > 1 ? 's' : ''}.</b> ${drillsDue().filter(([, d]) => !d.mastered).map(([id, d]) => `<button class="btn small" data-drill="${esc(id)}">${esc(d.title)}</button>`).join(' ')}</div></section>` : ''}
     ${coachCardHTML()}
     ${!Install.standalone() ? `<section class="card note">${ic('ph-download-simple')} <div><b>Install Fluent 90 on your phone.</b> One tap from your home screen, full screen, faster. <button class="btn small primary" data-act="install">Install</button></div></section>` : ''}
     ${!AI.hasKey() ? `<section class="card note">${ic('ph-sparkle')} <div><b>Unlock your AI partner.</b> Add your free Gemini key: role-plays, corrections and a new episode every day from day 31. <button class="btn small" data-act="settings">Add key</button></div></section>` : ''}
     ${!Sync.user ? `<section class="card note">${ic('ph-device-mobile')} <div><b>Phone + PC?</b> Sign in with Google to sync your progress and get reminders at 07:00 · 13:00 · 20:00. <button class="btn small" data-act="signin">Sign in</button></div></section>` : ''}`;
     $$('[data-task]', el).forEach(b => b.addEventListener('click', () => { const task = p.tasks.find(x => x.id === b.dataset.task); openTask(task, { daily: true }); }));
     bindCoachCard(el);
+    $$('[data-drill]', el).forEach(b => b.addEventListener('click', () => openDrill(b.dataset.drill)));
 }
 // ----- weekly coach brief (the AI studies your data once a week and sets your focus) -----
 function coachCardHTML() {
@@ -621,6 +623,114 @@ RUNNERS.fixit = (body, ctx) => {
     step();
 };
 
+// ----- Custom drill (asked by the learner, built by the coach, brought back on later evenings) -----
+const DRILL_PRESETS = [
+    ['Asking questions', "J'ai du mal à poser des questions en anglais (do, does, did, where, how much...)."],
+    ['Verb conjugation', "Je me trompe dans les conjugaisons : présent (he works), passé (went, bought), present perfect (I have done)."],
+    ['Past tense', "Quand je raconte quelque chose au passé, j'oublie de mettre le verbe au passé."],
+    ['Future & plans', 'Je ne sais pas quand utiliser will, going to ou le présent continu pour parler du futur.'],
+    ['Prepositions', 'Je confonds in, on, at, to, for.'],
+    ['Polite requests', 'Je veux demander des choses poliment à un client (could you, would you mind...).']
+];
+function normAns(x) { return words(String(x).replace(/___/g, ' ')).join(' '); }
+RUNNERS.drill = (body, ctx) => {
+    const id = ctx.opts.drillId, d = S.drills[id];
+    if (!d) { body.innerHTML = `<div class="empty"><p>Drill not found.</p></div>`; return; }
+    const ex = d.exercises;
+    let i = 0, good = 0;
+    const intro = () => {
+        body.innerHTML = `<p class="eyebrow">Custom drill · ${esc(d.topic)}</p><h2 class="mission-t">${ic('ph-target')} ${esc(d.title)}</h2>
+            <div class="ai-box"><div class="ai-head">${ic('ph-lightbulb')} The rule</div><p class="pre">${esc(d.lesson)}</p>${d.lesson_fr ? `<p class="muted small pre">${esc(d.lesson_fr)}</p>` : ''}
+            ${(d.table || []).length ? `<div class="conj">${d.table.map(r => `<div><small>${esc(r.form)}</small><b>${esc(r.example)}</b></div>`).join('')}</div>` : ''}</div>
+            <div class="row mt"><button class="btn primary" data-start>${ic('ph-play')} Start the ${ex.length} exercises</button></div>`;
+        $('[data-start]', body).addEventListener('click', step);
+    };
+    const step = () => {
+        if (i >= ex.length) {
+            const pct = Math.round(good * 100 / ex.length);
+            drillDone(id, pct); save({ silent: true });
+            const nd = S.drills[id];
+            return ctx.finish({ title: pct >= 80 ? 'Drill passed' : 'Drill done', html: `<p>Right at first try: <b>${good}/${ex.length}</b> (${pct}%).</p><p class="muted">${nd.mastered ? 'Mastered: it will not come back anymore.' : `Your coach brings it back on <b>${esc(niceDate(nd.due))}</b>${pct >= 80 ? '' : ' (tomorrow, because it is not solid yet)'}.`}</p>` });
+        }
+        const e = ex[i];
+        const label = { choose: 'Choose', fill: 'Fill the gap', transform: 'Transform', translate: 'Say it in English', speak: 'Say it out loud' }[e.type] || 'Answer';
+        body.innerHTML = `<div class="progress-line"><div style="width:${i * 100 / ex.length}%"></div></div>
+            <p class="eyebrow">${i + 1}/${ex.length} · ${label}</p>
+            <div class="situation">${esc(e.prompt)}</div>
+            ${e.type === 'choose' ? `<div class="mcq">${e.options.map((o, k) => `<button class="opt" data-o="${k}">${esc(o)}</button>`).join('')}</div>`
+            : `<div class="chat-input">${Mic.ok ? `<button class="icon-btn mic-btn" data-mic title="Speak">${ic('ph-microphone')}</button>` : ''}<input class="input" data-in placeholder="${e.type === 'speak' ? 'Say it (microphone) or type it…' : 'Your answer…'}" autocomplete="off"><button class="btn primary" data-go>Check</button></div>`}
+            <div data-res></div>`;
+        const show = (ok, said) => {
+            if (ok) good++;
+            $('[data-res]', body).innerHTML = `<div class="model ${ok ? 'ok' : ''}"><small>${ok ? `${ic('ph-check-circle')} Correct` : `${ic('ph-x-circle')} Not quite${said ? ` · you said: ${esc(said)}` : ''}`}</small><p>${esc(e.answers[0])}</p>${e.answers.length > 1 ? `<small>Also right: ${e.answers.slice(1).map(esc).join(' · ')}</small>` : ''}<small>${esc(e.explain || '')}</small>
+                <div class="row"><button class="btn small" data-say>${ic('ph-speaker-high')} Listen</button><button class="btn primary small" data-next>Next ${ic('ph-arrow-right')}</button></div></div>`;
+            $('[data-say]', body).addEventListener('click', () => TTS.speak(e.type === 'fill' ? e.prompt.replace('___', e.answers[0]) : e.answers[0], { whole: true, rate: S.settings.playRate || 1 }));
+            $('[data-next]', body).addEventListener('click', () => { i++; step(); });
+            if (!ok) logMistakes([{ wrong: said || '(no answer)', right: e.answers[0], why: e.explain, type: 'other' }], 'drill');
+        };
+        if (e.type === 'choose') {
+            $$('[data-o]', body).forEach(b => b.addEventListener('click', () => {
+                if ($('.model', body)) return;
+                const o = e.options[+b.dataset.o], ok = e.answers.some(a => normAns(a) === normAns(o));
+                b.classList.add(ok ? 'right' : 'wrong');
+                show(ok, ok ? '' : o);
+            }));
+            return;
+        }
+        const inp = $('[data-in]', body), go = $('[data-go]', body);
+        const check = () => {
+            const said = inp.value.trim(); if (!said) return;
+            go.disabled = true; inp.disabled = true;
+            const n = normAns(said);
+            // Exact match (contractions handled) or very close for long sentences
+            const ok = e.answers.some(a => normAns(a) === n || (words(a).length >= 6 && matchScore(a, said).pct >= 90 && matchScore(said, a).pct >= 90));
+            show(ok, ok ? '' : said);
+        };
+        go.addEventListener('click', check);
+        inp.addEventListener('keydown', k => { if (k.key === 'Enter') check(); });
+        const mic = $('[data-mic]', body);
+        if (mic) mic.addEventListener('click', () => {
+            if (mic.classList.contains('rec')) return;
+            mic.classList.add('rec');
+            const c = Mic.listen({ onText: t => { inp.value = t; }, onEnd: r => { mic.classList.remove('rec'); if (r.text) { inp.value = r.text; check(); } } });
+            ctx.cleanup(() => c.stop());
+        });
+        inp.focus();
+    };
+    intro();
+};
+function openDrill(id) { const d = S.drills[id]; openTask(Object.assign({ id: 'free-drill', type: 'drill' }, TASKS.drill, { title: d ? d.title : 'Custom drill' }), { daily: false, drillId: id }); }
+function drillCardHTML() {
+    const due = drillsDue(), all = Object.entries(S.drills).sort((a, b) => (b[1].created || '').localeCompare(a[1].created || ''));
+    return `<section class="card drill-card"><div class="card-head"><h3>${ic('ph-target')} Ask your coach for a drill</h3>${due.length ? `<span class="tag hot">${due.length} due</span>` : ''}</div>
+        <p class="muted small">Explain what is hard for you, in French or English. Your coach diagnoses the cause, explains the rule and builds 10 exercises just for that. It brings them back on the next evenings until you master them.</p>
+        <div class="starters">${DRILL_PRESETS.map(([t], k) => `<button class="chip-btn" data-preset="${k}">${esc(t)}</button>`).join('')}</div>
+        <textarea class="input" rows="3" data-req placeholder="Ex : je n'arrive pas à poser des questions au passé (did you...?)"></textarea>
+        <div class="row">${AI.hasKey() ? `<button class="btn primary" data-mkdrill>${ic('ph-sparkle')} Build my drill</button>` : `<button class="btn" data-act="settings">Add your Gemini key first</button>`}</div>
+        <div data-drmsg></div>
+        ${all.length ? `<div class="drills">${all.map(([id, d]) => `<button class="drill-row ${d.due <= today() && !d.mastered ? 'due' : ''}" data-drill="${esc(id)}"><span>${ic(d.mastered ? 'ph-seal-check' : 'ph-target')}</span><div><b>${esc(d.title)}</b><small>${d.mastered ? 'Mastered' : d.due <= today() ? 'Due today' : 'Next: ' + esc(niceDate(d.due))}${d.runs && d.runs.length ? ` · last ${d.runs[d.runs.length - 1].pct}%` : ''}</small></div>${ic('ph-caret-right')}</button>`).join('')}</div>` : ''}
+    </section>`;
+}
+function bindDrillCard(el) {
+    $$('[data-preset]', el).forEach(b => b.addEventListener('click', () => { $('[data-req]', el).value = DRILL_PRESETS[+b.dataset.preset][1]; }));
+    $$('[data-drill]', el).forEach(b => b.addEventListener('click', () => openDrill(b.dataset.drill)));
+    const mk = $('[data-mkdrill]', el);
+    if (mk) mk.addEventListener('click', async () => {
+        const req = $('[data-req]', el).value.trim(), msg = $('[data-drmsg]', el);
+        if (countWords(req) < 3) { msg.innerHTML = '<p class="warn small">Explain your difficulty in a few words.</p>'; return; }
+        mk.disabled = true; msg.innerHTML = `<div class="ai-load">${ic('ph-brain')} Your coach is diagnosing the problem and building your exercises…</div>`;
+        try {
+            const j = await Brain.run('customDrill', { request: req });
+            if (!j.exercises || j.exercises.length < 5) throw new Error('Not enough good exercises. Try again or explain more precisely.');
+            const id = 'r' + Date.now().toString(36);
+            S.drills[id] = { title: clipTxt(j.title, 60), topic: clipTxt(j.topic, 140), request: clipTxt(req, 500), lesson: clipTxt(j.lesson, 800), lesson_fr: clipTxt(j.lesson_fr, 400), table: j.table || [], exercises: j.exercises, created: today(), due: today(), step: 0, runs: [] };
+            save({ silent: true });
+            openDrill(id);
+        } catch (e) { msg.innerHTML = `<p class="warn small">${ic('ph-cloud-warning')} ${esc(e.message)}</p>`; mk.disabled = false; }
+    });
+}
+const clipTxt = (x, n) => String(x == null ? '' : x).trim().slice(0, n);
+
 // ----- Month 3: real-world mission (use English outside the app) -----
 function missionFor(n) { return D.missions[Math.floor(Math.max(0, n - 61) / 2) % D.missions.length]; }
 RUNNERS.mission = (body, ctx) => {
@@ -1008,6 +1118,7 @@ function renderPractice() {
     ];
     const maxEp = S.startDate ? Math.min(30, n) : 1;
     el.innerHTML = `<div class="page-head"><h2>Practice</h2><p class="muted">Extra rounds anytime. They add minutes and improve your level estimate, but your daily tasks are on the Today page.</p></div>
+    ${drillCardHTML()}
     <div class="tiles">${tiles.map(([type, t, s]) => `<button class="tile" data-type="${type}">${ic(TASKS[type].icon)}<b>${esc(t)}</b><small>${esc(s)}</small></button>`).join('')}</div>
     <section class="card mt"><div class="card-head"><h3>${ic('ph-books')} Episodes</h3><span class="muted small">${maxEp} unlocked</span></div>
         <div class="eps">${D.themes.slice(0, maxEp).map((t, i) => `<button class="ep" data-ep="${i + 1}"><span>${i + 1}</span>${esc(t.s.t)}</button>`).join('')}</div></section>
@@ -1016,6 +1127,7 @@ function renderPractice() {
         <div class="links">${D.resources[ph].map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${ic('ph-arrow-square-out')} ${esc(t)}</a>`).join('')}</div>
         <div class="log-row"><input class="input" data-min type="number" min="5" max="120" placeholder="Minutes"><input class="input" data-sum placeholder="In one sentence (in English): what was it about?"><button class="btn primary" data-log>Log</button></div>
     </section>`;
+    bindDrillCard(el);
     $$('[data-type]', el).forEach(b => b.addEventListener('click', () => { const type = b.dataset.type; openTask(Object.assign({ id: 'free-' + type, type }, TASKS[type]), { daily: false }); }));
     $$('[data-ep]', el).forEach(b => b.addEventListener('click', () => openTask(Object.assign({ id: 'free-listen', type: 'listen' }, TASKS.listen, { title: 'Episode ' + b.dataset.ep }), { daily: false, episodeDay: +b.dataset.ep })));
     $('[data-log]', el).addEventListener('click', () => {
