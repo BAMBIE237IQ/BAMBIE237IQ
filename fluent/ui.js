@@ -309,8 +309,15 @@ function openTask(task, opts = {}) { Player.open(task, opts); }
 function audioBar(text, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'audio-bar';
-    wrap.innerHTML = `<button class="btn primary" data-r="1">${ic('ph-play')} Play</button><button class="btn" data-r="0.8">0.8×</button><button class="btn" data-r="0.65">Slow</button><button class="icon-btn" data-stop title="Stop">${ic('ph-stop')}</button>`;
-    $$('[data-r]', wrap).forEach(b => b.addEventListener('click', () => TTS.speak(typeof text === 'function' ? text() : text, Object.assign({}, opts, { rate: parseFloat(b.dataset.r) }))));
+    // Speed is a choice (remembered), Play is the only button that plays
+    const speeds = [[0.7, 'Slow'], [1, 'Normal'], [1.2, 'Fast']];
+    const cur = () => S.settings.playRate || 1;
+    wrap.innerHTML = `<button class="btn primary" data-play>${ic('ph-play')} Play</button><div class="seg speed" title="Reading speed">${speeds.map(([v, l]) => `<button data-r="${v}" class="${cur() == v ? 'on' : ''}">${l}</button>`).join('')}</div><button class="icon-btn" data-stop title="Stop">${ic('ph-stop')}</button>`;
+    $('[data-play]', wrap).addEventListener('click', () => TTS.speak(typeof text === 'function' ? text() : text, Object.assign({}, opts, { rate: cur() })));
+    $$('[data-r]', wrap).forEach(b => b.addEventListener('click', () => {
+        S.settings.playRate = parseFloat(b.dataset.r); save({ silent: true });
+        $$('[data-r]', wrap).forEach(x => x.classList.toggle('on', x === b));
+    }));
     $('[data-stop]', wrap).addEventListener('click', () => TTS.stop());
     return wrap;
 }
@@ -1136,8 +1143,30 @@ function renderCoach() {
     const el = $('#view-coach');
     if (!AI.hasKey()) { el.innerHTML = `<div class="page-head"><h2>AI partner</h2><p class="muted">Your conversation partner, 24/7, never judges you.</p></div>${keyNeededHTML()}`; bindKeyForm(el); return; }
     const n = Math.max(1, dayNum() || 1), ph = phaseOf(n);
-    el.innerHTML = `<div class="page-head"><h2>AI partner</h2><p class="muted">Pick a situation. Talk by voice or text. Your partner corrects one thing at a time.</p></div>
+    el.innerHTML = `<section class="card translator"><div class="card-head"><h3>${ic('ph-translate')} Translator · French ⇄ English</h3></div>
+        <textarea class="input" rows="2" data-tr placeholder="Write a sentence in French or in English…"></textarea>
+        <div class="row"><button class="btn primary" data-trgo>${ic('ph-translate')} Translate + 4 levels</button></div>
+        <div data-trres></div></section>
+    <div class="page-head mt"><h2>AI partner</h2><p class="muted">Pick a situation. Talk by voice or text. Your partner corrects one thing at a time.</p></div>
     <div class="tiles">${D.roleplays.map(r => `<button class="tile ${r.p > ph ? 'later' : ''}" data-rp="${r.id}">${ic('ph-chats-circle')}<b>${esc(r.t)}</b><small>${esc(r.goal)}</small>${r.p > ph ? `<span class="tag">phase ${r.p}</span>` : ''}</button>`).join('')}</div>`;
+    const trIn = $('[data-tr]', el), trGo = $('[data-trgo]', el), trRes = $('[data-trres]', el);
+    const doTr = async () => {
+        const text = trIn.value.trim(); if (!text) return;
+        trGo.disabled = true; trRes.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Translating…</div>`;
+        try {
+            const j = await Brain.run('translate', { text });
+            trRes.innerHTML = `<div class="ai-box"><div class="ai-head">${ic('ph-translate')} ${j.from === 'fr' ? 'French → English' : 'English → French'}</div>
+                <div class="better"><small>Translation</small><p>${esc(j.translation)}</p>${j.from === 'fr' ? `<button class="btn small" data-say="-1">${ic('ph-speaker-high')} Listen</button>` : ''}</div>
+                <p class="small"><b>The same idea, from simple to advanced:</b></p>
+                ${(j.levels || []).map((l, k) => `<div class="lvl-row"><span class="tag ${k === 0 ? 'ok' : ''}">${esc(l.level)}</span><div><b>${esc(l.en)}</b><small>${esc(l.note || '')}</small></div><button class="icon-btn" data-say="${k}" title="Listen">${ic('ph-speaker-high')}</button><button class="icon-btn" data-card="${k}" title="Add to my cards">${ic('ph-plus')}</button></div>`).join('')}
+                ${j.tip ? `<p class="tip">${ic('ph-lightbulb')} ${esc(j.tip)}</p>` : ''}</div>`;
+            $$('[data-say]', trRes).forEach(b => b.addEventListener('click', () => TTS.speak(+b.dataset.say < 0 ? j.translation : j.levels[+b.dataset.say].en, { whole: true, rate: S.settings.playRate || 1 })));
+            $$('[data-card]', trRes).forEach(b => b.addEventListener('click', () => { const l = j.levels[+b.dataset.card]; addCustomCard(l.en, j.from === 'fr' ? text : j.translation, 'translator'); save({ silent: true }); b.disabled = true; b.innerHTML = ic('ph-check'); toast('Added to your cards', 'good'); }));
+        } catch (e) { trRes.innerHTML = `<p class="warn small">${ic('ph-cloud-warning')} ${esc(e.message)}</p>`; }
+        trGo.disabled = false;
+    };
+    trGo.addEventListener('click', doTr);
+    trIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTr(); } });
     $$('[data-rp]', el).forEach(b => b.addEventListener('click', () => {
         const sc = D.roleplays.find(r => r.id === b.dataset.rp);
         openTask(Object.assign({ id: 'free-roleplay', type: 'roleplay' }, TASKS.roleplay, { title: sc.t }), { daily: false, scenario: sc });

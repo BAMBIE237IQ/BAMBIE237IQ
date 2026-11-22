@@ -356,7 +356,7 @@ const GVoice = {
             catch (e) { if (typeof toast === 'function') toast(e.message + ': device voice used.', 'bad'); return TTS.speak(chunks.slice(i).flat().join(' '), Object.assign({}, opts, { device: true, onsentence: opts.onsentence ? k => opts.onsentence(first + k) : null })); }
             if (my !== this.token) return;
             opts.onsentence && opts.onsentence(first);
-            await new Promise(res => { const a = this.audio = new Audio(url); a.playbackRate = S.settings.rate || 1; a.onended = a.onerror = res; a.play().catch(res); });
+            await new Promise(res => { const a = this.audio = new Audio(url); a.playbackRate = (opts.rate || 1) * (S.settings.rate || 1); a.onended = a.onerror = res; a.play().catch(res); });
             first += chunks[i].length;
         }
         if (my === this.token) opts.onend && opts.onend();

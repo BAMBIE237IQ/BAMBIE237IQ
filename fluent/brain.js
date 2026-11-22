@@ -340,6 +340,28 @@ Partner rules:
             clean: j => { j.drill = (j.drill || []).filter(d => d && d.wrong && d.right && words(d.wrong).join(' ') !== words(d.right).join(' ')).slice(0, 5); return j; }
         };
     },
+    // Translator FR <-> EN with the same idea at 4 levels
+    translate({ text }) {
+        return {
+            temp: 0.3, think: 'low',
+            task: `TRANSLATOR. Detect if the text is French or English. Translate it naturally (meaning, not word for word). Then give the same idea in ENGLISH at 4 levels, from simple to advanced: "A2 · simple", "B1 · everyday", "B2 · professional", "C1 · native-like". Each level must really sound different (vocabulary, structure, idioms at C1). note: when to use it, max 10 words. tip: one trap a French speaker falls into here (false friend, word order...), or empty.`,
+            user: `TEXT: """${clip(text, 600)}"""`,
+            schema: Sch.o({
+                analysis: ANALYSIS,
+                from: Sch.e(['fr', 'en'], 'language of the text'),
+                translation: Sch.s('natural translation into the other language'),
+                levels: Sch.a(Sch.o({ level: Sch.s('e.g. A2 · simple'), en: Sch.s('English version'), note: Sch.s('when to use it') }), 'exactly 4, simple to advanced', 4, 4),
+                tip: Sch.s('trap for French speakers, or empty')
+            }),
+            check: j => {
+                const out = [], ls = (j.levels || []).map(l => words(l.en).join(' '));
+                if (ls.length !== 4) out.push('Exactly 4 levels.');
+                if (new Set(ls).size < ls.length) out.push('Each level must be a different sentence.');
+                if ((j.levels || []).some(l => FRENCH.test(l.en))) out.push('levels must be in English.');
+                return out;
+            }
+        };
+    },
     // Month 3: prepares a real-world mission
     mission({ m }) {
         return {
