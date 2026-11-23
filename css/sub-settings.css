@@ -120,3 +120,13 @@
     .help-body { padding-left: 14px; }
 }
 .sim-th span { white-space: normal; line-height: 1.3; }
+.msg-legend { margin: -4px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.45; }
+.msg-prevpick { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--text-secondary); }
+.msg-prevpick select { height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-input, #0b0b0b); color: var(--text-primary); font: inherit; font-size: 13.5px; }
+.theme-list { display: flex; flex-direction: column; gap: 8px; }
+.theme-row { display: grid; grid-template-columns: minmax(90px, 140px) 56px minmax(0, 1fr); gap: 8px; align-items: center; }
+.theme-row strong { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.theme-row input { min-width: 0; height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-input, #0b0b0b); color: var(--text-primary); font: inherit; font-size: 14px; }
+.theme-row input:focus { outline: none; border-color: #ff3d4a; }
+.theme-row .theme-emoji { text-align: center; font-size: 18px; padding: 0 4px; }
+@media (max-width: 520px) { .theme-row { grid-template-columns: 48px minmax(0, 1fr); } .theme-row strong { grid-column: 1 / -1; } }

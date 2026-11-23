@@ -2,6 +2,7 @@
 // Une fenêtre en rubriques : Messages de relance · Calcul du CA · Comment ça marche · Simulation · Clients · Export.
 // PC : menu à gauche, contenu à droite. Téléphone : onglets qui défilent en haut, contenu en dessous.
 // Données : S.subMessages = { soon, today, expired } (textes écrits par l'utilisateur)
+//           S.subThemes = { serviceId: { theme, emoji } } (thème de chaque service, sinon deviné d'après le nom)
 //           S.subSim = { accounts: [{ name, count, cost, seats }], offers: [{ name, months, price, clients }], margin }
 let subSetTab = 'messages';
 const SUBSET_TABS = [
@@ -20,18 +21,71 @@ const SUB_MSG_KINDS = [
     ['expired', 'Déjà expiré', 'Envoyé après la date de fin. {jours} = nombre de jours depuis la fin.']
 ];
 const SUB_MSG_DEFAULTS = {
-    soon: 'Bonjour {nom} 👋\nTon abonnement se termine dans {jours} jours. Tu veux le renouveler pour continuer sans coupure ? 🙏',
-    today: 'Bonjour {nom} 👋\nTon abonnement se termine aujourd’hui. Réponds-moi pour le renouveler sans coupure 🙏',
-    expired: 'Bonjour {nom} 👋\nTon abonnement est terminé depuis {jours} jours. Tu veux le reprendre ? Je te le réactive tout de suite 🙏'
+    soon: 'Bonjour {nom} 👋\nTon abonnement {service} se termine dans {jours} jours. Pour continuer à profiter de {thème} sans coupure, tu veux le renouveler ? {emoji}',
+    today: 'Bonjour {nom} 👋\nTon abonnement {service} se termine aujourd’hui. Réponds-moi pour garder {thème} sans coupure {emoji}',
+    expired: 'Bonjour {nom} 👋\nTon abonnement {service} est terminé depuis {jours} jours. Tu veux retrouver {thème} ? Je te le réactive tout de suite {emoji}'
 };
+const SUB_TOKENS = ['{nom}', '{quand}', '{jours}', '{service}', '{thème}', '{emoji}'];
+
+// Thème de chaque service : ce dont le client profite (séries, musique, IA…), deviné d'après le nom, modifiable dans les Paramètres
+const SUB_THEME_GUESS = [
+    [/netflix/i, 'tes séries et tes films', '🎬'],
+    [/prime|amazon/i, 'tes films et tes séries', '🎬'],
+    [/disney/i, 'tes films Disney, Marvel et Star Wars', '🏰'],
+    [/crunchy|anime|adn/i, 'tes animés', '🍥'],
+    [/hbo|max\b|apple ?tv|paramount|canal|mycanal/i, 'tes films, tes séries et tes chaînes', '📺'],
+    [/iptv|tv\b|bein|dazn/i, 'tes chaînes et ton sport', '⚽'],
+    [/youtube ?music|spotify|deezer|apple ?music|tidal|audiomack|boomplay|music/i, 'ta musique et tes playlists', '🎵'],
+    [/youtube/i, 'tes vidéos sans pub', '▶️'],
+    [/chat ?gpt|openai|gpt/i, 'ton assistant IA ChatGPT', '🤖'],
+    [/claude|gemini|perplexity|copilot|mistral|grok|deepseek|\bia\b|\bai\b/i, 'ton assistant IA', '🤖'],
+    [/midjourney|leonardo|dall|runway|kling|suno|eleven/i, 'tes créations avec l’IA', '🎨'],
+    [/canva|adobe|photoshop|figma|capcut/i, 'tes outils de création', '🎨'],
+    [/office|microsoft|365|notion|google ?one|drive|icloud/i, 'tes outils de travail', '💼'],
+    [/xbox|game ?pass|playstation|psn|ps plus|steam|nintendo/i, 'tes jeux', '🎮'],
+    [/proton ?vpn/i, 'ta connexion VPN protégée', '🔒'],
+    [/proton/i, 'ta messagerie sécurisée', '🔒'],
+    [/vpn|nord|express/i, 'ta connexion protégée', '🔒'],
+    [/duolingo|coursera|udemy|babbel|masterclass/i, 'tes cours', '📚']
+];
+function subThemeGuess(id) {
+    const t = `${id} ${subServiceName(id)}`;
+    const hit = SUB_THEME_GUESS.find(([re]) => re.test(t));
+    return hit ? { theme: hit[1], emoji: hit[2] } : { theme: 'ton abonnement', emoji: '🙏' };
+}
+function subThemeOf(id) {
+    const g = subThemeGuess(id), o = (S.subThemes || {})[id] || {};
+    return { theme: (o.theme || '').trim() || g.theme, emoji: (o.emoji || '').trim() || g.emoji };
+}
+function setSubTheme(id, field, v) {
+    if (!S.subThemes) S.subThemes = {};
+    S.subThemes[id] = { ...(S.subThemes[id] || {}), [field]: v };
+    save();
+    SUB_MSG_KINDS.forEach(([k]) => { const p = document.getElementById('subMsgPrev_' + k); if (p) p.textContent = subMsgPreview(k); });
+}
+
 function subMsgTemplate(kind) {
     const m = S.subMessages || {};
     return typeof m[kind] === 'string' ? m[kind] : SUB_MSG_DEFAULTS[kind];
 }
-// Remplit {nom} et {jours} ; « 1 jours » devient « 1 jour »
-function subMsgFill(tpl, name, days) {
-    return String(tpl).replace(/\{nom\}/gi, name || '').replace(/\{jours\}/gi, days == null ? '' : String(days))
-        .replace(/(^|[^\d])1 jours\b/g, '$11 jour');
+// Remplit {nom}, {jours}, {service}, {thème} et {emoji} ; « 1 jours » devient « 1 jour »
+// {quand} : « demain », « dans 3 jours », « aujourd'hui », « hier », « il y a 4 jours »
+function subWhen(kind, days) {
+    if (kind === 'today' || days === 0) return 'aujourd’hui';
+    if (kind === 'expired') return days === 1 ? 'hier' : `il y a ${days} jours`;
+    return days === 1 ? 'demain' : `dans ${days} jours`;
+}
+function subMsgFill(tpl, name, days, serviceId, kind) {
+    const th = serviceId ? subThemeOf(serviceId) : { theme: 'ton abonnement', emoji: '🙏' };
+    return String(tpl)
+        .replace(/\{nom\}/gi, name || '')
+        .replace(/\{quand\}/gi, subWhen(kind, days))
+        .replace(/\{jours\}/gi, days == null ? '' : String(days))
+        .replace(/\{service\}/gi, serviceId ? subServiceName(serviceId) : '')
+        .replace(/\{th[eèé]me\}/gi, th.theme)
+        .replace(/\{emoji\}/gi, th.emoji)
+        .replace(/(^|[^\d])1 jours\b/g, '$11 jour')
+        .replace(/ {2,}/g, ' ');
 }
 // Message d'un client : le bon modèle selon les jours restants. Modèle vide ou abonnement sans date de fin : message automatique détaillé.
 function subRelanceCustom(c) {
@@ -40,7 +94,7 @@ function subRelanceCustom(c) {
     const kind = d > 0 ? 'soon' : d === 0 ? 'today' : 'expired';
     const tpl = subMsgTemplate(kind);
     if (!tpl.trim()) return null;
-    return subMsgFill(tpl, c.name, Math.abs(d));
+    return subMsgFill(tpl, c.name, Math.abs(d), c.service, kind);
 }
 // Le bouton « Copier la relance » de la fiche client passe désormais par les messages personnalisés
 (function hookRelance() {
@@ -57,10 +111,13 @@ function saveSubMsg(kind, v) {
     subMsgSavedFlash(kind);
 }
 function subMsgSavedFlash(kind) { const f = document.getElementById('subMsgOk_' + kind); if (!f) return; f.textContent = 'Enregistré ✓'; clearTimeout(f._t); f._t = setTimeout(() => { f.textContent = ''; }, 1600); }
+let subMsgPrevSvc = null;   // service utilisé pour l'aperçu
+function subMsgPrevService() { const ids = subServiceIds(); return ids.includes(subMsgPrevSvc) ? subMsgPrevSvc : ids[0]; }
+function setSubMsgPrevService(id) { subMsgPrevSvc = id; SUB_MSG_KINDS.forEach(([k]) => { const p = document.getElementById('subMsgPrev_' + k); if (p) p.textContent = subMsgPreview(k); }); }
 function subMsgPreview(kind) {
     const tpl = subMsgTemplate(kind);
     if (!tpl.trim()) return '(Vide : l’app enverra le message automatique détaillé, avec service, date et prix.)';
-    return subMsgFill(tpl, 'Awa', kind === 'soon' ? 3 : kind === 'expired' ? 2 : 0);
+    return subMsgFill(tpl, 'Awa', kind === 'soon' ? 3 : kind === 'expired' ? 2 : 0, subMsgPrevService(), kind);
 }
 function subMsgInsert(kind, token) {
     const ta = document.getElementById('subMsg_' + kind); if (!ta) return;
@@ -76,21 +133,41 @@ function subMsgReset(kind) {
     toast('Message par défaut remis ✓');
 }
 function subSetMessagesHtml() {
+    const ids = subServiceIds(), prev = subMsgPrevService();
     return `
-    <p class="set-lead">Écris tes propres messages. L’app choisit le bon selon la date de fin du client, puis remplace <code>{nom}</code> par son nom et <code>{jours}</code> par le nombre de jours. Ils servent pour le bouton <b>Copier la relance</b> dans la fiche d’un client.</p>
+    <p class="set-lead">Écris tes propres messages. L’app choisit le bon selon la date de fin du client, puis remplace les mots entre accolades :</p>
+    <ul class="msg-legend">
+        <li><code>{nom}</code> le nom du client</li>
+        <li><code>{quand}</code> « demain », « dans 3 jours », « aujourd’hui », « hier », « il y a 4 jours »</li>
+        <li><code>{jours}</code> le nombre de jours seul</li>
+        <li><code>{service}</code> le service (Netflix, Spotify…)</li>
+        <li><code>{thème}</code> ce dont il profite : « tes séries et tes films », « ta musique et tes playlists », « ton assistant IA »…</li>
+        <li><code>{emoji}</code> l’emoji du service (🎬, 🎵, 🤖…)</li>
+    </ul>
+    <p class="set-hint">Ils servent pour le bouton <b>Copier la relance</b> dans la fiche d’un client.</p>
+    <label class="msg-prevpick">Aperçu avec <select onchange="setSubMsgPrevService(this.value)">${ids.map(id => `<option value="${escAttr(id)}"${id === prev ? ' selected' : ''}>${escHtml(subServiceName(id))}</option>`).join('')}</select></label>
     ${SUB_MSG_KINDS.map(([k, title, hint]) => `
     <div class="msg-card">
         <div class="msg-head"><strong>${title}</strong><span class="msg-ok" id="subMsgOk_${k}"></span></div>
         <p class="set-hint">${hint}</p>
         <textarea id="subMsg_${k}" rows="4" oninput="saveSubMsgDebounced('${k}', this.value)" aria-label="Message ${title}">${escHtml(subMsgTemplate(k))}</textarea>
         <div class="msg-tools">
-            <button class="msg-chip" onclick="subMsgInsert('${k}', '{nom}')">+ {nom}</button>
-            <button class="msg-chip" onclick="subMsgInsert('${k}', '{jours}')">+ {jours}</button>
+            ${SUB_TOKENS.map(t => `<button class="msg-chip" onclick="subMsgInsert('${k}', '${t}')">+ ${t}</button>`).join('')}
             <span class="grow"></span>
             <button class="msg-link" onclick="subMsgReset('${k}')">Message par défaut</button>
         </div>
         <div class="msg-prev"><span>Aperçu pour « Awa »</span><p id="subMsgPrev_${k}">${escHtml(subMsgPreview(k))}</p></div>
-    </div>`).join('')}`;
+    </div>`).join('')}
+    <div class="msg-card">
+        <div class="msg-head"><strong>Thème de chaque service</strong></div>
+        <p class="set-hint">Ce que <code>{thème}</code> et <code>{emoji}</code> deviennent pour chaque service. Déjà rempli d’après le nom du service : change-le si besoin, ou vide la case pour revenir à la proposition.</p>
+        <div class="theme-list">${ids.map(id => { const o = (S.subThemes || {})[id] || {}, g = subThemeGuess(id); return `
+            <div class="theme-row">
+                <strong>${escHtml(subServiceName(id))}</strong>
+                <input class="theme-emoji" value="${escAttr(o.emoji || '')}" placeholder="${escAttr(g.emoji)}" oninput="setSubTheme('${escAttr(id)}', 'emoji', this.value)" aria-label="Emoji de ${escAttr(subServiceName(id))}">
+                <input value="${escAttr(o.theme || '')}" placeholder="${escAttr(g.theme)}" oninput="setSubTheme('${escAttr(id)}', 'theme', this.value)" aria-label="Thème de ${escAttr(subServiceName(id))}">
+            </div>`; }).join('')}</div>
+    </div>`;
 }
 let subMsgTimers = {};
 function saveSubMsgDebounced(kind, v) { clearTimeout(subMsgTimers[kind]); subMsgTimers[kind] = setTimeout(() => saveSubMsg(kind, v), 500); }
