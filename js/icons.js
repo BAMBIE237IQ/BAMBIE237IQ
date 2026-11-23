@@ -21,6 +21,7 @@ const MI_TO_PH = {
     account_balance: 'bank', money_off: 'money', favorite: 'heart', notifications: 'bell', drag_indicator: 'dots-six-vertical', settings: 'gear-six', content_copy: 'copy', login: 'sign-in',
     pause_circle: 'pause-circle', play_circle: 'play-circle',
     movie: 'video-camera', folder: 'folder-simple',
+    chat: 'chat-circle-text', help: 'question', calculate: 'calculator', payments: 'money', groups: 'users-three', percent: 'percent', autorenew: 'arrows-clockwise', person_off: 'user-minus', event_seat: 'armchair', drag_handle: 'equals',
     sticky_note_2: 'note', keep: 'push-pin', keep_off: 'push-pin-slash', search: 'magnifying-glass',
     translate: 'translate', open_in_new: 'arrow-square-out', password: 'password', key: 'key', visibility: 'eye', visibility_off: 'eye-slash'
 };

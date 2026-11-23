@@ -75,6 +75,8 @@ function init() {
             S.subAccountMeta = parsed.subAccountMeta || {};
             S.subProfileCodes = parsed.subProfileCodes || {};
             S.sectionNotes = parsed.sectionNotes || {};
+            S.subMessages = parsed.subMessages || {};
+            S.subSim = parsed.subSim || null;
             S.caMode = parsed.caMode || 'days';
             S.calendarChecked = parsed.calendarChecked || {};
             S.calendarEvents = parsed.calendarEvents || {};
@@ -128,6 +130,8 @@ function init() {
                 S.subAccountMeta = data.subAccountMeta || {};
                 S.subProfileCodes = data.subProfileCodes || {};
                 S.sectionNotes = data.sectionNotes || {};
+                S.subMessages = data.subMessages || {};
+                S.subSim = data.subSim || null;
                 S.caMode = data.caMode || 'days';
             S.calendarChecked = data.calendarChecked || {};
             S.calendarEvents = data.calendarEvents || {};
@@ -166,7 +170,7 @@ function getPersistedState() {
         finAccounts: S.finAccounts, fin2Accounts: S.fin2Accounts, finance2Transactions: S.finance2Transactions, fin2Year: S.fin2Year, fin2Month: S.fin2Month, fin2Type: S.fin2Type,
         blurAmounts: S.blurAmounts,
         subscriptions: S.subscriptions,
-        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, subAccountMeta: S.subAccountMeta, subProfileCodes: S.subProfileCodes || {}, sectionNotes: S.sectionNotes || {}, caMode: S.caMode, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
+        subAccountNames: S.subAccountNames, subServices: S.subServices, subAccountCosts: S.subAccountCosts, subAccountMeta: S.subAccountMeta, subProfileCodes: S.subProfileCodes || {}, sectionNotes: S.sectionNotes || {}, subMessages: S.subMessages || {}, subSim: S.subSim || null, caMode: S.caMode, calendarChecked: S.calendarChecked, calendarEvents: S.calendarEvents, fitness: S.fitness, journal: S.journal
     };
 }
 
