@@ -1,0 +1,259 @@
+<title>Streamify Réseau</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: régie de diffusion — une console en grille, une ligne par adresse e-mail, une colonne par réseau, carnet de notes à droite */
+:root{
+  --bg:#f3f4f8; --panel:#ffffff; --ink:#151827; --muted:#646a82; --line:#e1e3ec;
+  --accent:#5b3df5; --accent-soft:#ece8ff; --danger:#d23b4b;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Figtree",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1018; --panel:#171927; --ink:#eceef7; --muted:#9298b3; --line:#272a3d;
+  --accent:#8f7bff; --accent-soft:#251f4a; --danger:#ff6b7a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1018; --panel:#171927; --ink:#eceef7; --muted:#9298b3; --line:#272a3d;
+  --accent:#8f7bff; --accent-soft:#251f4a; --danger:#ff6b7a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{width:46px;height:46px;border-radius:14px;background:var(--accent);display:grid;place-items:center;color:#fff}
+h1{font:800 clamp(26px,4vw,38px)/1 var(--f-display);margin:0;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:500 12px var(--f-mono);padding:6px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip b{color:var(--ink);font-weight:500}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;min-width:0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid var(--line)}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.search{flex:1;min-width:180px}
+button{font:600 14px var(--f-body);border:0;border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--accent);color:#fff;white-space:nowrap}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.ghost:hover{color:var(--ink);border-color:var(--muted)}
+button.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:1040px}
+th{position:sticky;top:0;background:var(--panel);text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);font:600 12px var(--f-body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+th .pl{display:flex;align-items:center;gap:8px;color:var(--ink);text-transform:none;letter-spacing:0;font-size:14px}
+td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+.email{font:500 13px var(--f-mono);word-break:break-all}
+.label{font-size:12px;color:var(--muted);margin-top:2px}
+.acc{display:flex;flex-direction:column;gap:2px}
+.acc a{color:var(--ink);text-decoration:none;font-weight:600}
+.acc a:hover{color:var(--accent);text-decoration:underline}
+.empty-cell{color:var(--line);font-size:18px}
+.acc .h{font:400 12px var(--f-mono);color:var(--muted)}
+.ico{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;flex:none}
+.ico svg{width:14px;height:14px}
+.rowact{display:flex;gap:6px;justify-content:flex-end}
+.rowact button{padding:6px 10px;font-size:13px}
+.state{padding:48px 20px;text-align:center;color:var(--muted)}
+.state h3{font:700 20px var(--f-display);color:var(--ink);margin:0 0 6px}
+.notes{padding:16px;display:flex;flex-direction:column;gap:12px}
+.notes h2{font:700 18px var(--f-display);margin:0}
+.note{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.note p{margin:0;white-space:pre-wrap;word-break:break-word}
+.note .meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font:400 11px var(--f-mono);color:var(--muted)}
+.note .meta button{padding:2px 8px;font-size:12px}
+.notelist{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);padding:0;width:min(640px,calc(100% - 32px))}
+dialog::backdrop{background:rgb(10 10 20/.5)}
+.dlg{padding:22px;display:flex;flex-direction:column;gap:14px}
+.dlg h2{font:700 22px var(--f-display);margin:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld>span{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.plat{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.plat .t{display:flex;align-items:center;gap:8px;font-weight:600}
+.dlgfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600}
+@media (prefers-reduced-motion:no-preference){tbody tr{transition:background .15s}}
+td.cell{padding:6px}
+.cellbox{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:150px}
+.cellbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.cellbox input{border:0;background:transparent;padding:8px 10px;border-radius:8px;outline:none;font-size:14px}
+.cellbox input.mono{font:500 13px var(--f-mono)}
+.cellbox a{flex:none;color:var(--muted);padding:0 8px;text-decoration:none;font-size:15px}
+.cellbox a:hover{color:var(--accent)}
+.saved{animation:sv .9s}
+@keyframes sv{0%{border-color:#2fbf71}100%{border-color:var(--line)}}
+td.num{font:500 12px var(--f-mono);color:var(--muted);width:32px;text-align:right;padding-top:16px}
+.addrow td{padding:10px 12px}
+.addrow button{width:100%;background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.addrow button:hover{color:var(--accent);border-color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 16 0"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg></div>
+      <div><h1>Streamify Réseau</h1><p class="sub">Tes adresses e-mail et les comptes rattachés, réseau par réseau.</p></div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="layout">
+    <section class="card">
+      <div class="toolbar">
+        <input id="q" class="search" type="search" placeholder="Rechercher une adresse, une chaîne, un compte…">
+        <button id="addBtn">+ Nouvelle ligne</button>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="body"></tbody>
+      </table></div>
+      <div id="state" class="state"><h3>Chargement…</h3><p>Connexion à ton espace.</p></div>
+    </section>
+
+    <aside class="card notes">
+      <h2>Notes</h2>
+      <textarea id="noteIn" rows="3" placeholder="Une idée, un rappel, un mot de passe à changer…"></textarea>
+      <button id="noteBtn">Ajouter la note</button>
+      <div class="notelist" id="notes"></div>
+    </aside>
+  </div>
+</div>
+
+<dialog id="dlg"><form class="dlg" id="form" method="dialog">
+  <h2 id="dlgTitle">Nouvelle adresse</h2>
+  <div class="grid2">
+    <label class="fld"><span>Adresse e-mail</span><input id="f_email" type="email" required placeholder="nom@gmail.com"></label>
+    <label class="fld"><span>Libellé (optionnel)</span><input id="f_label" placeholder="Compte principal, niche foot…"></label>
+  </div>
+  <div class="grid2" id="platFields"></div>
+  <div class="dlgfoot">
+    <button type="button" class="danger" id="delBtn">Supprimer</button>
+    <div style="display:flex;gap:8px"><button type="button" class="ghost" id="cancelBtn">Annuler</button><button type="submit">Enregistrer</button></div>
+  </div>
+</form></dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const PLATFORMS=[
+ {k:"youtube",n:"YouTube",c:"#ff0033",ph:"@machaine",svg:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M9 7.5v9l7.5-4.5z"/></svg>'},
+ {k:"tiktok",n:"TikTok",c:"#111111",ph:"@moncompte",svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M13 4v11a3 3 0 1 1-3-3"/><path d="M13 4c.5 2.5 2.3 4 5 4"/></svg>'},
+ {k:"instagram",n:"Instagram",c:"#d62976",ph:"@moncompte",svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17" cy="7" r=".8" fill="#fff"/></svg>'},
+ {k:"facebook",n:"Facebook",c:"#1877f2",ph:"Nom de la page",svg:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21z"/></svg>'},
+ {k:"snapchat",n:"Snapchat",c:"#fffc00",ph:"moncompte",svg:'<svg viewBox="0 0 24 24" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"><path d="M12 3.5c3 0 5 2.2 5 5v2.3l1.8-.4c.6 0 .8.7.2 1l-2 .9c.6 1.8 2 3 3.5 3.4-.3.8-1.6 1-2.6 1.2l-.4 1.2c-1.2-.2-2.2 0-3.3.9-1.3.9-3.1.9-4.4 0-1.1-.9-2.1-1.1-3.3-.9l-.4-1.2c-1-.2-2.3-.4-2.6-1.2 1.5-.4 2.9-1.6 3.5-3.4l-2-.9c-.6-.3-.4-1 .2-1l1.8.4V8.5c0-2.8 2-5 5-5z"/></svg>'},
+ {k:"x",n:"X",c:"#000000",ph:"@moncompte",svg:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M17.8 3.5h3l-6.6 7.5 7.8 9.5h-6.1l-4.8-6-5.4 6h-3l7-8L2.4 3.5h6.2l4.3 5.5zm-1 15.3h1.7L7.3 5.1H5.5z"/></svg>'}
+];
+const URLS={youtube:h=>"https://www.youtube.com/"+(h.startsWith("@")?h:"@"+h),tiktok:h=>"https://www.tiktok.com/"+(h.startsWith("@")?h:"@"+h),instagram:h=>"https://www.instagram.com/"+h.replace(/^@/,""),facebook:h=>"https://www.facebook.com/"+h.replace(/^@/,"").replace(/\s+/g,""),snapchat:h=>"https://www.snapchat.com/add/"+h.replace(/^@/,""),x:h=>"https://x.com/"+h.replace(/^@/,"")};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let rows=[],notes=[],rowsCol=null,notesCol=null,editing=null;
+
+function getVal(d,f){return f==="email"?(d.email||""):(((d.accounts||{})[f]||{}).name||"")}
+function refreshLink(inp,d){const a=inp.parentNode.querySelector("a[data-link]");if(!a)return;const k=a.dataset.link,acc=(d.accounts||{})[k]||{};const u=safeUrl(linkFor(k,acc));a.hidden=!u;if(u)a.href=u}
+async function saveCell(inp){
+  const r=rows.find(x=>x.id===inp.dataset.id);if(!r)return;const f=inp.dataset.f,v=inp.value.trim();
+  if(getVal(r.d,f)===v)return;
+  const patch=f==="email"?{email:v}:{["accounts."+f]:{name:v,url:""}};
+  try{
+    if(f!=="email"){const accounts={...(r.d.accounts||{})};if(v)accounts[f]={name:v,url:""};else delete accounts[f];await rowsCol.doc(r.id).update({accounts,updatedAt:Date.now()})}
+    else await rowsCol.doc(r.id).update({email:v,updatedAt:Date.now()});
+    const box=inp.parentNode;box.classList.remove("saved");void box.offsetWidth;box.classList.add("saved");
+  }catch{toast("Enregistrement impossible, réessaie")}
+}
+async function addRow(){if(!rowsCol)return toast("Connexion en cours, réessaie dans un instant");
+  try{await rowsCol.add({email:"",label:"",accounts:{},createdAt:Date.now(),updatedAt:Date.now()});
+    setTimeout(()=>{const ins=$("body").querySelectorAll('input[data-f="email"]');ins[ins.length-1]?.focus()},300)}catch{toast("Ajout impossible")}}
+document.addEventListener("change",e=>{if(e.target.matches("input[data-f]"))saveCell(e.target)});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input[data-f]"))e.target.blur()});
+$("headRow").innerHTML='<th>#</th><th>Adresse e-mail</th>'+PLATFORMS.map(p=>`<th><span class="pl"><span class="ico" style="background:${p.c}">${p.svg}</span>${p.n}</span></th>`).join("")+'<th></th>';
+$("platFields").innerHTML=PLATFORMS.map(p=>`<div class="plat"><div class="t"><span class="ico" style="background:${p.c}">${p.svg}</span>${p.n}</div>
+ <input id="f_${p.k}_name" placeholder="${esc(p.ph)}" aria-label="${p.n} : nom du compte">
+ <input id="f_${p.k}_url" type="url" placeholder="Lien (optionnel)" aria-label="${p.n} : lien"></div>`).join("");
+
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,1800)}
+function linkFor(k,a){if(a.url)return a.url;if(!a.name)return"";try{return URLS[k](a.name.trim())}catch{return""}}
+function safeUrl(u){return /^https?:\/\//i.test(u)?u:""}
+
+function render(){
+  const q=$("q").value.trim().toLowerCase();
+  const list=rows.filter(r=>!q||JSON.stringify(r.d).toLowerCase().includes(q));
+  const sig=list.map(r=>r.id).join("|")+"#"+!!rowsCol;
+  const tb=$("body");
+  if(tb.dataset.sig===sig){
+    tb.querySelectorAll("input[data-f]").forEach(inp=>{if(inp===document.activeElement)return;const r=rows.find(x=>x.id===inp.dataset.id);if(r){const v=getVal(r.d,inp.dataset.f);if(inp.value!==v)inp.value=v;refreshLink(inp,r.d)}});
+  }else{
+    tb.dataset.sig=sig;
+    tb.innerHTML=list.map((r,i)=>{const d=r.d;return `<tr>
+     <td class="num">${i+1}</td>
+     <td class="cell"><div class="cellbox"><input class="mono" data-id="${esc(r.id)}" data-f="email" value="${esc(d.email)}" placeholder="nom@gmail.com" aria-label="Adresse e-mail ligne ${i+1}"></div></td>
+     ${PLATFORMS.map(p=>`<td class="cell"><div class="cellbox"><input data-id="${esc(r.id)}" data-f="${p.k}" value="${esc(getVal(d,p.k))}" placeholder="${esc(p.ph)}" aria-label="${p.n} ligne ${i+1}"><a data-link="${p.k}" target="_blank" rel="noopener" title="Ouvrir le profil" hidden>↗</a></div></td>`).join("")}
+     <td><div class="rowact"><button class="danger" data-del="${esc(r.id)}" title="Supprimer la ligne">✕</button></div></td></tr>`}).join("")
+     +(rowsCol?`<tr class="addrow"><td colspan="${PLATFORMS.length+3}"><button data-addrow>+ Nouvelle ligne</button></td></tr>`:"");
+    tb.querySelectorAll("input[data-f]").forEach(inp=>{const r=rows.find(x=>x.id===inp.dataset.id);if(r)refreshLink(inp,r.d)});
+  }
+  const st=$("state");
+  if(!rowsCol){st.hidden=false}
+  else if(!rows.length){st.hidden=false;st.innerHTML='<h3>Aucune ligne pour l’instant</h3><p>Clique sur « + Nouvelle ligne » puis remplis les cases : adresse e-mail, YouTube, TikTok…</p>'}
+  else if(!list.length){st.hidden=false;st.innerHTML='<h3>Aucun résultat</h3><p>Rien ne correspond à cette recherche.</p>'}
+  else st.hidden=true;
+  const counts=PLATFORMS.map(p=>[p.n,rows.filter(r=>{const a=(r.d.accounts||{})[p.k];return a&&(a.name||a.url)}).length]);
+  $("stats").innerHTML=`<span class="chip"><b>${rows.length}</b> adresses</span>`+counts.map(([n,c])=>`<span class="chip">${n} <b>${c}</b></span>`).join("");
+  $("notes").innerHTML=notes.length?notes.map(n=>`<div class="note"><p>${esc(n.d.text)}</p><div class="meta"><span>${new Date(n.d.at).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"})}</span><button class="ghost" data-delnote="${esc(n.id)}">Supprimer</button></div></div>`).join(""):'<p class="label">Tes notes apparaîtront ici.</p>';
+}
+
+function openDlg(r){
+  editing=r||null;
+  $("dlgTitle").textContent=r?"Modifier l’adresse":"Nouvelle adresse";
+  $("delBtn").hidden=!r;
+  const d=r?r.d:{};
+  $("f_email").value=d.email||"";$("f_label").value=d.label||"";
+  PLATFORMS.forEach(p=>{const a=(d.accounts||{})[p.k]||{};$(`f_${p.k}_name`).value=a.name||"";$(`f_${p.k}_url`).value=a.url||""});
+  $("dlg").showModal();
+}
+$("addBtn").onclick=addRow;
+$("cancelBtn").onclick=()=>$("dlg").close();
+$("q").oninput=render;
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-addrow]")){addRow();return}
+  const del=e.target.closest("[data-del]");
+  if(del){if(del.dataset.arm!=="1"){del.dataset.arm="1";del.textContent="Confirmer ?";setTimeout(()=>{if(del.isConnected){del.dataset.arm="";del.textContent="✕"}},3000);return}
+    rowsCol.doc(del.dataset.del).delete().then(()=>toast("Ligne supprimée")).catch(()=>toast("Suppression impossible"));return}
+  const dn=e.target.closest("[data-delnote]");if(dn&&notesCol){notesCol.doc(dn.dataset.delnote).delete().then(()=>toast("Note supprimée")).catch(()=>toast("Suppression impossible"))}
+});
+let delArm=false;
+$("delBtn").onclick=async()=>{
+  if(!editing)return;
+  if(!delArm){delArm=true;$("delBtn").textContent="Confirmer la suppression";setTimeout(()=>{delArm=false;$("delBtn").textContent="Supprimer"},3000);return}
+  delArm=false;$("delBtn").textContent="Supprimer";
+  try{await rowsCol.doc(editing.id).delete();$("dlg").close();toast("Adresse supprimée")}catch{toast("Suppression impossible")}
+};
+$("form").onsubmit=async e=>{
+  e.preventDefault();
+  const accounts={};PLATFORMS.forEach(p=>{const name=$(`f_${p.k}_name`).value.trim(),url=$(`f_${p.k}_url`).value.trim();if(name||url)accounts[p.k]={name,url}});
+  const data={email:$("f_email").value.trim(),label:$("f_label").value.trim(),accounts,updatedAt:Date.now(),createdAt:editing?.d.createdAt||Date.now()};
+  try{ editing?await rowsCol.doc(editing.id).set(data):await rowsCol.add(data); $("dlg").close(); toast("Enregistré") }
+  catch{ toast("Enregistrement impossible, réessaie") }
+};
+$("noteBtn").onclick=async()=>{
+  const t=$("noteIn").value.trim();if(!t||!notesCol)return;
+  try{await notesCol.add({text:t,at:Date.now()});$("noteIn").value="";toast("Note ajoutée")}catch{toast("Ajout impossible")}
+};
+
+render();
+(async()=>{
+  const db=await window.claude?.use?.("db"), user=await window.claude?.use?.("user");
+  if(!db||!user){$("state").innerHTML='<h3>Espace indisponible</h3><p>Ouvre cette page en étant connecté à ton compte Claude pour enregistrer tes données.</p>';return}
+  const uid=await user.id(), base="data/users/"+uid;
+  rowsCol=db.collection(base+"/accounts"); notesCol=db.collection(base+"/notes");
+  rowsCol.orderBy("createdAt","asc").onSnapshot(s=>{rows=s.docs.map(x=>({id:x.id,d:x.data()}));render()},()=>toast("Erreur de chargement"));
+  notesCol.orderBy("at","desc").onSnapshot(s=>{notes=s.docs.map(x=>({id:x.id,d:x.data()}));render()});
+  render();
+})();
+</script>

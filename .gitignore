@@ -4,3 +4,5 @@ _archive/
 .vercel/
 VAPID-CLE-PRIVEE.txt
 apk/
+# Projet separe, dans son propre depot GitHub (moncampus-android)
+moncampus-android/
