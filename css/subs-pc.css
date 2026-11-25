@@ -1,0 +1,84 @@
+/* ==================== ABONNEMENTS : codes des profils (service → compte → profils), CA par jour, mises en page PC ==================== */
+
+/* ---------- Codes des profils ---------- */
+.pc-body { display: block; max-height: none; overflow-y: auto; }
+.pc-col { display: none; flex-direction: column; gap: 8px; min-width: 0; }
+.pc-body.pc-lvl-0 .pc-col-svc, .pc-body.pc-lvl-1 .pc-col-acc, .pc-body.pc-lvl-2 .pc-col-prof { display: flex; }
+.pc-col-title { font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--text-secondary); padding: 2px 2px 0; display: flex; align-items: baseline; gap: 8px; }
+.pc-col-title small { font-weight: 600; text-transform: none; letter-spacing: 0; }
+.pc-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+.pc-item:hover { border-color: var(--border-light, #444); }
+.pc-item.on { border-color: #ff3d4a; background: rgba(229, 28, 44, .08); }
+.pc-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pc-item-main strong { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-item-main small { font-size: 12.5px; color: var(--text-secondary); }
+.pc-chev { color: var(--text-secondary); font-size: 20px; }
+.pc-logo { width: 36px; height: 36px; flex: none; border-radius: 10px; display: grid; place-items: center; background: #1f1f23; }
+.pc-logo-txt { font-weight: 900; color: #fff; }
+.pc-acc-num { width: 36px; height: 36px; flex: none; border-radius: 10px; display: grid; place-items: center; font-weight: 900; font-size: 15px; background: rgba(229, 28, 44, .14); color: #ff6b74; }
+.pc-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 8px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text-primary); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.pc-back .material-icons-outlined { font-size: 18px; }
+.pc-cards { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.pc-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-card); }
+.pc-card-top { display: flex; gap: 8px; }
+.pc-card input { min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-main, #0b0b0b); color: var(--text-primary); font: inherit; font-size: 14px; }
+.pc-card .pc-name { flex: 1; font-weight: 700; }
+.pc-card .pc-del { width: 42px; flex: none; }
+.pc-code-line { display: flex; gap: 8px; }
+.pc-card .pc-code { flex: 1; font-family: ui-monospace, Consolas, monospace; font-size: 20px; font-weight: 800; letter-spacing: .18em; padding: 10px 14px; }
+.pc-copy { width: 48px; flex: none; border-radius: 10px; border: 1px solid rgba(61, 220, 132, .45); background: rgba(61, 220, 132, .08); color: #3ddc84; cursor: pointer; display: grid; place-items: center; }
+.pc-copy:hover { background: rgba(61, 220, 132, .16); }
+.pc-card .pc-date { font-size: 11.5px; color: var(--text-secondary); }
+.pc-who { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
+.pc-who .material-icons-outlined { font-size: 16px; color: #ff6b74; }
+
+/* Téléphone : services et clients gardent leur place habituelle */
+.ca-side { display: contents; }
+
+/* ---------- Diagramme du CA : en-tête 12 mois ⇄ jours ---------- */
+.ca-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: -6px; }
+.ca-ch-title { display: flex; flex-direction: column; gap: 1px; font-size: 13.5px; font-weight: 800; min-width: 0; }
+.ca-ch-title.right { text-align: right; align-items: flex-end; }
+.ca-ch-title small { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+.ca-ch-btn { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 34px; padding: 0 8px 0 12px; border-radius: 999px; border: 1px solid var(--border-light, #444); background: var(--bg-card); color: var(--text-primary); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.ca-ch-btn.back { padding: 0 12px 0 6px; }
+.ca-ch-btn:hover { border-color: #ff3d4a; }
+.ca-ch-btn .material-icons-outlined { font-size: 20px; }
+
+/* Paramètres : carte du message « code du profil » */
+.msg-card-code .msg-head strong { display: inline-flex; align-items: center; gap: 6px; }
+.msg-card-code .msg-head .material-icons-outlined { font-size: 18px; color: #ff3d4a; }
+
+/* ---------- PC : tout en grand ---------- */
+@media (min-width: 900px) {
+    /* Codes des profils : trois colonnes côte à côte */
+    .qa-sheet.pc-sheet { max-width: 1120px; height: min(760px, 100%); overflow: hidden; }
+    .pc-body, .pc-body[class*="pc-lvl-"] { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px 270px minmax(0, 1fr); gap: 14px; overflow: hidden; }
+    .pc-body .pc-col { display: flex; overflow-y: auto; padding: 2px 4px 8px 2px; }
+    .pc-col-prof { border-left: 1px solid var(--border); padding-left: 14px !important; }
+    .pc-back { display: none; }
+    .pc-cards { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+
+    /* CA des abonnements : graphique à gauche, détail à droite */
+    #caOverlay .ca-sheet { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); column-gap: 22px; row-gap: 14px; align-content: start; height: min(820px, 100%); }
+    #caOverlay .qa-head, #caOverlay .ca-nav, #caOverlay .notif-foot { grid-column: 1 / -1; }
+    #caOverlay .ca-hero { grid-column: 1; }
+    #caOverlay .ca-chart-head { grid-column: 1; margin-bottom: 0; }
+    #caOverlay .ca-chart { grid-column: 1; height: 340px; }
+    #caOverlay .ca-due { grid-column: 1; }
+    #caOverlay .ca-side { grid-column: 2; grid-row: 3 / span 4; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+    #caOverlay .ca-rows { max-height: none; flex: 1; min-height: 0; }
+
+    /* Stats : plus large, les cartes se rangent en colonnes */
+    .qa-sheet.st-sheet { max-width: 1120px; }
+    .st-kpis { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+
+    /* Alertes : liste sur deux colonnes */
+    .qa-sheet.notif-sheet { max-width: 880px; }
+    #notifOverlay .notif-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 60vh; align-content: start; }
+
+    /* Fiche client : les champs sur deux colonnes */
+    .modal.sub-modal { width: 760px !important; max-width: calc(100vw - 48px); }
+    .sub-modal #subTabFiche { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; row-gap: 12px; }
+    .sub-modal #subTabFiche > .sub-actions { grid-column: 1 / -1; }
+}

@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="css/descriptions.css">
     <link rel="stylesheet" href="css/notes.css">
     <link rel="stylesheet" href="css/sub-settings.css">
+    <link rel="stylesheet" href="css/subs-pc.css">
 </head>
 <body>
     <!-- ===== DÉMARRAGE ANIMÉ ===== -->
@@ -623,6 +624,7 @@
                 <div class="sub-actions" id="subActions" hidden>
                     <button type="button" class="btn" onclick="renewSub()"><span class="material-icons-outlined">refresh</span> Renouveler</button>
                     <button type="button" class="btn" onclick="copySubRelance()"><span class="material-icons-outlined">content_copy</span> Message de relance</button>
+                    <button type="button" class="btn" id="subCodeBtn" onclick="copySubProfileCode()" hidden><span class="material-icons-outlined">password</span> Copier le code</button>
                 </div>
                 <div><label class="fin-label">Service</label><select id="subService" class="fin-input" onchange="updateSubModalFields()"></select></div>
                 <div><label class="fin-label">Compte</label><select id="subAccount" class="fin-input"></select></div>
@@ -709,6 +711,7 @@
     <script src="js/profile-codes.js"></script>
     <script src="js/stats.js"></script>
     <script src="js/sub-settings.js"></script>
+    <script src="js/subs-pro.js"></script>
     <script src="js/fin-mobile.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/anim.js"></script>
@@ -747,7 +750,7 @@
                 <button class="icon-btn" onclick="closeProfileCodes()" aria-label="Fermer"><span class="material-icons-outlined">close</span></button>
             </div>
             <div class="pc-top"><span id="pcSummary"></span><button class="pc-show" id="pcShowBtn" onclick="togglePcShow()"></button></div>
-            <p class="pc-hint">Chaque compte garde la liste de ses profils, avec leur nom et leur code. Tout est enregistré dès que tu quittes une case.</p>
+            <p class="pc-hint">Choisis un service, puis un compte : tu vois ses profils et leurs codes. Tout est enregistré dès que tu quittes une case.</p>
             <div id="pcBody" class="pc-body"></div>
         </div>
     </div>
@@ -840,10 +843,13 @@
                     <div><span>Bénéfice</span><strong id="caProfit">0</strong></div>
                 </div>
             </div>
+            <div class="ca-chart-head" id="caChartHead"></div>
             <div class="ca-chart"><canvas id="caChart" aria-label="CA et bénéfice sur 12 mois" role="img"></canvas></div>
             <div id="caDue" class="ca-due" hidden></div>
-            <div id="caServices" class="ca-services"></div>
-            <div id="caRows" class="ca-rows"></div>
+            <div class="ca-side">
+                <div id="caServices" class="ca-services"></div>
+                <div id="caRows" class="ca-rows"></div>
+            </div>
             <p class="notif-foot" id="caFoot"></p>
         </div>
     </div>

@@ -158,6 +158,7 @@ function subSetMessagesHtml() {
         </div>
         <div class="msg-prev"><span>Aperçu pour « Awa »</span><p id="subMsgPrev_${k}">${escHtml(subMsgPreview(k))}</p></div>
     </div>`).join('')}
+    ${typeof subCodeMsgCardHtml === 'function' ? subCodeMsgCardHtml() : ''}
     <div class="msg-card">
         <div class="msg-head"><strong>Thème de chaque service</strong></div>
         <p class="set-hint">Ce que <code>{thème}</code> et <code>{emoji}</code> deviennent pour chaque service. Déjà rempli d’après le nom du service : change-le si besoin, ou vide la case pour revenir à la proposition.</p>
