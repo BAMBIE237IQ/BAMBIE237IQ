@@ -82,3 +82,14 @@
     .sub-modal #subTabFiche { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px; row-gap: 12px; }
     .sub-modal #subTabFiche > .sub-actions { grid-column: 1 / -1; }
 }
+
+/* Automatisations texte */
+.tok-list { display: flex; flex-direction: column; gap: 10px; }
+.tok-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tok-head .grow { flex: 1; }
+.tok-namebox { display: inline-flex; align-items: center; gap: 2px; font-family: ui-monospace, Consolas, monospace; font-size: 16px; font-weight: 800; color: #ff6b74; }
+.tok-namebox input { width: min(220px, 52vw); height: 38px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-input, #0b0b0b); color: var(--text-primary); font: inherit; font-size: 15px; }
+.tok-namebox input:focus { outline: none; border-color: #ff3d4a; }
+.tok-head .msg-chip { display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; }
+.tok-head .msg-chip .material-icons-outlined { font-size: 16px; }
+.tok-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; }

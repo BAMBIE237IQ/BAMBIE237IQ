@@ -420,3 +420,92 @@ function subAutoTx(mk, id) { return S.activeLedger !== 'finance2' && ((S.transac
     if (typeof ed === 'function') window.editTransaction = function (mk, id) { if (subAutoTx(mk, id)) return toast(msg); return ed.apply(this, arguments); };
     if (typeof del === 'function') window.deleteTransaction = function (mk, id) { if (subAutoTx(mk, id)) return toast(msg); return del.apply(this, arguments); };
 })();
+
+// ---------- 5) Automatisations texte : tes propres mots entre accolades ----------
+// Ex. {paiement} = « Orange Money au 6XX XX XX XX ». Utilisables dans tous les messages (relance, reçu, code du profil).
+// La valeur peut elle-même contenir {nom}, {service}… : tes mots sont remplacés en premier.
+const SUB_BUILTIN_TOKENS = ['nom', 'quand', 'jours', 'service', 'thème', 'theme', 'emoji', 'compte', 'profil', 'code', 'durée', 'duree', 'montant', 'payé', 'paye', 'reste', 'début', 'debut', 'fin'];
+function subTokens() { if (!Array.isArray(S.subTokens)) S.subTokens = S.subTokens ? Object.values(S.subTokens) : []; return S.subTokens; }
+const subTokName = v => String(v || '').trim().toLowerCase().replace(/[{}\s]+/g, '_').replace(/[^a-z0-9_àâäéèêëîïôöùûüç-]/g, '').replace(/^_+|_+$/g, '');
+const subRxEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function subApplyCustom(tpl) {
+    let out = String(tpl ?? '');
+    for (let pass = 0; pass < 3; pass++) {   // un mot peut en contenir un autre (3 niveaux au plus)
+        const before = out;
+        for (const t of subTokens()) if (t.name) out = out.replace(new RegExp(`\\{${subRxEsc(t.name)}\\}`, 'gi'), t.value || '');
+        if (out === before) break;
+    }
+    return out;
+}
+(function wrapFills() {
+    const m = subMsgFill, b = subBillFill, c = subCodeMsgFill;
+    subMsgFill = function (tpl, ...rest) { return m(subApplyCustom(tpl), ...rest); };
+    subBillFill = function (tpl, ...rest) { return b(subApplyCustom(tpl), ...rest); };
+    subCodeMsgFill = function (tpl, ...rest) { return c(subApplyCustom(tpl), ...rest); };
+})();
+// Les boutons « + {mot} » des cartes de messages proposent aussi tes mots
+const SUB_TOKEN_BASES = new Map();
+function subSyncTokenChips() {
+    const mine = subTokens().filter(t => t.name).map(t => `{${t.name}}`);
+    for (const arr of [SUB_TOKENS, SUB_BILL_TOKENS, SUB_CODE_TOKENS]) {
+        if (!SUB_TOKEN_BASES.has(arr)) SUB_TOKEN_BASES.set(arr, arr.slice());
+        arr.length = 0; arr.push(...SUB_TOKEN_BASES.get(arr), ...mine);
+    }
+}
+function subTokAdd() { subTokens().push({ name: '', value: '' }); save(); renderSubSettings(); const n = document.querySelectorAll('.tok-name'); if (n.length) n[n.length - 1].focus(); }
+function subTokDel(i) {
+    const t = subTokens()[i]; if (!t) return;
+    if ((t.name || t.value) && !confirm(`Supprimer le mot {${t.name || '…'}} ? Les messages qui l’utilisent l’afficheront tel quel.`)) return;
+    subTokens().splice(i, 1); save(); renderSubSettings(); toast('Mot supprimé');
+}
+function subTokSetName(i, v) {
+    const t = subTokens()[i]; if (!t) return;
+    const n = subTokName(v);
+    if (n && SUB_BUILTIN_TOKENS.includes(n)) { toast(`{${n}} existe déjà dans l’app : choisis un autre nom`); renderSubSettings(); return; }
+    if (n && subTokens().some((x, j) => j !== i && x.name === n)) { toast(`Tu as déjà un mot {${n}}`); renderSubSettings(); return; }
+    t.name = n; save(); renderSubSettings(); if (n) toast(`{${n}} enregistré ✓`);
+}
+let subTokTimer = null;
+function subTokSetValue(i, v) {
+    const t = subTokens()[i]; if (!t) return;
+    t.value = v;
+    clearTimeout(subTokTimer); subTokTimer = setTimeout(() => { save(); const p = document.getElementById('tokPrev_' + i); if (p) p.textContent = subTokPreview(t); }, 400);
+}
+function subTokPreview(t) { return t.value ? subBillFill(t.value, subBillSample()) : '(vide)'; }
+function subTokCopy(i) { const t = subTokens()[i]; if (t && t.name) copyText(`{${t.name}}`, `{${t.name}} copié ✓ Colle-le dans un message`); }
+function subSetAutoHtml() {
+    const list = subTokens();
+    return `
+    <p class="set-lead">Crée tes propres mots entre accolades et écris toi-même ce qu’ils deviennent. Mets-les ensuite dans n’importe quel message (relance, reçu de paiement, code du profil) : l’app les remplace quand tu copies.</p>
+    <ul class="msg-legend">
+        <li>Exemple : <code>{paiement}</code> → « Orange Money ou MTN au 6XX XX XX XX »</li>
+        <li>Exemple : <code>{signature}</code> → « Handy Streaming, à ton service 📺 »</li>
+        <li>Dans ton texte, tu peux aussi mettre <code>{nom}</code>, <code>{service}</code>, <code>{montant}</code>… : ils sont remplis pour chaque client.</li>
+        <li>Tes mots apparaissent ensuite dans les boutons <b>+ {mot}</b> de chaque message.</li>
+    </ul>
+    <div class="tok-list">
+    ${list.map((t, i) => `
+        <div class="msg-card tok-card">
+            <div class="tok-head">
+                <label class="tok-namebox"><span>{</span><input class="tok-name" value="${escAttr(t.name || '')}" placeholder="nom_du_mot" onchange="subTokSetName(${i}, this.value)" aria-label="Nom du mot"><span>}</span></label>
+                ${t.name ? `<button class="msg-chip" onclick="subTokCopy(${i})" title="Copier {${escAttr(t.name)}}"><span class="material-icons-outlined">content_copy</span></button>` : ''}
+                <span class="grow"></span>
+                <button class="msg-link" onclick="subTokDel(${i})">Supprimer</button>
+            </div>
+            <textarea rows="3" placeholder="Ce qui doit s’afficher à la place du mot" oninput="subTokSetValue(${i}, this.value)" aria-label="Texte du mot ${escAttr(t.name || '')}">${escHtml(t.value || '')}</textarea>
+            <div class="msg-prev"><span>Aperçu</span><p id="tokPrev_${i}">${escHtml(subTokPreview(t))}</p></div>
+        </div>`).join('') || '<p class="set-hint">Aucun mot pour l’instant. Touche « Nouveau mot ».</p>'}
+    </div>
+    <button class="msg-chip tok-add" onclick="subTokAdd()"><span class="material-icons-outlined">add</span> Nouveau mot</button>`;
+}
+// Nouvel onglet dans les Paramètres, juste après « Messages de relance »
+if (!SUBSET_TABS.some(t => t[0] === 'auto')) SUBSET_TABS.splice(1, 0, ['auto', 'Automatisations texte', 'auto_fix_high']);
+(function hookSubSettingsRender() {
+    const base = renderSubSettings;
+    renderSubSettings = function () {
+        subSyncTokenChips();
+        const r = base.apply(this, arguments);
+        if (subSetTab === 'auto') { const c = document.getElementById('subSetContent'); if (c) c.innerHTML = `<h3 class="subset-h">Automatisations texte</h3>${subSetAutoHtml()}`; }
+        return r;
+    };
+})();
