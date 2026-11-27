@@ -75,13 +75,15 @@ function subWhen(kind, days) {
     if (kind === 'expired') return days === 1 ? 'hier' : `il y a ${days} jours`;
     return days === 1 ? 'demain' : `dans ${days} jours`;
 }
+// Nom du service avec son emoji devant, pour les messages copiés : « 🎬 Netflix »
+function subSvcLabel(id) { const e = (subThemeOf(id).emoji || '').trim(); return `${e ? e + ' ' : ''}${subServiceName(id)}`; }
 function subMsgFill(tpl, name, days, serviceId, kind) {
     const th = serviceId ? subThemeOf(serviceId) : { theme: 'ton abonnement', emoji: '🙏' };
     return String(tpl)
         .replace(/\{nom\}/gi, name || '')
         .replace(/\{quand\}/gi, subWhen(kind, days))
         .replace(/\{jours\}/gi, days == null ? '' : String(days))
-        .replace(/\{service\}/gi, serviceId ? subServiceName(serviceId) : '')
+        .replace(/\{service\}/gi, serviceId ? subSvcLabel(serviceId) : '')
         .replace(/\{th[eèé]me\}/gi, th.theme)
         .replace(/\{emoji\}/gi, th.emoji)
         .replace(/(^|[^\d])1 jours\b/g, '$11 jour')
@@ -140,7 +142,7 @@ function subSetMessagesHtml() {
         <li><code>{nom}</code> le nom du client</li>
         <li><code>{quand}</code> « demain », « dans 3 jours », « aujourd’hui », « hier », « il y a 4 jours »</li>
         <li><code>{jours}</code> le nombre de jours seul</li>
-        <li><code>{service}</code> le service (Netflix, Spotify…)</li>
+        <li><code>{service}</code> le service avec son emoji (🎬 Netflix, 🎵 Spotify…)</li>
         <li><code>{thème}</code> ce dont il profite : « tes séries et tes films », « ta musique et tes playlists », « ton assistant IA »…</li>
         <li><code>{emoji}</code> l’emoji du service (🎬, 🎵, 🤖…)</li>
     </ul>

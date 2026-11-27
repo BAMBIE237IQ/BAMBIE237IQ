@@ -119,7 +119,7 @@ function subFindProfileCode(service, acc, profile) {
 function subCodeMsgFill(tpl, c, p) {
     return String(tpl)
         .replace(/\{nom\}/gi, c.name || '')
-        .replace(/\{service\}/gi, subServiceName(c.service))
+        .replace(/\{service\}/gi, subSvcLabel(c.service))
         .replace(/\{compte\}/gi, c.account ? subAccountLabel(c.service, c.account) : '')
         .replace(/\{profil\}/gi, c.profile || '')
         .replace(/\{code\}/gi, p && p.code ? p.code : '')
@@ -136,11 +136,62 @@ function subCodeSample() {
 }
 const _subMsgPreviewBase = subMsgPreview;
 subMsgPreview = function (kind) {
+    if (kind === 'bill') { const c = subBillSample(); return subBillFill(subMsgTemplate('bill'), c); }
     if (kind !== 'code') return _subMsgPreviewBase(kind);
     const { c, p } = subCodeSample();
     return subCodeMsgFill(subMsgTemplate('code'), c, p);
 };
+// ---------- Reçu de paiement (après le paiement du client) ----------
+const SUB_BILL_DEFAULT = 'Merci {nom} 🙏\nPaiement reçu : {montant} pour {service} ({durée}).\nCompte : {compte} · Profil : {profil}\nDu {début} au {fin}.\nReste à payer : {reste}';
+const SUB_BILL_TOKENS = ['{nom}', '{service}', '{durée}', '{montant}', '{payé}', '{reste}', '{début}', '{fin}', '{compte}', '{profil}'];
+SUB_MSG_DEFAULTS.bill = SUB_BILL_DEFAULT;
+const fcfaTxt = n => `${formatFCFA(n)} FCFA`;
+function subBillFill(tpl, c) {
+    const life = subDurationValue(c.duration) === 'life', n = parseInt(subDurationValue(c.duration), 10) || 1, due = subDue(c);
+    let out = String(tpl)
+        .replace(/\{nom\}/gi, c.name || '')
+        .replace(/\{service\}/gi, c.service ? subSvcLabel(c.service) : '')
+        .replace(/\{dur[ée]e\}/gi, life ? 'à vie' : `${n} mois`)
+        .replace(/\{montant\}/gi, fcfaTxt(subAmount(c)))
+        .replace(/\{pay[ée]\}/gi, fcfaTxt(subPaid(c)))
+        .replace(/\{reste\}/gi, due ? fcfaTxt(due) : 'rien, tout est payé ✓')
+        .replace(/\{d[ée]but\}/gi, c.start ? fmtDateFr(c.start) : '—')
+        .replace(/\{fin\}/gi, life ? 'à vie' : (c.end ? fmtDateFr(c.end) : '—'))
+        .replace(/\{compte\}/gi, c.account ? subAccountLabel(c.service, c.account) : '')
+        .replace(/\{profil\}/gi, c.profile || '');
+    // Ligne « Profil : » vide (service sans profil) : on retire juste ce morceau
+    out = out.replace(/ ?· ?Profil ?: ?(?=\n|$)/g, '').replace(/^Profil ?: ?$\n?/gm, '');
+    return out.replace(/ {2,}/g, ' ');
+}
+function subBillSample() {
+    const c = (S.subscriptions || []).find(x => !x.suspended && subAmount(x) && x.profile) || (S.subscriptions || []).find(x => subAmount(x));
+    return c || { name: 'Awa', service: subServiceIds()[0], account: 1, profile: 'Rouge', duration: '1 Mois', start: localDateStr(), end: addMonthsToDate(localDateStr(), 1), code: '2500' };
+}
+function copySubBill() {
+    const c = (S.subscriptions || []).find(x => x.id === editingSubId);
+    if (!c) return;
+    if (!subAmount(c)) return toast('Indique d’abord le montant payé dans la fiche du client');
+    copyText(subBillFill(subMsgTemplate('bill'), c), `Reçu de ${c.name} copié ✓ Colle-le dans WhatsApp`);
+}
+function subBillMsgCardHtml() {
+    const c = subBillSample();
+    return `
+    <div class="msg-card msg-card-code">
+        <div class="msg-head"><strong><span class="material-icons-outlined">receipt_long</span> Reçu de paiement</strong><span class="msg-ok" id="subMsgOk_bill"></span></div>
+        <p class="set-hint">À envoyer après le paiement, avec le bouton <b>Reçu de paiement</b> de la fiche client. Tout se remplit selon le client : service, durée, montant, dates, compte, profil et ce qu’il reste à payer.</p>
+        <textarea id="subMsg_bill" rows="6" oninput="saveSubMsgDebounced('bill', this.value)" aria-label="Message du reçu de paiement">${escHtml(subMsgTemplate('bill'))}</textarea>
+        <div class="msg-tools">
+            ${SUB_BILL_TOKENS.map(t => `<button class="msg-chip" onclick="subMsgInsert('bill', '${t}')">+ ${t}</button>`).join('')}
+            <span class="grow"></span>
+            <button class="msg-link" onclick="subMsgReset('bill')">Message par défaut</button>
+        </div>
+        <div class="msg-prev"><span>Aperçu pour « ${escHtml(c.name || 'Client')} »</span><p id="subMsgPrev_bill">${escHtml(subMsgPreview('bill'))}</p></div>
+    </div>`;
+}
 function subCodeMsgCardHtml() {
+    return subBillMsgCardHtml() + subCodeMsgCardHtmlOnly();
+}
+function subCodeMsgCardHtmlOnly() {
     const { c } = subCodeSample();
     return `
     <div class="msg-card msg-card-code">
@@ -179,6 +230,13 @@ function copySubProfileCode() {
 // Vue « jours » : simple visualisation. Entrées = montant de chaque abonnement le jour où il commence ;
 // dépenses (barres négatives) = coût de chaque compte à son jour de paiement (1er du mois s'il n'est pas renseigné).
 let caChartView = 'year', caLastClick = { i: -1, t: 0 };
+// Survol : seulement les barres qui ont un montant (pas de bulle vide sur les jours sans mouvement), sans animation (sinon le graphique semble figé)
+if (typeof Chart !== 'undefined' && Chart.Interaction && !Chart.Interaction.modes.subNonZero) {
+    Chart.Interaction.modes.subNonZero = (chart, e, options, useFinal) =>
+        Chart.Interaction.modes.index(chart, e, { ...options, intersect: false }, useFinal)
+            .filter(it => Number(chart.data.datasets[it.datasetIndex].data[it.index]) !== 0);
+}
+const CA_HOVER_FAST = { transitions: { active: { animation: { duration: 0 } } }, animation: { duration: 300 } };
 function subDayFlows(y, m) {
     const n = daysIn(y, m), key = `${y}-${String(m + 1).padStart(2, '0')}`;
     const income = Array(n).fill(0), cost = Array(n).fill(0), who = Array.from({ length: n }, () => []), what = Array.from({ length: n }, () => []);
@@ -232,11 +290,11 @@ renderCAChart = function () {
                 ]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                responsive: true, maintainAspectRatio: false, ...CA_HOVER_FAST, interaction: { mode: 'subNonZero', intersect: false },
                 plugins: {
                     legend: { labels: { color: '#a8a8a8', boxWidth: 12, font } },
                     tooltip: {
-                        filter: it => it.parsed.y !== 0,
+                        animation: false,
                         callbacks: {
                             title: it => `${it[0].label} ${MONTHS[caMonth].toLowerCase()}`,
                             label: c => ` ${c.dataset.label} : ${c.parsed.y < 0 ? '−' : ''}${formatFCFA(Math.abs(c.parsed.y))} FCFA`,
@@ -269,7 +327,7 @@ renderCAChart = function () {
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            responsive: true, maintainAspectRatio: false, ...CA_HOVER_FAST, interaction: { mode: 'index', intersect: false },
             // Double-clic (ou double-tap) sur un mois : on ouvre ses jours
             onClick: (evt, els, chart) => {
                 const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
@@ -281,7 +339,7 @@ renderCAChart = function () {
                     renderCAPanel();
                 } else caLastClick = { i, t: now };
             },
-            plugins: { legend: { labels: { color: '#a8a8a8', boxWidth: 12, font } }, tooltip: { callbacks: { label: c => ` ${c.dataset.label} : ${formatFCFA(c.parsed.y)} FCFA` } } },
+            plugins: { legend: { labels: { color: '#a8a8a8', boxWidth: 12, font } }, tooltip: { animation: false, callbacks: { label: c => ` ${c.dataset.label} : ${formatFCFA(c.parsed.y)} FCFA` } } },
             scales: {
                 x: { grid: { display: false }, ticks: { color: '#a8a8a8', font: { family: 'Figtree' } } },
                 y: { grid: { color: 'rgba(255,255,255,.06)' }, ticks: { color: '#6e6e6e', callback: caAxis } }

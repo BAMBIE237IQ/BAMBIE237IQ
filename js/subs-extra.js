@@ -44,7 +44,7 @@ function subModalExtras(id) {
 
 // ----- Message de relance prêt à copier -----
 function subRelanceText(c) {
-    const svc = subServiceName(c.service), d = subDaysLeft(c.end);
+    const svc = typeof subSvcLabel === 'function' ? subSvcLabel(c.service) : subServiceName(c.service), d = subDaysLeft(c.end);
     const quand = d === null ? '' : d < 0 ? `a expiré le ${fmtDateFr(c.end)}` : d === 0 ? `se termine aujourd'hui (${fmtDateFr(c.end)})` : `se termine le ${fmtDateFr(c.end)} (dans ${d} jour${d > 1 ? 's' : ''})`;
     const months = parseInt(subDurationValue(c.duration), 10) || 1, due = subDue(c);
     return [
