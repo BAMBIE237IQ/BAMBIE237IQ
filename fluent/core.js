@@ -117,27 +117,36 @@ function isComplete(date) {
     return plan(n).tasks.every(t => taskDone(date, t.id));
 }
 function dropDone(date, drop) { return drop.tasks.every(t => taskDone(date, t.id)); }
-// Ultra strict: one missed day and the streak is back to zero.
+// Streak rule: a day keeps the streak when the morning AND midday sessions are done.
+// (The full day, evening included, still counts as "complete" for the bonus and the 90-day map.)
+function keepsStreak(date) {
+    const n = dayNum(date);
+    if (n < 1) return false;
+    const p = plan(n);
+    return dropDone(date, p.drops[0]) && dropDone(date, p.drops[1]);
+}
 function streak() {
     if (!S.startDate) return 0;
     let d = today(), c = 0;
-    if (!isComplete(d)) d = addDays(d, -1);
-    while (d >= S.startDate && isComplete(d)) { c++; d = addDays(d, -1); }
+    if (!keepsStreak(d)) d = addDays(d, -1);
+    while (d >= S.startDate && keepsStreak(d)) { c++; d = addDays(d, -1); }
     return c;
 }
 function bestStreak() {
     if (!S.startDate) return 0;
     let best = 0, run = 0;
-    for (let d = S.startDate; d <= today(); d = addDays(d, 1)) { if (isComplete(d)) { run++; best = Math.max(best, run); } else if (d !== today()) run = 0; }
+    for (let d = S.startDate; d <= today(); d = addDays(d, 1)) { if (keepsStreak(d)) { run++; best = Math.max(best, run); } else if (d !== today()) run = 0; }
     return best;
 }
 function missedDays() {
     if (!S.startDate) return 0;
     let m = 0;
-    for (let d = S.startDate; d < today(); d = addDays(d, 1)) if (!isComplete(d)) m++;
+    for (let d = S.startDate; d < today(); d = addDays(d, 1)) if (!keepsStreak(d)) m++;
     return m;
 }
 function totalMinutes() { return Object.values(S.days).reduce((a, d) => a + (d.minutes || 0), 0) + (S.freeMin || 0); }
+// XP earned: score 0..1 (how right you were). At least 20% for doing the work.
+function earnedXp(base, score) { return score == null ? base : Math.round(base * Math.max(0.2, Math.min(1, score))); }
 function completeTask(id, xp) {
     const rec = dayRec();
     if (rec.tasks[id]) return false;
@@ -330,7 +339,18 @@ const GVoice = {
         return this.model;
     },
     wav(b64) {
-        const pcm = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), h = new DataView(new ArrayBuffer(44));
+        const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        // 16-bit samples: drop an odd last byte, cut the quiet tail (where the noise sits) and fade in/out (no click)
+        let smp = new Int16Array(raw.buffer.slice(0, raw.length - (raw.length % 2)));
+        let end = smp.length; while (end > 2400 && Math.abs(smp[end - 1]) < 700) end--;
+        end = Math.min(smp.length, end + 1200);            // keep 50 ms of natural decay
+        smp = smp.slice(0, end);
+        const fin = Math.min(240, smp.length), fout = Math.min(1440, smp.length);
+        for (let i = 0; i < fin; i++) smp[i] = smp[i] * i / fin;
+        for (let i = 0; i < fout; i++) { const k = smp.length - 1 - i; smp[k] = smp[k] * i / fout; }
+        const pad = new Int16Array(2400);                   // 100 ms of silence so the speaker shuts off softly
+        const pcm = new Uint8Array(smp.length * 2 + pad.length * 2); pcm.set(new Uint8Array(smp.buffer), 0);
+        const h = new DataView(new ArrayBuffer(44));
         const w = (o, t) => [...t].forEach((c, i) => h.setUint8(o + i, c.charCodeAt(0)));
         w(0, 'RIFF'); h.setUint32(4, 36 + pcm.length, true); w(8, 'WAVE'); w(12, 'fmt '); h.setUint32(16, 16, true); h.setUint16(20, 1, true); h.setUint16(22, 1, true);
         h.setUint32(24, 24000, true); h.setUint32(28, 48000, true); h.setUint16(32, 2, true); h.setUint16(34, 16, true); w(36, 'data'); h.setUint32(40, pcm.length, true);
@@ -580,7 +600,7 @@ const Sync = {
         if (!this.ref) return;
         clearTimeout(this.timer);
         const n = dayNum(), p = n >= 1 ? plan(n) : null, t = today();
-        const status = p ? { n, morning: dropDone(t, p.drops[0]), midday: dropDone(t, p.drops[1]), evening: dropDone(t, p.drops[2]), complete: isComplete(t), left: p.tasks.filter(x => !taskDone(t, x.id)).length, streak: streak(), at: Date.now() } : { n: 0, at: Date.now() };
+        const status = p ? { n, morning: dropDone(t, p.drops[0]), midday: dropDone(t, p.drops[1]), evening: dropDone(t, p.drops[2]), complete: isComplete(t), safe: keepsStreak(t), left: p.tasks.filter(x => !taskDone(t, x.id)).length, streak: streak(), at: Date.now() } : { n: 0, at: Date.now() };
         this.status = 'syncing';
         Promise.all([
             this.ref.child('state').set(JSON.stringify(S)),

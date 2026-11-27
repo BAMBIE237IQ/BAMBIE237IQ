@@ -32,6 +32,7 @@ function message(slot, st, startDate) {
   if (slot === 'midday' && !s.midday) return { title: 'Midday session (10 min)', body: '5 fast reflexes + a few lines to write. Silent, you can do it anywhere.' };
   if (slot === 'evening') {
     const left = s.left != null ? s.left : 6;
+    if (s.safe) return { title: `Streak safe · ${left} task${left > 1 ? 's' : ''} left`, body: 'Finish the evening session out loud to complete the day (+50 XP).' };
     return { title: `${left} task${left > 1 ? 's' : ''} left today`, body: `At home, out loud: shadowing + speaking. Miss today and your ${streak ? `${streak}-day ` : ''}streak goes back to 0.` };
   }
   return null;

@@ -109,7 +109,7 @@ function renderToday() {
     </section>
     <div class="strict ${complete ? 'ok' : ''}">
         ${complete ? `${ic('ph-seal-check')} <span><b>Day ${n} complete.</b> Streak safe. See you tomorrow at 07:00.</span>`
-                   : `${ic('ph-warning-octagon')} <span><b>${left} task${left > 1 ? 's' : ''} left</b> · about ${hoursLeft} h before midnight. Ultra strict: miss today and your streak goes back to 0.</span>`}
+                   : `${ic('ph-warning-octagon')} <span><b>${left} task${left > 1 ? 's' : ''} left</b> · about ${hoursLeft} h before midnight. ${keepsStreak(t) ? 'Streak safe today (morning + midday done). Finish the evening for the full day.' : 'Do the morning AND midday sessions today, or your streak goes back to 0.'}</span>`}
     </div>
     <div class="drops">${p.drops.map(d => dropHTML(d, t)).join('')}</div>
     <div class="grid-2">
@@ -205,7 +205,8 @@ function onboardingHTML() {
     <section class="card rules">
         <h3>${ic('ph-gavel')} The rules</h3>
         <ul>
-            <li><b>Ultra strict.</b> A day counts only when all its tasks are done. Miss one day: your streak goes back to 0.</li>
+            <li><b>Strict streak.</b> Your streak lives if you finish the morning AND midday sessions every day. Miss them once: back to 0. The evening session completes the day (+50 XP bonus).</li>
+            <li><b>XP is earned.</b> The more you get right, the more XP you get. Doing an exercise badly gives only 20%.</li>
             <li><b>No translation.</b> Think in simple English. Broken English is fine. Silence is not.</li>
             <li><b>Every day, you speak.</b> From day 1. Nobody hears you, so there is nothing to be afraid of.</li>
             <li><b>Your level is measured,</b> not guessed: listening, speaking speed, pauses and phrases you really know.</li>
@@ -265,8 +266,13 @@ const Player = {
         ctx.finished = true;
         this.flushMinutes();
         let dayComplete = false;
-        if (ctx.daily) dayComplete = completeTask(ctx.task.id, ctx.task.xp);
-        else if (ctx.task.xp) { S.xp += Math.round(ctx.task.xp / 2); save(); }
+        // XP follows quality: score 0..1 from the exercise (or 50% now + the rest when the coach's score arrives)
+        const score = ctx.pendingAI ? 0.5 : summary.score;
+        const base = ctx.daily ? ctx.task.xp : Math.round((ctx.task.xp || 0) / 2);
+        const gained = earnedXp(base, score);
+        ctx.xpBase = base; ctx.xpGiven = gained;
+        if (ctx.daily) dayComplete = completeTask(ctx.task.id, gained);
+        else if (gained) { S.xp += gained; save(); }
         else save();
         const body = $('#playerBody');
         const n = dayNum(), p = n >= 1 ? plan(n) : null;
@@ -277,7 +283,7 @@ const Player = {
             ${dayComplete ? `<div class="fire">${ic('ph-fire')}</div><h2>Day ${n} complete!</h2><p>Streak: <b>${streak()} day${streak() > 1 ? 's' : ''}</b>. +50 bonus XP. Tomorrow, 07:00.</p>`
                           : `<div class="check">${ic('ph-check-circle')}</div><h2>${esc(summary.title || 'Done!')}</h2>`}
             ${summary.html ? `<div class="done-sum">${summary.html}</div>` : ''}
-            <p class="xp">+${ctx.daily ? ctx.task.xp : Math.round((ctx.task.xp || 0) / 2)} XP</p>
+            <p class="xp" data-xp>+${gained} XP${gained < base ? ` <small>/ ${base} · ${ctx.pendingAI ? 'the rest depends on your coach score' : 'the more you get right, the more you earn'}</small>` : ''}</p>
             <div class="row center">
                 ${next ? `<button class="btn primary" data-next>${ic(next.icon)} Next: ${esc(next.title)}</button>` : ''}
                 <button class="btn" data-close>${ctx.daily ? 'Back to today' : 'Close'}</button>
@@ -361,13 +367,21 @@ function metricsHTML(m) {
 }
 async function aiFeedbackBlock(container, { kind, text, extra = '' }) {
     if (!AI.hasKey() || countWords(text) < 8) return;
+    const pctx = Player.ctx; if (pctx) pctx.pendingAI = true;
     const box = document.createElement('div');
     box.className = 'ai-box';
     box.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Your coach is reading what you said…</div>`;
     container.appendChild(box);
     try {
         const j = await Brain.run('speak', { kind, text, extra });
-        logMistakes(j.fixes, kind); save({ silent: true });
+        logMistakes(j.fixes, kind);
+        // Quality bonus: the other half of the XP, in proportion to the coach's scores
+        if (pctx && pctx.xpBase && Player.ctx === pctx) {
+            const sc = j.scores ? avg(Object.values(j.scores).map(Number).filter(x => x >= 0)) / 10 : 0.5;
+            const bonus = Math.max(0, earnedXp(pctx.xpBase, 0.5 + sc * 0.5) - pctx.xpGiven);
+            if (bonus) { S.xp += bonus; if (pctx.daily) dayRec().xp = (dayRec().xp || 0) + bonus; pctx.xpGiven += bonus; toast(`+${bonus} XP for accuracy (${Math.round(sc * 100)}%)`, 'good'); const x = $('[data-xp]'); if (x) x.textContent = `+${pctx.xpGiven} XP / ${pctx.xpBase}`; }
+        }
+        save({ silent: true });
         box.innerHTML = `<div class="ai-head">${ic('ph-sparkle')} Coach</div>
             ${scoresHTML(j.scores)}
             ${j.win ? `<p class="good">${ic('ph-thumbs-up')} ${esc(j.win)}</p>` : ''}
@@ -519,7 +533,7 @@ RUNNERS.listen = async (body, ctx) => {
             tr.classList.remove('blur');
             const acc = firstOk / qs.length;
             if (ctx.daily) { S.metrics.listen.push({ d: today(), acc, lvl: st.lvl }); S.metrics.listen = S.metrics.listen.slice(-60); }
-            ctx.finish({ title: 'Episode understood', html: `<p>First-try answers: <b>${firstOk}/${qs.length}</b>. ${acc === 1 ? 'Perfect.' : 'Read the text once more and listen again tonight.'}</p>` });
+            ctx.finish({ score: qs.length ? firstOk / qs.length : 1, title: 'Episode understood', html: `<p>First-try answers: <b>${firstOk}/${qs.length}</b>. ${acc === 1 ? 'Perfect.' : 'Read the text once more and listen again tonight.'}</p>` });
         }
     }));
     setTimeout(() => { if (Player.ctx === ctx) TTS.speak(st.x, { onsentence: i => { $$('[data-s]', tr).forEach(s => s.classList.toggle('cur', +s.dataset.s === i)); } }); }, 400);
@@ -535,7 +549,7 @@ RUNNERS.reflex = (body, ctx) => {
         if (i >= items.length) {
             const a = avg(lat) || 0;
             S.metrics.reflex.push({ d: today(), avg: Math.round(a * 10) / 10 }); S.metrics.reflex = S.metrics.reflex.slice(-60);
-            return ctx.finish({ title: 'Reflexes trained', html: `<p>Average start time: <b>${a.toFixed(1)} s</b> (goal: under ${target} s). ${a <= target ? 'Fast. No time to translate: good.' : 'Start with a ready-made opener: "Sorry…", "Let me…", "I think…".'}</p>` });
+            return ctx.finish({ score: a ? Math.min(1, target / a) : 1, title: 'Reflexes trained', html: `<p>Average start time: <b>${a.toFixed(1)} s</b> (goal: under ${target} s). ${a <= target ? 'Fast. No time to translate: good.' : 'Start with a ready-made opener: "Sorry…", "Let me…", "I think…".'}</p>` });
         }
         const [sit, model] = items[i];
         body.innerHTML = `<div class="progress-line"><div style="width:${i * 20}%"></div></div>
@@ -588,7 +602,7 @@ RUNNERS.fixit = (body, ctx) => {
         if (i >= items.length) {
             const pct = Math.round(good * 100 / items.length);
             S.metrics.fixit = (S.metrics.fixit || []).concat({ d: today(), pct }).slice(-60);
-            return ctx.finish({ title: 'Mistakes fixed', html: `<p>Fixed at first try: <b>${good}/${items.length}</b>. ${pct >= 80 ? 'These mistakes are leaving you.' : 'Say each correct sentence 3 times out loud tonight.'}</p>` });
+            return ctx.finish({ score: pct / 100, title: 'Mistakes fixed', html: `<p>Fixed at first try: <b>${good}/${items.length}</b>. ${pct >= 80 ? 'These mistakes are leaving you.' : 'Say each correct sentence 3 times out loud tonight.'}</p>` });
         }
         const it = items[i];
         body.innerHTML = `<div class="progress-line"><div style="width:${i * 100 / items.length}%"></div></div>
@@ -650,7 +664,7 @@ RUNNERS.drill = (body, ctx) => {
             const pct = Math.round(good * 100 / ex.length);
             drillDone(id, pct); save({ silent: true });
             const nd = S.drills[id];
-            return ctx.finish({ title: pct >= 80 ? 'Drill passed' : 'Drill done', html: `<p>Right at first try: <b>${good}/${ex.length}</b> (${pct}%).</p><p class="muted">${nd.mastered ? 'Mastered: it will not come back anymore.' : `Your coach brings it back on <b>${esc(niceDate(nd.due))}</b>${pct >= 80 ? '' : ' (tomorrow, because it is not solid yet)'}.`}</p>` });
+            return ctx.finish({ score: pct / 100, title: pct >= 80 ? 'Drill passed' : 'Drill done', html: `<p>Right at first try: <b>${good}/${ex.length}</b> (${pct}%).</p><p class="muted">${nd.mastered ? 'Mastered: it will not come back anymore.' : `Your coach brings it back on <b>${esc(niceDate(nd.due))}</b>${pct >= 80 ? '' : ' (tomorrow, because it is not solid yet)'}.`}</p>` });
         }
         const e = ex[i];
         const label = { choose: 'Choose', fill: 'Fill the gap', transform: 'Transform', translate: 'Say it in English', speak: 'Say it out loud' }[e.type] || 'Answer';
@@ -803,7 +817,7 @@ RUNNERS.write = (body, ctx) => {
             $('[data-say]', res).addEventListener('click', () => TTS.speak(j.corrected));
             const add = $('[data-add]', res);
             if (add) add.addEventListener('click', () => { addCustomCard(j.chunk.en, j.chunk.fr, 'write'); save({ silent: true }); add.disabled = true; add.textContent = 'Added ✓'; });
-            ctx.finish({ title: 'Text corrected' });
+            ctx.finish({ score: (j.score || 0) / 10, title: 'Text corrected' });
         } catch (e) {
             res.innerHTML = `<p class="warn small">${ic('ph-cloud-warning')} ${esc(e.message)}. Your text still counts.</p>`;
             ctx.finish({ title: 'Text written' });
@@ -825,7 +839,7 @@ RUNNERS.checkpoint = (body, ctx) => {
             const acc = avg(scores) / 100, lv = avg(items.map(x => x[0]));
             S.metrics.dict.push({ d: today(), acc, lvl: lv });
             const after = cefr();
-            return ctx.finish({ title: 'Checkpoint done', html: `<p>Dictation: <b>${Math.round(acc * 100)}%</b> of the words.</p><p>Level estimate: ${before.label} ${before.value.toFixed(2)} → <b>${after.label} ${after.value.toFixed(2)}</b></p>` });
+            return ctx.finish({ score: acc, title: 'Checkpoint done', html: `<p>Dictation: <b>${Math.round(acc * 100)}%</b> of the words.</p><p>Level estimate: ${before.label} ${before.value.toFixed(2)} → <b>${after.label} ${after.value.toFixed(2)}</b></p>` });
         }
         const [, sent] = items[i];
         let plays = 0;
@@ -861,7 +875,7 @@ RUNNERS.shadow = (body, ctx) => {
     const step = () => {
         if (i >= items.length) {
             const a = Math.round(avg(scores) || 0);
-            return ctx.finish({ title: 'Shadowing done', html: `<p>Average match: <b>${a}%</b>. Copy the music of the sentence, not only the words.</p>` });
+            return ctx.finish({ score: a / 100, title: 'Shadowing done', html: `<p>Average match: <b>${a}%</b>. Copy the music of the sentence, not only the words.</p>` });
         }
         const sent = items[i];
         let tries = 0, best = 0;
@@ -1048,9 +1062,11 @@ RUNNERS.roleplay = (body, ctx) => {
         const box = document.createElement('div'); box.className = 'ai-box'; box.innerHTML = `<div class="ai-load">${ic('ph-sparkle')} Talk · Notice · Improve: preparing your feedback…</div>`;
         body.appendChild(box);
         const transcript = hist.map(m => (m.role === 'model' ? 'PARTNER: ' : 'LEARNER: ') + m.text).join('\n');
+        let rpScore;
         try {
             const learnerText = hist.filter(m => m.role === 'user').map(m => m.text).join(' / ');
             const j = await Brain.run('rpSummary', { sc, transcript, learnerText });
+            if (j.scores) rpScore = avg(Object.values(j.scores).map(Number).filter(x => x >= 0)) / 10;
             logMistakes(j.mistakes, 'roleplay-summary');
             box.innerHTML = `<div class="ai-head">${ic('ph-sparkle')} Talk · Notice · Improve</div>
                 <p class="small">${j.goal_reached ? `${ic('ph-seal-check')} <b>Goal reached.</b>` : `${ic('ph-target')} <b>Goal not reached yet.</b>`} ${esc(sc.goal)}</p>
@@ -1063,7 +1079,7 @@ RUNNERS.roleplay = (body, ctx) => {
             (j.notes || []).forEach(x => { if (x && x.en) S.notebook.unshift({ id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), en: x.en, note: x.fr || '', date: today(), src: sc.t }); });
             $$('[data-add]', box).forEach(b => b.addEventListener('click', () => { const x = j.notes[+b.dataset.add]; addCustomCard(x.en, x.fr, 'roleplay'); save({ silent: true }); b.disabled = true; b.textContent = 'Added ✓'; }));
         } catch (e) { box.innerHTML = `<p class="warn small">${ic('ph-cloud-warning')} Feedback unavailable: ${esc(e.message)}</p>`; }
-        ctx.finish({ title: 'Conversation done' });
+        ctx.finish({ score: rpScore, title: 'Conversation done' });
     });
 };
 
